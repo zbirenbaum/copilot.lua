@@ -2,7 +2,7 @@ local user_data = require('copilot.setup').get_cred()
 local util = require('copilot.util')
 
 local function completion_handler(_, result, c, _)
-   print(vim.inspect(result.completions))
+   -- print(vim.inspect(result.completions))
 end
 
 local get_completions = function()
@@ -20,7 +20,7 @@ local send_editor_info = function (a, b, c, d)
          name = "Neovim",
       },
    }, 600)
-   print(vim.inspect(responses))
+   -- print(vim.inspect(responses))
 end
 
 local capabilities = vim.lsp.protocol.make_client_capabilities()
