@@ -1,14 +1,6 @@
 local user_data = require('copilot.setup').get_cred()
 local util = require('copilot.util')
 
-local function completion_handler(_, result, c, _)
-   -- print(vim.inspect(result.completions))
-end
-
-local get_completions = function()
-   local params = util.get_completion_params()
-   completions = vim.lsp.buf_request(0, 'getCompletions', params, completion_handler)
-end
 local send_editor_info = function (a, b, c, d)
    local responses = vim.lsp.buf_request_sync(0, 'setEditorInfo', {
       editorPluginInfo = {
@@ -52,10 +44,5 @@ vim.lsp.start_client({
    end,
    on_attach = function()
       send_editor_info()
-      vim.keymap.set('n', '<leader>i', get_completions, {noremap = true, silent = true})
-      vim.api.nvim_create_autocmd({'TextChangedI'}, {
-         callback = get_completions,
-         once = false,
-      })
    end
 })
