@@ -31,7 +31,7 @@ M.get_copilot_path = function()
    local root_path = vim.fn.stdpath("data") .. "/site/pack/packer/"
    for _, loc in ipairs{"opt", "start"} do
       local copilot_path = root_path .. loc .. "/copilot.lua/copilot/index.js"
-      if vim.fn.filereadable(copilot_path) then
+      if vim.fn.filereadable(copilot_path) ~= 0 then
          return copilot_path
       end
    end
