@@ -2,7 +2,7 @@
 
 This plugin is the pure lua replacement for https://github.com/github/copilot.vim
 
-While using copilot.vim, for the first time since I started using neovim my laptop began to overheat. Additionally, I found the large chunks of ghost text moving around my code, and interfering with my existing cmp ghost text disturbing. As lua is far more efficient and make things easier to integrate with modern plugins, this repository was created. 
+While using copilot.vim, for the first time since I started using neovim my laptop began to overheat. Additionally, I found the large chunks of ghost text moving around my code, and interfering with my existing cmp ghost text disturbing. As lua is far more efficient and makes things easier to integrate with modern plugins, this repository was created. 
 
 ## (IMPORTANT) Usage:
 Note that this plugin will only start up the copilot server. The current usage of this is via https://github.com/zbirenbaum/copilot-cmp, which turns copilot suggestions into menu entries for cmp, and displays the full text body in a float, similar to how documentation would appear, off to the side.
