@@ -1,8 +1,3 @@
-local config_root = vim.fn.expand('~/.config') .. "/github-copilot/hosts.json"
-local config_hosts = config_root .. "/hosts.json"
-local request = require('plenary.curl').request
-local post = require('plenary.curl').post
-
 local M = {}
 
 local function find_config_path()
@@ -18,14 +13,9 @@ local function json_body(response)
       return vim.fn.json_decode(response.body)
    end
 end
+
 local function oauth_user(token)
-   local response = request({
-      url = "https://api.github.com/user",
-      headers = {
-         Authorization = "Bearer " .. token,
-      },
-   })
-   return json_body(response)
+   return vim.fn.json_decode(vim.fn.system("curl -s --header \"Authorization: Bearer " .. token .. "\" https://api.github.com/user"))
 end
 
 local function oauth_save(oauth_token)
