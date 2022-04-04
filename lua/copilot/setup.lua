@@ -7,7 +7,7 @@ local M = {}
 
 local function find_config_path()
    local config = vim.fn.expand('$XDG_CONFIG_HOME')
-   if config then return config end
+   if config and config ~= '' then return config end
    config = vim.fn.has('win32') and vim.fn.expand('~/AppData/Local') or nil
    return config or vim.fn.expand('~/.config')
 end
