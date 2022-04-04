@@ -35,7 +35,8 @@ local function oauth_save(oauth_token)
 end
 
 M.get_cred = function ()
-   local userdata = vim.fn.json_decode(vim.api.nvim_eval("readfile('/home/zach/.config/github-copilot/hosts.json')"))
+   local config = vim.fn.expand('$XDG_CONFIG_HOME')
+   local userdata = vim.fn.json_decode(vim.api.nvim_eval("readfile('" .. config .. "/github-copilot/hosts.json')"))
    local token = userdata["github.com"].oauth_token
    local user = oauth_user(token)
    return {user = user, token = token}
