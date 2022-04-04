@@ -12,7 +12,6 @@ local send_editor_info = function (a, b, c, d)
          name = "Neovim",
       },
    }, 600)
-   -- print(vim.inspect(responses))
 end
 
 local capabilities = vim.lsp.protocol.make_client_capabilities()
@@ -37,7 +36,9 @@ vim.lsp.start_client({
       vim.lsp.buf_attach_client(0, client.id)
       vim.api.nvim_create_autocmd({'BufEnter'}, {
          callback = function ()
-            if not vim.lsp.buf_get_clients(0)[client.id] then vim.lsp.buf_attach_client(0, client.id) end
+            if not vim.lsp.buf_get_clients(0)[client.id] then
+               vim.lsp.buf_attach_client(0, client.id)
+            end
          end,
          once = false,
       })
