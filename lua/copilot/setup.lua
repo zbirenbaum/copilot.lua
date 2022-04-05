@@ -18,12 +18,12 @@ end
 
 local function json_body(response)
    if response.headers['content-type'] == 'application/json' then
-      return vim.fn.json_decode(response.body)
+      return vim.json.decode(response.body)
    end
 end
 
 local function oauth_user(token)
-   return vim.fn.json_decode(vim.fn.system("curl -s --header \"Authorization: Bearer " .. token .. "\" https://api.github.com/user"))
+   return vim.json.decode(vim.fn.system("curl -s --header \"Authorization: Bearer " .. token .. "\" https://api.github.com/user"))
 end
 
 local function oauth_save(oauth_token)
@@ -33,7 +33,7 @@ local function oauth_save(oauth_token)
 end
 
 M.get_cred = function ()
-   local userdata = vim.fn.json_decode(vim.api.nvim_eval("readfile('" .. find_config_path() .. "/github-copilot/hosts.json')"))
+   local userdata = vim.json.decode(vim.api.nvim_eval("readfile('" .. find_config_path() .. "/github-copilot/hosts.json')")[1])
    local token = userdata["github.com"].oauth_token
    local user = oauth_user(token)
    return {user = user, token = token}
