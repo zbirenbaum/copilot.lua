@@ -1,1 +1,1 @@
-require("copilot.copilot_handler")
+require("copilot.copilot_handler").start()
