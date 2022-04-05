@@ -56,6 +56,6 @@ The following is the default configuration:
 
 ```lua
 {
-	plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer", -- Installation Path of packer, change to the plugin manager installation path of your choice
+  plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer", -- Installation Path of packer, change to the plugin manager installation path of your choice
 }
 ```
