@@ -27,8 +27,8 @@ M.get_completion_params = function()
    return params
 end
 
-M.get_copilot_path = function()
-   local root_path = vim.fn.stdpath("data") .. "/site/pack/packer/"
+M.get_copilot_path = function(plugin_path)
+   local root_path = plugin_path or vim.fn.stdpath("data") .. "/site/pack/packer/"
    for _, loc in ipairs{"opt", "start"} do
       local copilot_path = root_path .. loc .. "/copilot.lua/copilot/index.js"
       if vim.fn.filereadable(copilot_path) ~= 0 then
