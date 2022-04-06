@@ -39,7 +39,6 @@ M.start = function(params)
     root_dir = vim.loop.cwd(),
     autostart = true,
     on_init = function(client, _)
-      send_editor_info()
       vim.lsp.buf_attach_client(0, client.id)
       if vim.fn.has("nvim-0.7") then
         vim.api.nvim_create_autocmd({ "BufEnter" }, {
@@ -51,6 +50,7 @@ M.start = function(params)
       else
         vim.cmd("au BufEnter * lua require('copilot.util').attach_copilot()")
       end
+      send_editor_info()
     end,
     on_attach = function()
       vim.schedule(function()
