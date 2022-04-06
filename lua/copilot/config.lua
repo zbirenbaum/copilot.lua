@@ -2,6 +2,9 @@ local M = {}
 
 local defaults = {
   plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
+  on_attach = function()
+    require("copilot_cmp")._on_insert_enter()
+  end,
 }
 
 M.params = {}

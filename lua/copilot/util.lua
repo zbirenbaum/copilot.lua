@@ -11,16 +11,23 @@ local get_relfile = function()
   return file
 end
 
-M.find_copilot_client = function ()
+M.find_copilot_client = function()
   for _, client in ipairs(vim.lsp.get_active_clients()) do
     if client.name == "copilot" then
       return client.id
     end
   end
-  print("Copilot not started!")
 end
 
-M.attach_copilot = function ()
+M.find_copilot_buf_client = function()
+  for _, client in ipairs(vim.lsp.buf_get_clients(0)) do
+    if client.name == "copilot" then
+      return client.id
+    end
+  end
+end
+
+M.attach_copilot = function()
   local client_id = require("copilot.util").find_copilot_client()
   if not vim.lsp.buf_get_clients(0)[client_id] then
     vim.lsp.buf_attach_client(0, client_id)

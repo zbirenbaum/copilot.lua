@@ -18,9 +18,9 @@ end
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities.getCompletions = true
 
-M.start = function(plugin_path)
+M.start = function(params)
   vim.lsp.start_client({
-    cmd = { require("copilot.util").get_copilot_path(plugin_path) },
+    cmd = { require("copilot.util").get_copilot_path(params.plugin_manager_path) },
     cmd_env = {
       ["GITHUB_USER"] = user_data.user,
       ["GITHUB_TOKEN"] = user_data.token,
@@ -51,6 +51,11 @@ M.start = function(plugin_path)
       else
         vim.cmd("au BufEnter * lua require('copilot.util').attach_copilot()")
       end
+    end,
+    on_attach = function()
+      vim.schedule(function()
+        params.on_attach()
+      end)
     end,
   })
 end
