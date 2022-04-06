@@ -1,5 +1,6 @@
 local M = {}
 
+
 local format_pos = function()
   local pos = vim.api.nvim_win_get_cursor(0)
   return { character = pos[2], line = pos[1] - 1 }
@@ -8,6 +9,22 @@ end
 local get_relfile = function()
   local file, _ = string.gsub(vim.api.nvim_buf_get_name(0), vim.loop.cwd() .. "/", "")
   return file
+end
+
+M.find_copilot_client = function ()
+  for _, client in ipairs(vim.lsp.get_active_clients()) do
+    if client.name == "copilot" then
+      return client.id
+    end
+  end
+  print("Copilot not started!")
+end
+
+M.attach_copilot = function ()
+  local client_id = require("copilot.util").find_copilot_client()
+  if not vim.lsp.buf_get_clients(0)[client_id] then
+    vim.lsp.buf_attach_client(0, client_id)
+  end
 end
 
 M.get_completion_params = function()
