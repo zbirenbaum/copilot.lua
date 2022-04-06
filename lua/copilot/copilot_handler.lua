@@ -39,18 +39,18 @@ M.start = function(plugin_path)
     root_dir = vim.loop.cwd(),
     autostart = true,
     on_init = function(client, _)
-      vim.lsp.buf_attach_client(0, client.id)
-      vim.api.nvim_create_autocmd({ "BufEnter" }, {
-        callback = function()
-          if not vim.lsp.buf_get_clients(0)[client.id] then
-            vim.lsp.buf_attach_client(0, client.id)
-          end
-        end,
-        once = false,
-      })
-    end,
-    on_attach = function()
       send_editor_info()
+      vim.lsp.buf_attach_client(0, client.id)
+      if vim.fn.has("nvim-0.7") then
+        vim.api.nvim_create_autocmd({ "BufEnter" }, {
+          callback = function()
+            util.attach_copilot()
+          end,
+          once = false,
+        })
+      else
+        vim.cmd("au BufEnter * lua require('copilot.util').attach_copilot()")
+      end
     end,
   })
 end
