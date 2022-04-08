@@ -27,7 +27,7 @@ M.start = function(params)
     autostart = true,
     on_init = function(client, _)
       vim.lsp.buf_attach_client(0, client.id)
-      if vim.fn.has("nvim-0.7") then
+      if vim.fn.has("nvim-0.7") > 0 then
         vim.api.nvim_create_autocmd({ "BufEnter" }, {
           callback = function()
             util.attach_copilot()
