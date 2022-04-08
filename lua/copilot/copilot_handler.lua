@@ -2,19 +2,6 @@ local user_data = require("copilot.setup").get_cred()
 local util = require("copilot.util")
 local M = {}
 
-local send_editor_info = function(a, b, c, d)
-  local responses = vim.lsp.buf_request_sync(0, "setEditorInfo", {
-    editorPluginInfo = {
-      name = "copilot.vim",
-      version = "1.1.0",
-    },
-    editorInfo = {
-      version = "0.7.0-dev+1343-g4d3acd6be-dirty",
-      name = "Neovim",
-    },
-  }, 600)
-end
-
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities.getCompletions = true
 
@@ -50,7 +37,6 @@ M.start = function(params)
       else
         vim.cmd("au BufEnter * lua require('copilot.util').attach_copilot()")
       end
-      send_editor_info()
     end,
     on_attach = function()
       vim.schedule(function()
@@ -59,5 +45,19 @@ M.start = function(params)
     end,
   })
 end
+
+-- this doesn't seem to do anything so remove for now
+-- local send_editor_info = function()
+--   vim.lsp.buf_request_sync(0, "setEditorInfo", {
+--     editorPluginInfo = {
+--       name = "copilot.vim",
+--       version = "1.1.0",
+--     },
+--     editorInfo = {
+--       version = "0.7.0-dev+1343-g4d3acd6be-dirty",
+--       name = "Neovim",
+--     },
+--   }, 600)
+-- end
 
 return M
