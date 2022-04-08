@@ -24,9 +24,31 @@ After the setup steps are complete for copilot.vim, ensure that ~/.config/github
 
 You have to run the `require("copilot").setup(options)` function in order to start Copilot. If no options are provided, the defaults are used.
 
-Because the copilot server takes some time to start up, I HIGHLY recommend that you load copilot after startup. This can be done in multiple ways:
+Because the copilot server takes some time to start up, I HIGHLY recommend that you load copilot after startup. This can be done in multiple ways, the best one will depend on your existing config and the speed of your machine:
 
-1. On 'InsertEnter': (My preferred way)
+1. On 'VimEnter' + Defer: (My preferred method, works well with fast configs)
+```
+use{
+  "zbirenbaum/copilot.lua",
+  event = {"VimEnter"},
+  config = function()
+    vim.defer_fn(function()
+      require("copilot").setup()
+    end, 100)
+  end,
+}
+```
+2. Load After Statusline + defer: (If option (1) causes statusline to flicker, try this)
+```
+["zbirenbaum/copilot.lua"] = {
+  "zbirenbaum/copilot.lua",
+  after = 'feline.nvim', --whichever statusline plugin you use here
+  config = function ()
+    vim.defer_fn(function() require("copilot").setup() end, 100)
+  end,
+},
+```
+3. On 'InsertEnter': (The safest way to avoid statup lag. Note: Your copilot completions may take a moment to start showing up)
 
 ```
 use {
@@ -38,17 +60,6 @@ use {
 },
 ```
 
-2. Load After Statusline + defer:
-
-```
-["zbirenbaum/copilot.lua"] = {
-  "zbirenbaum/copilot.lua",
-  after = 'feline.nvim', --whichever statusline plugin you use here
-  config = function ()
-    vim.defer_fn(function() require("copilot").setup() end, 100)
-  end,
-},
-```
 
 #### Configuration
 
