@@ -1,10 +1,20 @@
-local config = require("copilot.config")
 local M = {}
 
-M.setup = function(params)
-  config.setup(params)
-  config.params.plugin_manager_path = vim.fn.expand(config.params.plugin_manager_path) -- resolve wildcard and variable containing paths
-  require("copilot.copilot_handler").start(config.params)
+local defaults = {
+  plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
+  on_attach = function()
+    require("copilot_cmp")._on_insert_enter()
+  end,
+}
+
+local config_handler = function(opts)
+  local user_config = opts and vim.tbl_deep_extend("force", defaults, opts) or defaults
+  return user_config
+end
+
+M.setup = function(opts)
+  local user_config = config_handler(opts)
+  require("copilot.copilot_handler").start(user_config)
 end
 
 return M
