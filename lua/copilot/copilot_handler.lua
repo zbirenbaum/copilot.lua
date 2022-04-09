@@ -11,15 +11,6 @@ M.start = function(params)
     cmd_env = {
       ["GITHUB_USER"] = user_data.user,
       ["GITHUB_TOKEN"] = user_data.token,
-      ["COPILOT_AGENT_VERBOSE"] = 1,
-    },
-    handlers = {
-      ["getCompletions"] = function()
-        print("get completions")
-      end,
-      ["textDocumentSync"] = function()
-        print("handle")
-      end,
     },
     name = "copilot",
     trace = "messages",
@@ -45,19 +36,5 @@ M.start = function(params)
     end,
   })
 end
-
--- this doesn't seem to do anything so remove for now
--- local send_editor_info = function()
---   vim.lsp.buf_request_sync(0, "setEditorInfo", {
---     editorPluginInfo = {
---       name = "copilot.vim",
---       version = "1.1.0",
---     },
---     editorInfo = {
---       version = "0.7.0-dev+1343-g4d3acd6be-dirty",
---       name = "Neovim",
---     },
---   }, 600)
--- end
 
 return M
