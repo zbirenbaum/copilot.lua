@@ -1,4 +1,3 @@
-local user_data = require("copilot.setup").get_cred()
 local util = require("copilot.util")
 local M = {}
 
@@ -8,10 +7,6 @@ capabilities.getCompletions = true
 M.start = function(params)
   vim.lsp.start_client({
     cmd = { require("copilot.util").get_copilot_path(params.plugin_manager_path) },
-    cmd_env = {
-      ["GITHUB_USER"] = user_data.user,
-      ["GITHUB_TOKEN"] = user_data.token,
-    },
     name = "copilot",
     trace = "messages",
     root_dir = vim.loop.cwd(),
