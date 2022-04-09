@@ -26,9 +26,7 @@ local function json_body(response)
 end
 
 local function oauth_user(token)
-  return vim.json.decode(
-    vim.fn.system('curl -s --header "Authorization: Bearer ' .. token .. '" https://api.github.com/user')
-  )
+  return vim.fn.system('curl -s --header "Authorization: Bearer ' .. token .. '" https://api.github.com/user')
 end
 
 local function oauth_save(oauth_token)
@@ -36,6 +34,7 @@ local function oauth_save(oauth_token)
   local github = { oauth_token = oauth_token, user = user_data.login }
   return github
 end
+
 
 M.get_cred = function()
   local userdata = vim.json.decode(
