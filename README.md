@@ -75,7 +75,7 @@ The following is the default configuration:
 
 ##### plugin_manager_path
 
-This is installation path of Packer, change to the plugin manager installation path of your choice
+This is installation path of Packer, change this to the plugin manager installation path of your choice
 
 Example:
 
@@ -99,7 +99,7 @@ require("copilot").setup {
 
 ##### ft_disable
 
-Not attach buffers with specific filetypes to copilot lsp server.
+Prevents copilot from attaching to buffers with specific filetypes.
 
 Example:
 
