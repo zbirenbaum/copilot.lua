@@ -29,7 +29,7 @@ end
 
 M.attach_copilot = function()
   local client_id = require("copilot.util").find_copilot_client()
-  if not vim.lsp.buf_get_clients(0)[client_id] then
+  if client_id and not vim.lsp.buf_get_clients(0)[client_id] then
     vim.lsp.buf_attach_client(0, client_id)
   end
 end
