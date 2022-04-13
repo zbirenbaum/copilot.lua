@@ -71,12 +71,19 @@ The following is the default configuration:
   server_opts_overrides = {},
   ft_disable = {}
 }
+```
 
 ##### plugin_manager_path
 
 This is installation path of Packer, change to the plugin manager installation path of your choice
-```
 
+Example:
+
+```lua
+require("copilot").setup {
+  plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer", 
+}
+```
 
 ##### server_opts_overrides
 
