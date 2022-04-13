@@ -67,6 +67,44 @@ The following is the default configuration:
 
 ```lua
 {
-  plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer", -- Installation Path of packer, change to the plugin manager installation path of your choice
+  plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer", 
+  server_opts_overrides = {},
+  ft_disable = {}
+}
+```
+
+##### plugin_manager_path
+
+This is installation path of Packer, change this to the plugin manager installation path of your choice
+
+Example:
+
+```lua
+require("copilot").setup {
+  plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer", 
+}
+```
+
+##### server_opts_overrides
+
+Override copilot lsp client settings. See `:h vim.lsp.start_client` for list of options.
+
+Example:
+
+```lua
+require("copilot").setup {
+    server_opts_overrides = { trace = "verbose", name = "AI" },
+}
+```
+
+##### ft_disable
+
+Prevents copilot from attaching to buffers with specific filetypes.
+
+Example:
+
+```lua
+require("copilot").setup {
+    ft_disable = { "markdown", "terraform" },
 }
 ```
