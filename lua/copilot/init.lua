@@ -5,6 +5,13 @@ local defaults = {
   on_attach = function()
     require("copilot_cmp")._on_insert_enter()
   end,
+  startup_function = function()
+    vim.defer_fn(function()
+      require("copilot_cmp")._on_insert_enter()
+    end, 100)
+  end,
+  server_opts_overrides = {},
+  ft_disable = {},
 }
 
 local config_handler = function(opts)
