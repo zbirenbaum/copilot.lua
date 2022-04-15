@@ -1,13 +1,23 @@
-local util = require("copilot.util")
 local M = { params = {} }
+local util = require("copilot.util")
 
 M.buf_attach_copilot = function()
   if vim.tbl_contains(M.params.ft_disable, vim.bo.filetype) then return end
   if not vim.bo.buflisted or not vim.bo.buftype == "" then return end
-  local client_id = require("copilot.util").find_copilot_client()
+  local client_id = util.find_copilot_client()
   local buf_clients = vim.lsp.buf_get_clients(0)
-  if client_id and buf_clients and not buf_clients[client_id] then
+  if not buf_clients and client_id or (client_id and not buf_clients[client_id]) then
     vim.lsp.buf_attach_client(0, client_id)
+  end
+end
+
+local register_autocmd = function ()
+  if vim.fn.has("nvim-0.7") > 0 then
+    vim.api.nvim_create_autocmd({ "BufEnter" }, {
+      callback = vim.schedule_wrap(M.buf_attach_copilot),
+    })
+  else
+    vim.cmd("au BufEnter * lua vim.schedule(function() require('copilot.copilot_handler').buf_attach_copilot() end)")
   end
 end
 
@@ -19,15 +29,8 @@ M.merge_server_opts = function (params)
     root_dir = vim.loop.cwd(),
     autostart = true,
     on_init = function(_, _)
-      M.buf_attach_copilot()
-      if vim.fn.has("nvim-0.7") > 0 then
-        vim.api.nvim_create_autocmd({ "BufEnter" }, {
-          callback = vim.schedule(function() M.buf_attach_copilot() end),
-          once = false,
-        })
-      else
-        vim.cmd("au BufEnter * lua vim.schedule(function() require('copilot.copilot_handler').buf_attach_copilot() end)")
-      end
+      vim.schedule(M.buf_attach_copilot)
+      vim.schedule(register_autocmd)
     end,
     on_attach = function()
       vim.schedule_wrap(params.on_attach())
