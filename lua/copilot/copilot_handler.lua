@@ -22,7 +22,7 @@ local register_autocmd = function ()
 end
 
 M.merge_server_opts = function (params)
-  return vim.tbl_deep_extend("force", params.server_opts_overrides, {
+  return vim.tbl_deep_extend("force", {
     cmd = { require("copilot.util").get_copilot_path(params.plugin_manager_path) },
     name = "copilot",
     trace = "messages",
@@ -35,7 +35,7 @@ M.merge_server_opts = function (params)
     on_attach = function()
       vim.schedule_wrap(params.on_attach())
     end,
-  })
+  }, params.server_opts_overrides or {})
 end
 
 M.start = function(params)
