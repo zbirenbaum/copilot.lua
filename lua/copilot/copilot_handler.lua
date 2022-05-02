@@ -22,20 +22,37 @@ local register_autocmd = function ()
 end
 
 M.merge_server_opts = function (params)
-  return vim.tbl_deep_extend("force", {
-    cmd = { require("copilot.util").get_copilot_path(params.plugin_manager_path) },
-    name = "copilot",
-    trace = "messages",
-    root_dir = vim.loop.cwd(),
-    autostart = true,
-    on_init = function(_, _)
-      vim.schedule(M.buf_attach_copilot)
-      vim.schedule(register_autocmd)
-    end,
-    on_attach = function()
-      vim.schedule_wrap(params.on_attach())
-    end,
-  }, params.server_opts_overrides or {})
+  if vim.fn.has("win32") then
+    return vim.tbl_deep_extend("force", {
+      cmd = { 'node', require("copilot.util").get_copilot_path(params.plugin_manager_path) },
+      name = "copilot",
+      trace = "messages",
+      root_dir = vim.loop.cwd(),
+      autostart = true,
+      on_init = function(_, _)
+        vim.schedule(M.buf_attach_copilot)
+        vim.schedule(register_autocmd)
+      end,
+      on_attach = function()
+        vim.schedule_wrap(params.on_attach())
+      end,
+    }, params.server_opts_overrides or {})
+  else
+    return vim.tbl_deep_extend("force", {
+        cmd = { require("copilot.util").get_copilot_path(params.plugin_manager_path) },
+        name = "copilot",
+        trace = "messages",
+        root_dir = vim.loop.cwd(),
+        autostart = true,
+        on_init = function(_, _)
+          vim.schedule(M.buf_attach_copilot)
+          vim.schedule(register_autocmd)
+        end,
+        on_attach = function()
+          vim.schedule_wrap(params.on_attach())
+        end,
+      }, params.server_opts_overrides or {})
+  end
 end
 
 M.start = function(params)
