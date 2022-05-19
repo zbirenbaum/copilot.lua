@@ -38,6 +38,7 @@ M.get_completion_params = function()
       indentsize = vim.bo.shiftwidth,
       position = format_pos(),
       path = vim.api.nvim_buf_get_name(0),
+      uri = 'file://' .. vim.api.nvim_buf_get_name(0),
     },
   }
   return params
