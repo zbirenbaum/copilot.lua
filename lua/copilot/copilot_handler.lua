@@ -1,5 +1,6 @@
 local M = { params = {} }
 local util = require("copilot.util")
+local panel_handlers = require("copilot.api").panel
 
 M.buf_attach_copilot = function()
   if vim.tbl_contains(M.params.ft_disable, vim.bo.filetype) then return end
@@ -32,15 +33,26 @@ M.merge_server_opts = function (params)
       vim.schedule(M.buf_attach_copilot)
       vim.schedule(register_autocmd)
     end,
-    on_attach = function()
-      vim.schedule_wrap(params.on_attach())
-    end,
+    settings = {
+      advanced = {
+        listCount = 5, -- #completions for panel
+        inlineSuggestCount = 1, -- #completions for getCompletions
+      }
+    },
+    handlers = {
+      ["PanelSolution"] = panel_handlers.save,
+      -- ["PanelSolutionsDone"] = function() end,
+    }
   }, params.server_opts_overrides or {})
 end
 
 M.start = function(params)
   M.params = params
-  vim.lsp.start_client(M.merge_server_opts(params))
+  local client_id = vim.lsp.start_client(M.merge_server_opts(params))
+  if params.startup_function then
+    -- params.startup_function()
+  end
+  return client_id
 end
 
 return M

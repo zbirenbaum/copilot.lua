@@ -7,7 +7,7 @@ local defaults = {
   end,
   startup_function = function()
     vim.defer_fn(function()
-      require("copilot_cmp")._on_insert_enter()
+      require("copilot_cmp").setup(require("copilot.api").panel.cmp)
     end, 100)
   end,
   server_opts_overrides = {},
