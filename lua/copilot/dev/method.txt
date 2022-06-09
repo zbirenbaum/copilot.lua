@@ -1,2 +1,0 @@
-1. Start copilot client and attach to buffer
-2. 

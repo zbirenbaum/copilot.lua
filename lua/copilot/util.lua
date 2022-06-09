@@ -71,40 +71,5 @@ M.get_copilot_path = function(plugin_path)
   end
 end
 
-local function completion_handler(_, result, _, _)
-  print(vim.inspect(result))
-end
-
-M.register_completion_handler = function(handler)
-  if handler then
-    completion_handler = handler
-  end
-end
-
-M.send_completion_request = function()
-  local params = M.get_completion_params()
-  vim.lsp.buf_request(0, "getCompletions", params, completion_handler)
-end
-
-M.create_request_autocmd = function(group)
-  vim.api.nvim_create_autocmd(group, { callback = M.send_completion_request })
-end
-
-M.panel = function (_, solutions, c)
-  print(#solutions)
-  print(c)
-end
-
-M.panel_done = function (a, b, c)
-  print(a)
-  print(b)
-  print(c)
-end
-
-M.get_panel = function (callback, notify_reply_callback)
-  local client = M.find_copilot_client()
-  local params = M.get_completion_params("getPanelCompletions")
-  client.rpc.request("getPanelCompletions", params, callback, notify_reply_callback)
-end
 
 return M
