@@ -1,6 +1,5 @@
 local M = { params = {} }
 local util = require("copilot.util")
-local panel_handlers = require("copilot.api").panel
 
 M.buf_attach_copilot = function()
   if vim.tbl_contains(M.params.ft_disable, vim.bo.filetype) then return end
@@ -18,7 +17,7 @@ local register_autocmd = function ()
       callback = vim.schedule_wrap(M.buf_attach_copilot),
     })
   else
-    vim.cmd("au BufEnter * lua vim.schedule(function() require('copilot.copilot_handler').buf_attach_copilot() end)")
+    vim.cmd("au BufEnter * lua vim.schedule(function() require('copilot.client').buf_attach_copilot() end)")
   end
 end
 
@@ -33,26 +32,23 @@ M.merge_server_opts = function (params)
       vim.schedule(M.buf_attach_copilot)
       vim.schedule(register_autocmd)
     end,
+    handlers = params.panel and {
+      ["PanelSolution"] = params.panel.save_completions,
+    },
     settings = {
       advanced = {
-        listCount = 5, -- #completions for panel
+        listCount = 10, -- #completions for panel
         inlineSuggestCount = 1, -- #completions for getCompletions
       }
     },
-    handlers = {
-      ["PanelSolution"] = panel_handlers.save,
-      -- ["PanelSolutionsDone"] = function() end,
-    }
   }, params.server_opts_overrides or {})
 end
 
 M.start = function(params)
   M.params = params
   local client_id = vim.lsp.start_client(M.merge_server_opts(params))
-  if params.startup_function then
-    -- params.startup_function()
-  end
-  return client_id
+  local client = vim.lsp.get_client_by_id(client_id)
+  return { client_id, client }
 end
 
 return M
