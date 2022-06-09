@@ -4,6 +4,10 @@ This plugin is the pure lua replacement for https://github.com/github/copilot.vi
 
 While using copilot.vim, for the first time since I started using neovim my laptop began to overheat. Additionally, I found the large chunks of ghost text moving around my code, and interfering with my existing cmp ghost text disturbing. As lua is far more efficient and makes things easier to integrate with modern plugins, this repository was created.
 
+### Quick Annoucement (If you are a first time user just scroll to the next header, you can ignore this):
+There is a dev branch called new_req with a metric ton of new features, as well as even more that I am working on but are still half implemented.
+Virtually everything is extremely buggy at the moment, but it is deceptively close to being ready, as the issues are mostly connected. There is some really cool stuff like configurable numbers of entries from copilot, settings for controlling the types and accuracy of completions copilot will retrieve, as well as a module for printing panel suggestions to buffers. If anyone wants to help me out with stabilizing it before merging to master over the next few days it would probably be a super easy way to get in a few PR's, and would be a great help!
+
 ## (IMPORTANT) Usage:
 
 Note that this plugin will only start up the copilot server. The current usage of this is via https://github.com/zbirenbaum/copilot-cmp, which turns copilot suggestions into menu entries for cmp, and displays the full text body in a float, similar to how documentation would appear, off to the side.
