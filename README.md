@@ -4,10 +4,6 @@ This plugin is the pure lua replacement for https://github.com/github/copilot.vi
 
 While using copilot.vim, for the first time since I started using neovim my laptop began to overheat. Additionally, I found the large chunks of ghost text moving around my code, and interfering with my existing cmp ghost text disturbing. As lua is far more efficient and makes things easier to integrate with modern plugins, this repository was created.
 
-### Quick Annoucement (If you are a first time user just scroll to the next header, you can ignore this):
-There is a dev branch called new_req with a metric ton of new features, as well as even more that I am working on but are still half implemented.
-Virtually everything is extremely buggy at the moment, but it is deceptively close to being ready, as the issues are mostly connected. There is some really cool stuff like configurable numbers of entries from copilot, settings for controlling the types and accuracy of completions copilot will retrieve, as well as a module for printing panel suggestions to buffers. If anyone wants to help me out with stabilizing it before merging to master over the next few days it would probably be a super easy way to get in a few PR's, and would be a great help!
-
 ## (IMPORTANT) Usage:
 
 Note that this plugin will only start up the copilot server. The current usage of this is via https://github.com/zbirenbaum/copilot-cmp, which turns copilot suggestions into menu entries for cmp, and displays the full text body in a float, similar to how documentation would appear, off to the side.
@@ -71,9 +67,34 @@ The following is the default configuration:
 
 ```lua
 {
-  plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer", 
+  cmp_method = "getCompletionsCycling",
+  ft_disable = {},
+  plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
   server_opts_overrides = {},
-  ft_disable = {}
+}
+```
+
+##### cmp_method
+
+Set this to `"getPanelCompletions"` to try out the new features. Most notably, completions in the cmp menu are no longer limited to 3 recommendations. There will be a way to limit this soon, but currently about 5 to 10 typically show. This will also enable a new command `:CopilotPanel` in which you can preview a ton of completion options as in copilot.vim. This feature is very new, and you can expect bugs as I am still ironing out some aspects of it, such as ranking completions by their provided scores, so expect even more functionality soon. Once this is made stable, it will very likely be the new default.
+
+Example:
+
+```lua
+require("copilot").setup {
+  cmp_method = "getPanelCompletions",
+}
+```
+
+##### ft_disable
+
+Prevents copilot from attaching to buffers with specific filetypes.
+
+Example:
+
+```lua
+require("copilot").setup {
+  ft_disable = { "markdown", "terraform" },
 }
 ```
 
@@ -98,17 +119,5 @@ Example:
 ```lua
 require("copilot").setup {
   server_opts_overrides = { trace = "verbose", name = "AI" },
-}
-```
-
-##### ft_disable
-
-Prevents copilot from attaching to buffers with specific filetypes.
-
-Example:
-
-```lua
-require("copilot").setup {
-  ft_disable = { "markdown", "terraform" },
 }
 ```
