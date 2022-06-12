@@ -84,7 +84,6 @@ function panel.create (opts)
     vim.api.nvim_create_autocmd("WinClosed", {
       pattern = { tostring(print_buf.win) },
       callback = function ()
-        print("CopilotPanel closed")
         handler.remove_handler_callback("PanelSolution", "pb")
         handler.remove_handler_callback("PanelSolutionsDone", "pb")
       end,

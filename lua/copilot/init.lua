@@ -1,13 +1,12 @@
 local M = { client_info = nil }
 local client = require("copilot.client")
-local util = require("copilot.util")
 local lsp = vim.lsp
 
 local defaults = {
   plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
   server_opts_overrides = {},
   ft_disable = {},
-  cmp_method = "getPanelCompletions"
+  cmp_method = "getCompletionsCycling"
 }
 
 local config_handler = function(opts)
