@@ -7,8 +7,10 @@ local lsp_handlers = {
 
 local handlers = {
   ["PanelSolution"] = function (_, result, _, config)
-    for _, callback in pairs(config.callbacks) do
-      callback(result)
+    if result then
+      for _, callback in pairs(config.callbacks) do
+        callback(result)
+      end
     end
   end,
   ["PanelSolutionsDone"] = function (_, _, _, config)
