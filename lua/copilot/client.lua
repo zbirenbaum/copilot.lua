@@ -32,13 +32,10 @@ M.merge_server_opts = function (params)
       vim.schedule(M.buf_attach_copilot)
       vim.schedule(register_autocmd)
     end,
-    handlers = params.panel and {
-      ["PanelSolution"] = params.panel.save_completions,
-    },
     settings = {
       advanced = {
         listCount = 10, -- #completions for panel
-        inlineSuggestCount = 1, -- #completions for getCompletions
+        inlineSuggestCount = 3, -- #completions for getCompletions
       }
     },
   }, params.server_opts_overrides or {})
