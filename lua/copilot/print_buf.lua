@@ -31,6 +31,7 @@ M.clear = function ()
 end
 
 M.print = function (input)
+  vim.api.nvim_buf_set_option(M.buf, "filetype", vim.bo.filetype)
   if not cnl_valid() or not buf_valid() then M.validate()
   elseif not win_valid() then M.show() end
   if type(input) == "table" then input = vim.inspect(input) end
@@ -98,7 +99,7 @@ M.new = function ()
   a.nvim_win_set_buf(M.win, M.buf)
 end
 
-M.init = function ()
+M.init = function (opts)
   M.initialized = true
   local linked_win = a.nvim_get_current_win()
   M.print_buf =  M.exists() or M.new()
