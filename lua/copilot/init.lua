@@ -7,7 +7,7 @@ local defaults = {
   plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
   server_opts_overrides = {},
   ft_disable = {},
-  cmp_method = "getCompletionsCycling"
+  cmp_method = "getPanelCompletions"
 }
 
 local config_handler = function(opts)
@@ -31,7 +31,6 @@ M.setup = function(opts)
   vim.schedule(function () client.start(user_config) end)
   if user_config.cmp_method == "getPanelCompletions" then
     local panel = require("copilot.panel").create()
-    print(vim.inspect(panel))
     require("copilot_cmp").setup(panel.complete)
   elseif user_config.cmp_method == "getCompletionsCycling" then
     require("copilot_cmp").setup()
