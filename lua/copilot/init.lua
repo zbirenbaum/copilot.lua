@@ -30,7 +30,9 @@ M.setup = function(opts)
   local user_config = config_handler(opts)
   vim.schedule(function () client.start(user_config) end)
   if user_config.cmp_method == "getPanelCompletions" then
-    require("copilot.api").panel.create()
+    local panel = require("copilot.panel").create()
+    print(vim.inspect(panel))
+    require("copilot_cmp").setup(panel.complete)
   elseif user_config.cmp_method == "getCompletionsCycling" then
     require("copilot_cmp").setup()
   end

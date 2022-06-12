@@ -41,7 +41,6 @@ M.get_completion_params = function(method)
   local uri = vim.uri_from_bufnr(0)
   local params = {
     options = vim.empty_dict(),
-    panelId = (method == "getPanelCompletions") and "fuckyou" or nil,
     doc = {
       source = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n"),
       relativePath = rel_path,
