@@ -3,7 +3,7 @@ local client = require("copilot.client")
 
 local defaults = {
   cmp = {
-    method = "getPanelCompletions",
+    method = "getCompletionsCycling",
     max_results = 5,
   },
   extensions = {
@@ -32,8 +32,10 @@ end
 
 M.setup = function(opts)
   local user_config = config_handler(opts)
-  require("copilot.extensions.panel").create()
-  vim.schedule(function () client.start(user_config) end)
+  vim.schedule(function ()
+    client.start(user_config)
+    require("copilot.extensions.panel").create()
+  end)
 end
 
 return M

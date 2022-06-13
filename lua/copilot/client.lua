@@ -25,9 +25,7 @@ M.merge_server_opts = function (params)
     on_init = function(_, _)
       vim.schedule(M.buf_attach_copilot)
       vim.schedule(register_autocmd)
-      vim.schedule(function ()
-        params.extensions[params.cmp.method](params.cmp.max_results)
-      end)
+      params.extensions[params.cmp.method](params.cmp.max_results)
     end,
     settings = params.settings,
   }, params.server_opts_overrides or {})
