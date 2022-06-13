@@ -1,7 +1,7 @@
 local util = require("copilot.util")
 local format = require("copilot_cmp.format")
 local handler = require("copilot.handlers")
-local print_buf = require("copilot.print_panel")
+local print_buf = require("copilot.extensions.print_panel")
 
 local panel = {
   method = "getPanelCompletions",
@@ -53,8 +53,8 @@ panel.complete = vim.schedule_wrap(function (_, params, callback)
   callback({ isIncomplete = true })
 end)
 
-function panel.create (opts)
-  panel = vim.tbl_deep_extend("force", panel, opts or {})
+function panel.create (max_results)
+  panel.max_results = max_results or 10
   panel.buf = type(panel.uri) == "number" or vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(panel.buf, "copilot:///" .. tostring(panel.buf))
   panel.uri = vim.uri_from_bufnr(panel.buf)
@@ -90,6 +90,7 @@ function panel.create (opts)
       once = true,
     })
   end, {})
+
   return panel
 end
 

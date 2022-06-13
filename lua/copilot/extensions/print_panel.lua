@@ -13,6 +13,11 @@ print_buf.set_text = function (full_text)
   vim.api.nvim_buf_set_var(print_buf.bufnr, "modifiable", 1)
   vim.api.nvim_buf_set_var(print_buf.bufnr, "readonly", 0)
   vim.api.nvim_buf_set_lines(print_buf.bufnr, 0, #full_text, false,full_text)
+
+  vim.schedule(function()
+    vim.api.nvim_buf_set_var(print_buf.bufnr, "modifiable", 0)
+    vim.api.nvim_buf_set_var(print_buf.bufnr, "readonly", 1)
+  end)
 end
 
 local create_win = function ()
