@@ -5,7 +5,7 @@ M.buf_attach_copilot = function()
   if vim.tbl_contains(M.params.ft_disable, vim.bo.filetype) then return end
   if not vim.bo.buflisted or not vim.bo.buftype == "" then return end
   local client_id = util.find_copilot_client()
-  local buf_clients = vim.lsp.buf_get_clients(0)
+  local buf_clients = vim.lsp.get_active_clients(0)
   if not buf_clients and client_id or (client_id and not buf_clients[client_id]) then
     vim.lsp.buf_attach_client(0, client_id)
   end
