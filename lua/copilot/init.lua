@@ -3,12 +3,12 @@ local client = require("copilot.client")
 
 local defaults = {
   cmp = {
-    method = "getCompletionsCycling",
+    method = "getPanelCompletions",
     max_results = 5,
   },
   extensions = {
     getPanelCompletions = function ()
-      require("copilot_cmp").setup(require("copilot.panel").complete)
+      require("copilot_cmp").setup(require("copilot.extensions.panel").complete)
     end,
     getCompletionsCycling = function ()
       require("copilot_cmp").setup()
