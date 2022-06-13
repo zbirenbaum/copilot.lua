@@ -1,14 +1,5 @@
 local M = {}
 
-local oldprint = print
-local print = function (args)
-  if type(args) == "table" then
-    oldprint(vim.inspect(args))
-  else
-    oldprint(args)
-  end
-end
-
 local format_pos = function()
   local pos = vim.api.nvim_win_get_cursor(0)
   return { character = pos[2], line = pos[1] - 1 }
@@ -20,23 +11,10 @@ local get_relfile = function()
 end
 
 M.find_copilot_client = function()
-  for _, client in ipairs(vim.lsp.get_active_clients()) do
-    if client.name == "copilot" then
-      return client.id
-    end
-  end
+  vim.lsp.get_active_clients({name="copilot"})
 end
 
-M.find_copilot_buf_client = function()
-  for _, client in ipairs(vim.lsp.buf_get_clients(0)) do
-    if client.name == "copilot" then
-      return client.id
-    end
-  end
-end
-
-
-M.get_completion_params = function(method)
+M.get_completion_params = function()
   local rel_path = get_relfile()
   local uri = vim.uri_from_bufnr(0)
   local params = {
