@@ -27,7 +27,6 @@ M.merge_server_opts = function (params)
       vim.schedule(M.buf_attach_copilot)
       vim.schedule(register_autocmd)
     end,
-    settings = params.settings,
   }, params.server_opts_overrides or {})
 end
 

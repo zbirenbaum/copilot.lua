@@ -66,24 +66,42 @@ use {
 The following is the default configuration:
 
 ```lua
-{
-  cmp_method = "getCompletionsCycling",
-  ft_disable = {},
-  plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
-  server_opts_overrides = {},
-}
+cmp = {
+  enabled = true,
+  method = "getPanelCompletions",
+},
+panel = { -- no config options yet
+  enabled = true,
+},
+ft_disable = {},
+plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
+server_opts_overrides = {},
 ```
 
-##### cmp_method
+##### cmp
 
-Set this to `"getPanelCompletions"` to try out the new features. Most notably, completions in the cmp menu are no longer limited to 3 recommendations. There will be a way to limit this soon, but currently about 5 to 10 typically show. This will also enable a new command `:CopilotPanel` in which you can preview a ton of completion options as in copilot.vim. This feature is very new, and you can expect bugs as I am still ironing out some aspects of it, such as ranking completions by their provided scores, so expect even more functionality soon. Once this is made stable, it will very likely be the new default.
-
-Example:
+Set the enabled field to false if you do not wish to see copilot recommendations in nvim-cmp. Set the `method` field to `getCompletionsCycling` if you are having issues. getPanelCompletions seems to work just as quickly, and does not limit completions in the cmp menu to 3 recommendations. getPanelCompletions also allows for the comparator provided in copilot-cmp to not just place all copilot completions on top, but also sort them by the `score` copilot assigns them, which is not provided by getCompletionsCycling. Example:
 
 ```lua
 require("copilot").setup {
-  cmp_method = "getPanelCompletions",
-}
+  cmp = {
+    enabled = true,
+    method = "getCompletionsCycling",
+  }
+},
+```
+
+##### panel
+
+Enabling panel creates the `CopilotPanel` command, which allows you to preview completions in a split window. Navigating to the split window allows you to jump between them and see each one. (<CR> to accept completion not yet implemented, coming soon)
+
+```lua
+require("copilot").setup {
+  panel = {
+    enabled = false,
+  }
+},
+
 ```
 
 ##### ft_disable
@@ -112,12 +130,20 @@ require("copilot").setup {
 
 ##### server_opts_overrides
 
-Override copilot lsp client settings. See `:h vim.lsp.start_client` for list of options.
+Override copilot lsp client settings. The `settings` field is where you can set the values of the options defined in SettingsOpts.md. These options are specific to the copilot lsp and can be used to customize its behavior. Ensure that the name field is not overriden as is is used for efficiency reasons in numerous checks to verify copilot is actually running. See `:h vim.lsp.start_client` for list of options.
 
 Example:
 
 ```lua
 require("copilot").setup {
-  server_opts_overrides = { trace = "verbose", name = "AI" },
-}
+  server_opts_overrides = {
+    trace = "verbose",
+    settings = {
+      advanced = {
+        listCount = 10, -- #completions for panel
+        inlineSuggestCount = 3, -- #completions for getCompletions
+      }
+    },
+  }
+},
 ```
