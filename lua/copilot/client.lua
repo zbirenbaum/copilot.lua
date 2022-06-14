@@ -13,6 +13,7 @@ M.buf_attach_copilot = function()
   local client = vim.lsp.get_active_clients({name=name})[1]
   if client and not vim.lsp.buf_is_attached(0, client.id) then
     vim.lsp.buf_attach_client(0, client.id)
+    client.completion_function = M.params.extensions
   end
 end
 
@@ -25,7 +26,6 @@ M.merge_server_opts = function (params)
     on_init = function(_, _)
       vim.schedule(M.buf_attach_copilot)
       vim.schedule(register_autocmd)
-      params.extensions[params.cmp.method](params.cmp.max_results)
     end,
     settings = params.settings,
   }, params.server_opts_overrides or {})
