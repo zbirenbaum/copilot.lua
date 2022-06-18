@@ -39,14 +39,9 @@ M.get_completion_params = function()
   return params
 end
 
-M.get_copilot_path = function(plugin_path)
-  for _, loc in ipairs({ "/opt", "/start", "" }) do
-    local copilot_path = plugin_path .. loc .. "/copilot.lua/copilot/index.js"
-    if vim.fn.filereadable(copilot_path) ~= 0 then
-      return copilot_path
-    end
-  end
+M.get_copilot_path = function()
+  local plugin_path = vim.api.nvim_exec("echo expand('<sfile>:p:h:h:h')", true)
+  return plugin_path .. "/copilot/index.js"
 end
-
 
 return M
