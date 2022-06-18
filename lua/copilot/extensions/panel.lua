@@ -10,7 +10,7 @@ local panel = {
 
 panel.send_request = function (opts)
   opts = opts or {}
-  local client = opts.client or not vim.tbl_isempty(panel.client) and panel.client or vim.lsp.get_active_clients({name="copilot"})[1]
+  local client = opts.client or not vim.tbl_isempty(panel.client) and panel.client or util.get_copilot_client()
   if not panel.client then return end
   local completion_params = util.get_completion_params()
   completion_params.panelId = opts.uri or panel.uri
@@ -19,7 +19,7 @@ panel.send_request = function (opts)
 end
 
 function panel.create (client, max_results)
-  panel.client = client or vim.lsp.get_active_clients({name="copilot"})[1]
+  panel.client = client or util.get_copilot_client()
   if not panel.client then print("Error, copilot not running") end
   panel.max_results = max_results or 10
   panel.buf = type(panel.uri) == "number" or vim.api.nvim_create_buf(false, true)

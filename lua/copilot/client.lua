@@ -9,11 +9,9 @@ end
 M.buf_attach_copilot = function()
   if vim.tbl_contains(M.params.ft_disable, vim.bo.filetype) then return end
   if not vim.bo.buflisted or not vim.bo.buftype == "" then return end
-  local name = M.params.server_opts_overrides.name or "copilot"
-  
   -- The filter param to get_active_clients() can be used on Neovim 0.8 and later.
   for _, client in pairs(vim.lsp.get_active_clients()) do
-    if client.name == name and not vim.lsp.buf_is_attached(0, client.id) then
+    if client.name == "copilot" and not vim.lsp.buf_is_attached(0, client.id) then
       vim.lsp.buf_attach_client(0, client.id)
       client.completion_function = M.params.extensions
     end
