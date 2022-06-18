@@ -10,8 +10,11 @@ local get_relfile = function()
   return file
 end
 
-M.find_copilot_client = function()
-  vim.lsp.get_active_clients({name="copilot"})
+M.get_copilot_client = function()
+ --  vim.lsp.get_active_clients({name="copilot"}) -- not in 0.7
+  for _, client in pairs(vim.lsp.get_active_clients()) do
+    if client.name == "copilot" then return client end
+  end
 end
 
 M.get_completion_params = function()

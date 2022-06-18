@@ -1,4 +1,5 @@
 local a = vim.api
+local cmd = vim.cmd
 local wo = vim.wo
 local handler = require("copilot.handlers")
 local format = require("copilot_cmp.format")
@@ -91,7 +92,7 @@ print_panel.select = function (id)
   if not id then id = print_panel.current or 1 end
   local selection = print_panel.entries[id]
   a.nvim_win_set_cursor(print_panel.win, {selection.linenr, 0})
-  vim.cmd("normal zt")
+  cmd("normal zt")
   print_panel.current = id
   print_panel.linenr = selection.linenr
 end
