@@ -1,23 +1,22 @@
 local a = vim.api
-local cmd = vim.cmd
 local wo = vim.wo
 local handler = require("copilot.handlers")
 local format = require("copilot_cmp.format")
 local print_panel = {}
 
 local set_text = function (full_text)
-  vim.api.nvim_buf_set_lines(print_panel.bufnr, 0, -1, false, {})
-  vim.api.nvim_buf_set_option(print_panel.bufnr, "modifiable", true)
-  vim.api.nvim_buf_set_option(print_panel.bufnr, "readonly", false)
+  a.nvim_buf_set_option(print_panel.bufnr, "modifiable", true)
+  a.nvim_buf_set_option(print_panel.bufnr, "readonly", false)
+  a.nvim_buf_set_lines(print_panel.bufnr, 0, -1, false, {})
 
   local ft = vim.bo.filetype
-  vim.api.nvim_buf_call(print_panel.bufnr, function ()
+  a.nvim_buf_call(print_panel.bufnr, function ()
     vim.bo.filetype = ft
   end)
-  vim.api.nvim_buf_set_lines(print_panel.bufnr, 0, #full_text, false,full_text)
+  a.nvim_buf_set_lines(print_panel.bufnr, 0, #full_text, false,full_text)
 
-  vim.api.nvim_buf_set_option(print_panel.bufnr, "modifiable", false)
-  vim.api.nvim_buf_set_option(print_panel.bufnr, "readonly", true)
+  a.nvim_buf_set_option(print_panel.bufnr, "modifiable", false)
+  a.nvim_buf_set_option(print_panel.bufnr, "readonly", true)
 end
 
 local format_entry = function (number, str)
@@ -77,7 +76,7 @@ end
 
 local create_win = function ()
   local oldwin = a.nvim_get_current_win() --record current window
-  local height = tostring(math.floor(vim.api.nvim_win_get_height(oldwin)*.3))
+  local height = tostring(math.floor(a.nvim_win_get_height(oldwin)*.3))
   cmd(height .. "split")
   local win = a.nvim_get_current_win()
   wo.number = false
@@ -91,7 +90,7 @@ end
 print_panel.select = function (id)
   if not id then id = print_panel.current or 1 end
   local selection = print_panel.entries[id]
-  vim.api.nvim_win_set_cursor(print_panel.win, {selection.linenr, 0})
+  a.nvim_win_set_cursor(print_panel.win, {selection.linenr, 0})
   vim.cmd("normal zt")
   print_panel.current = id
   print_panel.linenr = selection.linenr
@@ -117,11 +116,11 @@ print_panel.set_options = function ()
     buf = { bufhidden = "wipe", buftype = "nofile", swapfile = false, buflisted = false, }
   }
   for option, value in pairs(opts.win) do
-    vim.api.nvim_win_set_option(print_panel.win, option, value)
+    a.nvim_win_set_option(print_panel.win, option, value)
   end
 
   for option, value in pairs(opts.buf) do
-    vim.api.nvim_buf_set_option(print_panel.bufnr, option, value)
+    a.nvim_buf_set_option(print_panel.bufnr, option, value)
   end
 end
 
@@ -146,19 +145,20 @@ print_panel.create = function (bufnr)
     })
   end
 
-  local id = vim.api.nvim_create_augroup("Panel", {
+  local id = a.nvim_create_augroup("Panel", {
     clear = false
   })
 
-  vim.api.nvim_create_autocmd({"TextChangedI", "TextChangedP"}, {
+  a.nvim_create_autocmd({"TextChangedI", "TextChangedP"}, {
     callback = function ()
-      print("callback")
-      require("copilot.extensions.panel").send_request()
+      require("copilot.extensions.panel").send_request({
+        uri = "pb"
+      })
     end,
     group = id,
   })
 
-  vim.api.nvim_create_autocmd("WinEnter", {
+  a.nvim_create_autocmd("WinEnter", {
     callback = function ()
       if print_panel.entries then
         print_panel.select(print_panel.entries.current)
@@ -168,11 +168,11 @@ print_panel.create = function (bufnr)
     group = id,
   })
 
-  vim.api.nvim_create_autocmd("WinClosed", {
+  a.nvim_create_autocmd("WinClosed", {
     pattern = { tostring(print_panel.win) },
     callback = function ()
       -- cleanup panel triggers
-      vim.api.nvim_create_augroup("Panel", { clear = true })
+      a.nvim_create_augroup("Panel", { clear = true })
       handler.remove_handler_callback("PanelSolution", "pb")
       handler.remove_handler_callback("PanelSolutionsDone", "pb")
     end,
