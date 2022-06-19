@@ -8,8 +8,13 @@ local lsp_handlers = {
 local handlers = {
   ["PanelSolution"] = function (_, result, _, config)
     if not result then return "err" end
-    if result.panelId then config.callbacks[result.panelId](result)
-    else for _, callback in pairs(config.callbacks) do callback() end end
+    if result.panelId and config.callbacks[result.panelId] then
+      config.callbacks[result.panelId](result)
+    elseif not config.callbacks[result.panelId] and result.panelId then
+      return
+    else
+      for _, callback in pairs(config.callbacks) do callback() end
+    end
   end,
 
   ["PanelSolutionsDone"] = function (_, _, _, config)
