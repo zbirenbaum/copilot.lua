@@ -88,6 +88,9 @@ local create_win = function ()
   return win
 end
 
+print_panel.insert = function ()
+  print(vim.inspect(print_panel.entries))
+end
 print_panel.select = function (id)
   if not id then id = print_panel.current or 1 end
   local selection = print_panel.entries[id]
@@ -136,11 +139,14 @@ print_panel.create = function (bufnr)
   local keymaps = {
     ["j"] = print_panel.next,
     ["k"] = print_panel.prev,
-    ["<CR>"] = print_panel.select,
+    ["<CR>"] = print_panel.insert,
   }
 
   for key, fn  in pairs(keymaps) do
-    vim.keymap.set("n", key, fn, {
+    vim.keymap.set("n", key, function ()
+      -- necessary because of possible bug
+      return vim.api.nvim_get_current_buf() == print_panel.bufnr and fn()
+    end, {
       silent = true,
       buffer = print_panel.bufnr,
     })
