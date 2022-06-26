@@ -4,7 +4,7 @@ local client = require("copilot.client")
 local defaults = {
   cmp = {
     enabled = true,
-    method = "getPanelCompletions",
+    method = "getCompletionsCycling",
   },
   panel = { -- no config options yet
     enabled = true,
