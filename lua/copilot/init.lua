@@ -5,6 +5,7 @@ local defaults = {
   cmp = {
     enabled = true,
     method = "getCompletionsCycling",
+    autofmt = true,
   },
   panel = { -- no config options yet
     enabled = true,
@@ -46,7 +47,7 @@ M.setup = function(opts)
     client.start(user_config)
 
     if user_config.cmp.enabled then
-      require("copilot_cmp").setup(user_config.cmp.method)
+      require("copilot_cmp").setup(user_config.cmp)
     end
 
     if user_config.panel.enabled then
