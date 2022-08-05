@@ -9,15 +9,15 @@ local set_text = function (full_text)
   a.nvim_buf_set_option(print_panel.bufnr, "modifiable", true)
   a.nvim_buf_set_option(print_panel.bufnr, "readonly", false)
   a.nvim_buf_set_lines(print_panel.bufnr, 0, -1, false, {})
-
   local ft = vim.bo.filetype
   a.nvim_buf_call(print_panel.bufnr, function ()
     vim.bo.filetype = ft
   end)
   a.nvim_buf_set_lines(print_panel.bufnr, 0, #full_text, false,full_text)
-
-  a.nvim_buf_set_option(print_panel.bufnr, "modifiable", false)
-  a.nvim_buf_set_option(print_panel.bufnr, "readonly", true)
+  vim.schedule(function()
+    a.nvim_buf_set_option(print_panel.bufnr, "modifiable", false)
+    a.nvim_buf_set_option(print_panel.bufnr, "readonly", true)
+  end)
 end
 
 local format_entry = function (number, str)
