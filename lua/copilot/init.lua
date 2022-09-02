@@ -1,6 +1,5 @@
 local M = { client_info = nil }
 local client = require("copilot.client")
-
 local defaults = {
   cmp = {
     enabled = true,

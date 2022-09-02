@@ -1,4 +1,5 @@
 local M = { params = {} }
+local util = require("copilot.util")
 
 local register_autocmd = function ()
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
@@ -20,11 +21,15 @@ end
 
 M.merge_server_opts = function (params)
   return vim.tbl_deep_extend("force", {
-    cmd = { "node", require("copilot.util").get_copilot_path(params.plugin_manager_path) },
-    name = "copilot",
+    cmd = {'node', require("copilot.util").get_copilot_path(params.plugin_manager_path)},
+    cmd_cwd = vim.fn.expand('~'),
     root_dir = vim.loop.cwd(),
+    name = "copilot",
     autostart = true,
-    on_init = function(_, _)
+    single_file_support = true,
+    on_init = function(client, initialize_result)
+      local notify = client.rpc.notify
+      notify('setEditorInfo', util.get_editor_info())
       vim.schedule(M.buf_attach_copilot)
       vim.schedule(register_autocmd)
     end,
