@@ -1,5 +1,35 @@
 local M = {}
 
+-- keep for debugging reasons
+M.get_editor_info = function ()
+  local info = vim.empty_dict()
+  info.editorInfo = vim.empty_dict()
+  info.editorInfo.name = 'Neovim'
+  info.editorInfo.version = '0.8.0-dev-809-g7dde6d4fd'
+  info.editorPluginInfo = vim.empty_dict()
+  info.editorPluginInfo.name = 'copilot.vim'
+  info.editorPluginInfo.version = '1.5.3'
+  return info
+end
+
+-- keep for debugging reasons
+local get_capabilities = function ()
+  return {
+    capabilities = {
+      textDocumentSync = {
+        change = 2,
+        openClose = true
+      },
+      workspace = {
+        workspaceFolders = {
+          changeNotifications = true,
+          supported = true
+        }
+      }
+    }
+  }
+end
+
 local format_pos = function()
   local pos = vim.api.nvim_win_get_cursor(0)
   return { character = pos[2], line = pos[1] - 1 }
@@ -17,16 +47,28 @@ M.get_copilot_client = function()
   end
 end
 
-M.get_completion_params = function()
+local normalize_ft = function (ft)
+  local resolve_map = {
+    text = "plaintext",
+    javascriptreact = "javascript",
+    jsx = "javascript",
+    typescriptreact = "typescript",
+  }
+  if not ft or ft == '' then
+    return 'plaintext'
+  end
+  return resolve_map[ft] or ft
+end
+
+M.get_completion_params = function(opts)
   local rel_path = get_relfile()
   local uri = vim.uri_from_bufnr(0)
   local params = {
-    options = vim.empty_dict(),
     doc = {
       source = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n"),
       relativePath = rel_path,
-      languageId = vim.bo.filetype,
-      insertSpaces = true,
+      languageId = normalize_ft(vim.api.nvim_buf_get_option(0, 'filetype')),
+      insertSpaces = vim.o.expandtab,
       tabsize = vim.bo.shiftwidth,
       indentsize = vim.bo.shiftwidth,
       position = format_pos(),
@@ -39,6 +81,8 @@ M.get_completion_params = function()
       uri = uri,
     }
   }
+  params.position = params.doc.position
+  if opts then params.doc = vim.tbl_deep_extend('keep', params.doc, opts) end
   return params
 end
 
