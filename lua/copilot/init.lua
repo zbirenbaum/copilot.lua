@@ -10,6 +10,7 @@ local defaults = {
     enabled = true,
   },
   ft_disable = {},
+  copilot_node_command = "node",
   plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
   server_opts_overrides = {},
 }

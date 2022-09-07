@@ -74,6 +74,7 @@ panel = { -- no config options yet
   enabled = true,
 },
 ft_disable = {},
+copilot_node_command = 'node', -- Node version must be < 18
 plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
 server_opts_overrides = {},
 ```
@@ -125,6 +126,16 @@ Example:
 require("copilot").setup {
   ft_disable = { "markdown", "terraform" },
 }
+```
+
+##### copilot_node_command
+
+Use this field to provide the path to a specific node version such as one installed by nvm. Node version must be < 18. The LTS version of node (16.17.0) is recommended.
+
+Example:
+
+```lua
+copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v16.14.2/bin/node", -- Node version must be < 18
 ```
 
 ##### plugin_manager_path
