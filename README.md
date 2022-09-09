@@ -66,10 +66,6 @@ use {
 The following is the default configuration:
 
 ```lua
-cmp = {
-  enabled = true,
-  method = "getCompletionsCycling",
-},
 panel = { -- no config options yet
   enabled = true,
 },
@@ -77,30 +73,6 @@ ft_disable = {},
 copilot_node_command = 'node', -- Node version must be < 18
 plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
 server_opts_overrides = {},
-```
-
-##### cmp
-
-Set the enabled field to false if you do not wish to see copilot recommendations in nvim-cmp. Set the `method` field to `getCompletionsCycling` if you are having issues. getPanelCompletions previously worked just as quickly, and did not limit completions in the cmp menu to 3 recommendations, but has become so slow completions do not seem to appear due to recent changes from Microsoft. getPanelCompletions also allows for the comparator provided in copilot-cmp to not just place all copilot completions on top, but also sort them by the `score` copilot assigns them, which is not provided by getCompletionsCycling. Example:
-
-```lua
--- Recommended
-require("copilot").setup {
-  cmp = {
-    enabled = true,
-    method = "getCompletionsCycling",
-  }
-},
-```
-
-```lua
--- Not Currently Recommended
-require("copilot").setup {
-  cmp = {
-    enabled = true,
-    method = "getPanelCompletions",
-  }
-},
 ```
 
 ##### panel
