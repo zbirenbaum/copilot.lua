@@ -1,11 +1,6 @@
 local M = { client_info = nil }
 local client = require("copilot.client")
 local defaults = {
-  cmp = {
-    enabled = true,
-    method = "getCompletionsCycling",
-    autofmt = true,
-  },
   panel = { -- no config options yet
     enabled = true,
   },
@@ -45,10 +40,6 @@ M.setup = function(opts)
   local user_config = config_handler(opts)
   vim.schedule(function ()
     client.start(user_config)
-
-    if user_config.cmp.enabled then
-      require("copilot_cmp").setup(user_config.cmp)
-    end
 
     if user_config.panel.enabled then
       create_cmds(user_config)
