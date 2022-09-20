@@ -1,5 +1,11 @@
 local M = {}
 
+local id = 0
+function M.get_next_id()
+  id = id + 1
+  return id
+end
+
 -- keep for debugging reasons
 M.get_editor_info = function ()
   local info = vim.empty_dict()
@@ -93,6 +99,15 @@ M.get_copilot_path = function(plugin_path)
       return copilot_path
     end
   end
+end
+
+M.auth = function ()
+  local c = M.get_copilot_client()
+  if not c then
+    print("[Copilot] not running yet!")
+    return
+  end
+  require("copilot.auth").setup(c)
 end
 
 

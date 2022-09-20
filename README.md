@@ -12,13 +12,9 @@ On its own, this plugin will do nothing. You must either use https://github.com/
 
 ## Install
 
-### Preliminary Steps
+### Authentication
 
-Currently, you must have had the original copilot.vim installed and set up at some point, as the authentication steps you do during its setup create files in ~/.config/github-copilot which copilot.lua must read from to function. Fairly soon, copilot.lua will be able to perform this authentication step on its own, but as the plugin is in early stages, this has not yet been fully implemented.
-
-Install copilot.vim with `use {"github/copilot.vim"}`, `:PackerSync`, restart, and run `:Copilot` to be prompted for the necessary setup steps.
-
-After the setup steps are complete for copilot.vim, ensure that ~/.config/github-copilot has files in it, and then you are free to uninstall copilot.vim and proceed to the following steps.
+Once copilot is started, run `:CopilotAuth` to start the authentication process.
 
 ### Setup
 
