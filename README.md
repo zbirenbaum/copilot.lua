@@ -76,7 +76,17 @@ suggestion = {
    dismiss = "<C-]>",
   },
 },
-ft_disable = {},
+filetypes = {
+  yaml = false,
+  markdown = false,
+  help = false,
+  gitcommit = false,
+  gitrebase = false,
+  hgcommit = false,
+  svn = false,
+  cvs = false,
+  ["."] = false,
+},
 copilot_node_command = 'node', -- Node version must be < 18
 plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
 server_opts_overrides = {},
@@ -95,7 +105,7 @@ require("copilot").setup {
 
 ```
 
-#### suggestion
+##### suggestion
 
 When `auto_trigger` is `true`, copilot starts suggesting as soon as you enter insert mode. 
 
@@ -118,15 +128,30 @@ end)
 ```
 
 
-##### ft_disable
+##### filetypes
 
-Prevents copilot from attaching to buffers with specific filetypes.
+Specify filetypes for attaching copilot.
 
 Example:
 
 ```lua
 require("copilot").setup {
-  ft_disable = { "markdown", "terraform" },
+  filetypes = {
+    markdown = true, -- overrides default
+    terraform = false, -- disallow specific filetype
+  },
+}
+```
+
+If you add `"*"` as a filetype, the default configuration for `filetypes` won't be used anymore. e.g.
+
+```lua
+require("copilot").setup {
+  filetypes = {
+    javascript = true, -- allow specific filetype
+    typescript = true, -- allow specific filetype
+    ["*"] = false, -- disable for all other filetypes and ignore default `filetypes`
+  },
 }
 ```
 
