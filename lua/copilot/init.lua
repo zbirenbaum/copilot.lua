@@ -1,8 +1,21 @@
 local M = { client_info = nil }
 local client = require("copilot.client")
+local highlight = require("copilot.highlight")
+local suggestion = require("copilot.suggestion")
 local defaults = {
   panel = { -- no config options yet
     enabled = true,
+  },
+  suggestion = {
+    enabled = true,
+    auto_trigger = false,
+    debounce = 75,
+    keymap = {
+      accept = "<M-l>",
+      next = "<M-]>",
+      prev = "<M-[>",
+      dismiss = "<C-]>",
+    }
   },
   ft_disable = {},
   copilot_node_command = "node",
@@ -49,7 +62,12 @@ M.setup = function(opts)
       create_cmds(user_config)
     end
 
+    if user_config.suggestion.enabled then
+      suggestion.setup(user_config.suggestion)
+    end
   end)
+
+  highlight.setup()
 end
 
 return M
