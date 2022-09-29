@@ -36,16 +36,6 @@ local get_capabilities = function ()
   }
 end
 
-local format_pos = function()
-  local pos = vim.api.nvim_win_get_cursor(0)
-  return { character = pos[2], line = pos[1] - 1 }
-end
-
-local get_relfile = function()
-  local file, _ = string.gsub(vim.api.nvim_buf_get_name(0), vim.loop.cwd() .. "/", "")
-  return file
-end
-
 M.get_copilot_client = function()
  --  vim.lsp.get_active_clients({name="copilot"}) -- not in 0.7
   for _, client in pairs(vim.lsp.get_active_clients()) do
@@ -53,43 +43,79 @@ M.get_copilot_client = function()
   end
 end
 
-local normalize_ft = function (ft)
-  local resolve_map = {
-    text = "plaintext",
-    javascriptreact = "javascript",
-    jsx = "javascript",
-    typescriptreact = "typescript",
-  }
-  if not ft or ft == '' then
-    return 'plaintext'
+local eol_by_fileformat = {
+  unix = "\n",
+  dos = "\r\n",
+  mac = "\r",
+}
+
+local language_normalization_map = {
+  text = "plaintext",
+  javascriptreact = "javascript",
+  jsx = "javascript",
+  typescriptreact = "typescript",
+}
+
+local function language_for_file_type(filetype)
+  -- trim filetypes after dot, e.g. `yaml.gotexttmpl` -> `yaml`
+  local ft = string.gsub(filetype, "%..*", "")
+  if not ft or ft == "" then
+    ft = "text"
   end
-  return resolve_map[ft] or ft
+  return language_normalization_map[ft] or ft
 end
 
-M.get_completion_params = function(opts)
-  local rel_path = get_relfile()
-  local uri = vim.uri_from_bufnr(0)
-  local params = {
-    doc = {
-      source = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n"),
-      relativePath = rel_path,
-      languageId = normalize_ft(vim.api.nvim_buf_get_option(0, 'filetype')),
-      insertSpaces = vim.o.expandtab,
-      tabsize = vim.bo.shiftwidth,
-      indentsize = vim.bo.shiftwidth,
-      position = format_pos(),
-      path = vim.api.nvim_buf_get_name(0),
-      uri = uri,
-    },
-    textDocument = {
-      languageId = vim.bo.filetype,
-      relativePath = rel_path,
-      uri = uri,
-    }
+local function relative_path(absolute)
+  local relative = vim.fn.fnamemodify(absolute, ":.")
+  if string.sub(relative, 0, 1) == "/" then
+    return vim.fn.fnamemodify(absolute, ":t")
+  end
+  return relative
+end
+
+function M.get_doc()
+  local absolute = vim.api.nvim_buf_get_name(0)
+  local params = vim.lsp.util.make_position_params(0, "utf-16") -- copilot server uses utf-16
+  local doc = {
+    languageId = language_for_file_type(vim.bo.filetype),
+    path = absolute,
+    uri = params.textDocument.uri,
+    relativePath = relative_path(absolute),
+    insertSpaces = vim.o.expandtab,
+    tabSize = vim.fn.shiftwidth(),
+    indentSize = vim.fn.shiftwidth(),
+    position = params.position,
+  }
+
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  if vim.bo.endofline and vim.bo.fixendofline then
+    table.insert(lines, "")
+  end
+  doc.source = table.concat(lines, eol_by_fileformat[vim.bo.fileformat] or "\n")
+
+  return doc
+end
+
+function M.get_doc_params(overrides)
+  overrides = overrides or {}
+
+  local params = vim.tbl_extend("keep", {
+    doc = vim.tbl_extend("force", M.get_doc(), overrides.doc or {}),
+  }, overrides)
+  params.textDocument = {
+    uri = params.doc.uri,
+    languageId = params.doc.languageId,
+    relativePath = params.doc.relativePath,
   }
   params.position = params.doc.position
-  if opts then params.doc = vim.tbl_deep_extend('keep', params.doc, opts) end
+
   return params
+end
+
+-- use `require("copilot.util").get_doc_params()`
+---@deprecated
+M.get_completion_params = function(opts)
+  return M.get_doc_params(opts)
 end
 
 M.get_copilot_path = function(plugin_path)
