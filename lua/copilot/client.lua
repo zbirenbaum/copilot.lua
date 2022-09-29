@@ -1,5 +1,7 @@
-local M = { params = {} }
+local api = require("copilot.api")
 local util = require("copilot.util")
+
+local M = { params = {} }
 
 local register_autocmd = function ()
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
@@ -36,6 +38,11 @@ M.merge_server_opts = function (params)
       vim.schedule(M.buf_attach_copilot)
       vim.schedule(register_autocmd)
     end,
+    handlers = {
+      -- PanelSolution = api.handlers.PanelSolution,
+      -- PanelSolutionsDone = api.handlers.PanelSolutionsDone,
+      statusNotification = api.handlers.statusNotification,
+    }
   }, params.server_opts_overrides or {})
 end
 

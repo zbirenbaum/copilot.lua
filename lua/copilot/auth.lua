@@ -1,10 +1,10 @@
-local util = require("copilot.util")
+local api = require("copilot.api")
 
 local M = {}
 
 function M.setup(client)
   local function echo(message)
-    vim.cmd('echom "[Copilot] ' .. message .. '"')
+    vim.cmd('echom "[Copilot] ' .. tostring(message):gsub('"', '\\"') .. '"')
   end
 
   local function copy_to_clipboard(str)
@@ -16,20 +16,6 @@ function M.setup(client)
       str,
       str
     ))
-  end
-
-  local request = function(method, params)
-    local co = coroutine.running()
-    params.id = util.get_next_id()
-    client.rpc.request(method, params, function(err, data)
-      coroutine.resume(co, err, data)
-    end)
-    local err, data = coroutine.yield()
-    if err then
-      echo("Error: " .. err)
-      error(err)
-    end
-    return data
   end
 
   local function open_signin_popup(code, url)
@@ -68,16 +54,24 @@ function M.setup(client)
   end
 
   local initiate_setup = coroutine.wrap(function()
-    local data = request("checkStatus", {})
-
-    if data.user then
-      echo("Authenticated as GitHub user: " .. data.user)
+    local cserr, status = api.check_status(client)
+    if cserr then
+      echo(cserr)
       return
     end
 
-    local signin = request("signInInitiate", {})
+    if status.user then
+      echo("Authenticated as GitHub user: " .. status.user)
+      return
+    end
 
-    if not signin.verificationUri then
+    local siierr, signin = api.sign_in_initiate(client)
+    if siierr then
+      echo(siierr)
+      return
+    end
+
+    if not signin.verificationUri or not signin.userCode then
       echo("Failed to setup")
       return
     end
@@ -86,9 +80,14 @@ function M.setup(client)
 
     local close_signin_popup = open_signin_popup(signin.userCode, signin.verificationUri)
 
-    local confirm = request("signInConfirm", { userCode = signin.userCode })
+    local sicerr, confirm = api.sign_in_confirm(client, { userCode = signin.userCode })
 
     close_signin_popup()
+
+    if sicerr then
+      echo(sicerr)
+      return
+    end
 
     if string.lower(confirm.status) ~= "ok" then
       echo("Authentication failure: " .. confirm.error.message)
