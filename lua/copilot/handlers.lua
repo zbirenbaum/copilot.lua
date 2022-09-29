@@ -1,47 +1,24 @@
-local lsp_handlers = {
-  callbacks = {
-    ["PanelSolution"] = {},
-    ["PanelSolutionsDone"] = {}
-  },
-}
+local api = require("copilot.api")
 
-local handlers = {
-  ["PanelSolution"] = function (_, result, _, config)
-    if not result then return "err" end
-    if result.panelId and config.callbacks[result.panelId] then
-      config.callbacks[result.panelId](result)
-    elseif not config.callbacks[result.panelId] and result.panelId then
-      return
-    else
-      for _, callback in pairs(config.callbacks) do callback() end
-    end
-  end,
+---@deprecated
+local handlers = {}
 
-  ["PanelSolutionsDone"] = function (_, _, _, config)
-    for _, callback in pairs(config.callbacks) do
-      callback()
-    end
-  end
-}
-
-lsp_handlers.add_handler_callback = function (handler, fn_name, fn)
-  lsp_handlers.callbacks[handler][fn_name] = fn
-  vim.lsp.handlers[handler] = vim.lsp.with(handlers[handler], {
-    callbacks = lsp_handlers.callbacks[handler]
-  })
+-- use `require("copilot.api").register_panel_handlers()`
+---@deprecated
+handlers.add_handler_callback = function(method, panelId, fn)
+  api.panel.callback[method][panelId] = fn
 end
 
-lsp_handlers.remove_handler_callback = function (handler, fn_name)
-  lsp_handlers.callbacks[handler][fn_name] = nil
-  vim.lsp.handlers[handler] = vim.lsp.with(handlers[handler], {
-    callbacks = lsp_handlers.callbacks[handler]
-  })
+-- use `require("copilot.api").unregister_panel_handlers()`
+---@deprecated
+handlers.remove_handler_callback = function(method, panelId)
+  api.panel.callback[method][panelId] = nil
 end
 
-lsp_handlers.remove_all_name = function (fn_name)
-  for handler, _ in pairs(lsp_handlers.callbacks) do
-    lsp_handlers.remove_handler_callback(handler, fn_name)
-  end
+-- use `require("copilot.api").unregister_panel_handlers()`
+---@deprecated
+handlers.remove_all_name = function(panelId)
+  api.unregister_panel_handlers(panelId)
 end
 
-return lsp_handlers
+return handlers

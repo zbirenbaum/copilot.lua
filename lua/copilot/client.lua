@@ -39,8 +39,8 @@ M.merge_server_opts = function (params)
       vim.schedule(register_autocmd)
     end,
     handlers = {
-      -- PanelSolution = api.handlers.PanelSolution,
-      -- PanelSolutionsDone = api.handlers.PanelSolutionsDone,
+      PanelSolution = api.handlers.PanelSolution,
+      PanelSolutionsDone = api.handlers.PanelSolutionsDone,
       statusNotification = api.handlers.statusNotification,
     }
   }, params.server_opts_overrides or {})
