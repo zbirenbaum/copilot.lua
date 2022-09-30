@@ -28,6 +28,13 @@ function mod.notify(client, method, params)
   return client.notify(method, params)
 end
 
+---@alias copilot_set_editor_info_params { editorInfo: { name: string, version: string }, editorPluginInfo: { name: string, version: string } }
+
+---@param params copilot_set_editor_info_params
+function mod.set_editor_info(client, params)
+  return mod.notify(client, "setEditorInfo", params)
+end
+
 ---@alias copilot_check_status_data { user?: string }
 
 ---@return any|nil err
