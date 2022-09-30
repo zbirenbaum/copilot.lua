@@ -65,6 +65,17 @@ The following is the default configuration:
 panel = { -- no config options yet
   enabled = true,
 },
+suggestion = {
+  enabled = true,
+  auto_trigger = false,
+  debounce = 75,
+  keymap = {
+   accept = "<M-l>",
+   next = "<M-]>",
+   prev = "<M-[>",
+   dismiss = "<C-]>",
+  },
+},
 ft_disable = {},
 copilot_node_command = 'node', -- Node version must be < 18
 plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
@@ -83,6 +94,29 @@ require("copilot").setup {
 },
 
 ```
+
+#### suggestion
+
+When `auto_trigger` is `true`, copilot starts suggesting as soon as you enter insert mode. 
+
+When `auto_trigger` is `false`, use the `next` or `prev` keymap to trigger copilot suggestion.
+
+To toggle auto trigger for the current buffer, use `require("copilot.suggestion").toggle_auto_trigger()`.
+
+Copilot suggestion is automatically hidden when `popupmenu-completion` is open. In case you use a custom
+menu for completion, you can set the `copilot_suggestion_hidden` buffer variable to `true` to have the
+same behavior. For example, with `nvim-cmp`:
+
+```lua
+cmp.event:on("menu_opened", function()
+  vim.b.copilot_suggestion_hidden = true
+end)
+
+cmp.event:on("menu_closed", function()
+  vim.b.copilot_suggestion_hidden = false
+end)
+```
+
 
 ##### ft_disable
 
