@@ -1,12 +1,13 @@
 local api = require("copilot.api")
+local u = require("copilot.util")
 
 local M = {}
 
-function M.setup(client)
-  local function echo(message)
-    vim.cmd('echom "[Copilot] ' .. tostring(message):gsub('"', '\\"') .. '"')
-  end
+local function echo(message)
+  vim.cmd('echom "[Copilot] ' .. tostring(message):gsub('"', '\\"') .. '"')
+end
 
+function M.setup(client)
   local function copy_to_clipboard(str)
     vim.cmd(string.format(
       [[
@@ -98,6 +99,33 @@ function M.setup(client)
   end)
 
   initiate_setup()
+end
+
+function M.signout()
+  local client = u.get_copilot_client()
+  if not client then
+    return
+  end
+
+  api.check_status(
+    client,
+    { options = { localChecksOnly = true } },
+    ---@param status copilot_check_status_data
+    function(err, status)
+      if err then
+        echo(err)
+        return
+      end
+
+      if status.user then
+        echo("Signed out as GitHub user " .. status.user)
+      else
+        echo("Not signed in")
+      end
+
+      api.sign_out(client, function() end)
+    end
+  )
 end
 
 local function find_config_path()
