@@ -32,9 +32,8 @@ M.merge_server_opts = function (params)
     name = "copilot",
     autostart = true,
     single_file_support = true,
-    on_init = function(client, initialize_result)
-      local notify = client.rpc.notify
-      notify('setEditorInfo', util.get_editor_info())
+    on_init = function(client)
+      api.set_editor_info(client, util.get_editor_info())
       vim.schedule(M.buf_attach_copilot)
       vim.schedule(register_autocmd)
     end,
