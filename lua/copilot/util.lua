@@ -6,15 +6,18 @@ function M.get_next_id()
   return id
 end
 
--- keep for debugging reasons
-M.get_editor_info = function ()
-  local info = vim.empty_dict()
-  info.editorInfo = vim.empty_dict()
-  info.editorInfo.name = 'Neovim'
-  info.editorInfo.version = '0.8.0-dev-809-g7dde6d4fd'
-  info.editorPluginInfo = vim.empty_dict()
-  info.editorPluginInfo.name = 'copilot.vim'
-  info.editorPluginInfo.version = '1.5.3'
+---@return copilot_set_editor_info_params
+function M.get_editor_info()
+  local info = {
+    editorInfo = {
+      name = "Neovim",
+      version = string.match(vim.fn.execute("version"), "NVIM v(%S+)"),
+    },
+    editorPluginInfo = {
+      name = "copilot.vim",
+      version = '1.5.3',
+    },
+  }
   return info
 end
 
