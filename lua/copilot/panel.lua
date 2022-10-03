@@ -1,10 +1,10 @@
 local api = require("copilot.api")
+local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
 
 local mod = {}
 
-local marker_prefix = "<!-- copilot "
-local marker_suffix = " -->"
+local marker_prefix = "[copilot] "
 
 local panel_uri_prefix = "copilot://"
 
@@ -13,6 +13,8 @@ local panel = {
   setup_done = false,
 
   augroup = "copilot.panel",
+  ns_id = vim.api.nvim_create_namespace("copilot.panel"),
+
   req_number = 0,
   panel_uri = nil,
   -- `req_number:panel_uri`
@@ -86,7 +88,8 @@ function panel:clear()
   self.state = { entries = {} }
 
   if self.bufnr and vim.api.nvim_buf_is_valid(self.bufnr) then
-    vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, {})
+    vim.api.nvim_buf_clear_namespace(self.bufnr, self.ns_id, 0, -1)
+    vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, { "", "" })
   end
 
   return self
@@ -95,14 +98,21 @@ end
 function panel:refresh_header()
   local state = self.state
 
-  vim.api.nvim_buf_set_lines(self.bufnr, 0, 2, false, {
-    string.format(
-      "## Synthesizing %s/%s solutions (Duplicates hidden) [%s]",
-      state.received_count or "?",
-      state.expected_count or "?",
-      state.status or "..."
-    ),
-    "",
+  vim.api.nvim_buf_set_extmark(self.bufnr, self.ns_id, 0, 0, {
+    id = 1,
+    virt_text = {
+      {
+        string.format(
+          " Synthesizing %s/%s solutions (Duplicates hidden) [%s]",
+          state.received_count or "?",
+          state.expected_count or "?",
+          state.status or "..."
+        ),
+        hl_group.CopilotAnnotation,
+      },
+    },
+    virt_text_pos = "overlay",
+    hl_mode = "combine",
   })
 
   return self
@@ -116,19 +126,32 @@ function panel:add_entry(item)
 
   panel.state.entries[item.solutionId] = item
 
+  -- 0-indexed
+  local marker_linenr = vim.api.nvim_buf_line_count(self.bufnr)
+
   local lines = {
-    string.format("%s:id:%s: :score:%s:%s", marker_prefix, item.solutionId, item.score, marker_suffix),
+    "", -- marker line
   }
 
-  lines[#lines + 1] = string.format("```%s", self.filetype)
+  lines[#lines + 1] = ""
   for _, line in ipairs(get_display_lines(item.displayText)) do
     lines[#lines + 1] = line
   end
-  lines[#lines + 1] = "```"
-
   lines[#lines + 1] = ""
 
   vim.api.nvim_buf_set_lines(self.bufnr, -1, -1, false, lines)
+
+  vim.api.nvim_buf_set_extmark(self.bufnr, self.ns_id, marker_linenr, 0, {
+    id = marker_linenr + 1,
+    virt_text = {
+      {
+        string.format("%s:id:%s: :score:%s:", marker_prefix, item.solutionId, item.score),
+        hl_group.CopilotAnnotation,
+      },
+    },
+    virt_text_pos = "overlay",
+    hl_mode = "combine",
+  })
 
   return self
 end
@@ -147,36 +170,25 @@ function panel:get_entry(dir)
     return nil
   end
 
-  local marker_line, marker_linenr
+  local extmarks = vim.api.nvim_buf_get_extmarks(
+    self.bufnr,
+    self.ns_id,
+    { math.max(0, linenr - 1 + dir), 0 },
+    dir > 0 and -1 or 0,
+    { details = true, limit = 1 }
+  )
 
-  if dir > 0 then
-    local lines = vim.api.nvim_buf_get_lines(self.bufnr, linenr, -1, false)
-
-    for i = 1, #lines, 1 do
-      if lines[i]:find(marker_prefix, 0, true) then
-        marker_line = lines[i]
-        marker_linenr = linenr + i
-        break
-      end
-    end
-  else
-    local lines = vim.api.nvim_buf_get_lines(self.bufnr, 0, linenr, false)
-    for i = #lines + dir, 1, -1 do
-      if lines[i]:find(marker_prefix, 0, true) then
-        marker_line = lines[i]
-        marker_linenr = i
-        break
-      end
-    end
+  if not extmarks[1] then
+    return nil
   end
 
-  if not marker_line then
-    return
+  local id = string.match(extmarks[1][4].virt_text[1][1], ":id:(.-):")
+
+  if not id then
+    return nil
   end
 
-  local id = string.match(marker_line, ":id:(.-):", #marker_prefix)
-
-  return self:get_entry(id), marker_linenr
+  return self:get_entry(id), extmarks[1][2] + 1
 end
 
 ---@param dir -1|0|1
@@ -267,7 +279,7 @@ function panel:ensure_bufnr()
     bufhidden = "hide",
     buflisted = false,
     buftype = "nofile",
-    filetype = "markdown",
+    filetype = self.filetype,
     modifiable = false,
     readonly = true,
     swapfile = false,
