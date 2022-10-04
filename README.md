@@ -64,6 +64,14 @@ The following is the default configuration:
 ```lua
 panel = { -- no config options yet
   enabled = true,
+  auto_refresh = false,
+  keymap = {
+    jump_prev = "[[",
+    jump_next = "]]",
+    accept = "<CR>",
+    refresh = "gr",
+    open = "<M-CR>"
+  },
 },
 suggestion = {
   enabled = true,
@@ -84,16 +92,10 @@ server_opts_overrides = {},
 
 ##### panel
 
-Enabling panel creates the `CopilotPanel` command, which allows you to preview completions in a split window. Navigating to the split window allows you to jump between them and see each one. (<CR> to accept completion not yet implemented, coming soon)
+Enabling panel creates the `CopilotPanel` command, which allows you to preview suggestions
+in a split window.
 
-```lua
-require("copilot").setup {
-  panel = {
-    enabled = false,
-  }
-},
-
-```
+If `auto_refresh` is `true`, the suggestions are refreshed as you type in the buffer.
 
 #### suggestion
 
