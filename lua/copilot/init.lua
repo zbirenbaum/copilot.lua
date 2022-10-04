@@ -1,10 +1,19 @@
 local M = { client_info = nil }
 local client = require("copilot.client")
 local highlight = require("copilot.highlight")
+local panel = require("copilot.panel")
 local suggestion = require("copilot.suggestion")
 local defaults = {
-  panel = { -- no config options yet
+  panel = {
     enabled = true,
+    auto_refresh = false,
+    keymap = {
+      jump_prev = "[[",
+      jump_next = "]]",
+      accept = "<CR>",
+      refresh = "gr",
+      open = "<M-CR>"
+    }
   },
   suggestion = {
     enabled = true,
@@ -38,9 +47,7 @@ local create_cmds = function (_)
   end, {})
 
   vim.api.nvim_create_user_command("CopilotPanel", function ()
-    local panel = require("copilot.extensions.panel").create()
-    panel.send_request()
-    require("copilot.extensions.print_panel").create(panel.buf)
+    require("copilot.panel").open()
   end, {})
 
   vim.api.nvim_create_user_command("CopilotAuth", function()
@@ -59,6 +66,7 @@ M.setup = function(opts)
     client.start(user_config)
 
     if user_config.panel.enabled then
+      panel.setup(user_config.panel)
       create_cmds(user_config)
     end
 
