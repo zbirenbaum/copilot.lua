@@ -9,8 +9,50 @@ local register_autocmd = function ()
   })
 end
 
+local default_filetypes = {
+  yaml = false,
+  markdown = false,
+  help = false,
+  gitcommit = false,
+  gitrebase = false,
+  hgcommit = false,
+  svn = false,
+  cvs = false,
+  ["."] = false,
+}
+
+local function is_ft_disabled(ft)
+  --- for backward compatibility
+  if M.params.ft_disable and vim.tbl_contains(M.params.ft_disable, ft) then
+    return true
+  end
+
+  if M.params.filetypes[ft] ~= nil then
+    return not M.params.filetypes[ft]
+  end
+
+  local short_ft = string.gsub(ft, "%..*", "")
+
+  if M.params.filetypes[short_ft] ~= nil then
+    return not M.params.filetypes[short_ft]
+  end
+
+  if M.params.filetypes['*'] ~= nil then
+    return not M.params.filetypes['*']
+  end
+
+  if default_filetypes[short_ft] ~= nil then
+    return not default_filetypes[short_ft]
+  end
+
+  return false
+end
+
 M.buf_attach_copilot = function()
-  if vim.tbl_contains(M.params.ft_disable, vim.bo.filetype) then return end
+  if is_ft_disabled(vim.bo.filetype) then
+    return
+  end
+
   if not vim.bo.buflisted or not vim.bo.buftype == "" then return end
   -- The filter param to get_active_clients() can be used on Neovim 0.8 and later.
   for _, client in pairs(vim.lsp.get_active_clients()) do

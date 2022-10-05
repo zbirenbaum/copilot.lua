@@ -26,7 +26,8 @@ local defaults = {
       dismiss = "<C-]>",
     }
   },
-  ft_disable = {},
+  ft_disable = nil,
+  filetypes = {},
   copilot_node_command = "node",
   plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
   server_opts_overrides = {},
