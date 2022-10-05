@@ -64,6 +64,15 @@ function mod.sign_in_confirm(client, params, callback)
   return mod.request(client, "signInConfirm", params, callback)
 end
 
+---@alias copilot_get_version_data { version: string }
+
+---@return any|nil err
+---@return copilot_get_version_data data
+---@return table ctx
+function mod.get_version(client, callback)
+  return mod.request(client, "getVersion", {}, callback)
+end
+
 ---@alias copilot_notify_accepted_params { uuid: string }
 
 ---@param params copilot_notify_accepted_params
