@@ -16,5 +16,7 @@ jobs:
         id: update_file
         uses: TheLastProject/keep-remote-file-locally-up-to-date-action@v1
         with:
+          git_user: 'GitHub Actions'
+          git_email: 'github-actions[bot]@users.noreply.github.com'
           url: https://raw.githubusercontent.com/github/copilot.vim/release/copilot/dist/agent.js
           file_in_repo: copilot/dist/agent.js
