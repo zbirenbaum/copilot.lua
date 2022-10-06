@@ -35,13 +35,19 @@ function mod.set_editor_info(client, params)
   return mod.notify(client, "setEditorInfo", params)
 end
 
+---@alias copilot_check_status_params { options?: { localChecksOnly?: boolean } }
 ---@alias copilot_check_status_data { user?: string }
 
+---@param params? copilot_check_status_params
 ---@return any|nil err
 ---@return copilot_check_status_data data
 ---@return table ctx
-function mod.check_status(client, callback)
-  return mod.request(client, "checkStatus", {}, callback)
+function mod.check_status(client, params, callback)
+  if type(params) == "function" then
+    callback = params
+    params = {}
+  end
+  return mod.request(client, "checkStatus", params or {}, callback)
 end
 
 ---@alias copilot_sign_in_initiate_data { verificationUri?: string, userCode?: string }
@@ -62,6 +68,10 @@ end
 ---@return table ctx
 function mod.sign_in_confirm(client, params, callback)
   return mod.request(client, "signInConfirm", params, callback)
+end
+
+function mod.sign_out(client, callback)
+  return mod.request(client, "signOut", {}, callback)
 end
 
 ---@alias copilot_get_version_data { version: string }
