@@ -48,11 +48,13 @@ local create_cmds = function (_)
   end, {})
 
   vim.api.nvim_create_user_command("CopilotPanel", function ()
-    require("copilot.panel").open()
+    vim.deprecate("':CopilotPanel'", "':Copilot panel'", "in future", "copilot.lua")
+    vim.cmd("Copilot panel")
   end, {})
 
   vim.api.nvim_create_user_command("CopilotAuth", function()
-    require("copilot.util").auth()
+    vim.deprecate("':CopilotAuth'", "':Copilot auth'", "in future", "copilot.lua")
+    vim.cmd("Copilot auth")
   end, {})
 end
 
