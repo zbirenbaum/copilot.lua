@@ -21,6 +21,17 @@ function M.get_editor_info()
   return info
 end
 
+local copilot_lua_version = nil
+function M.get_copilot_lua_version()
+  if not copilot_lua_version then
+    local plugin_version_ok, plugin_version = pcall(function()
+      return vim.fn.systemlist("git rev-parse HEAD")[1]
+    end)
+    copilot_lua_version = plugin_version_ok and plugin_version or "dev"
+  end
+  return copilot_lua_version
+end
+
 -- keep for debugging reasons
 local get_capabilities = function ()
   return {
