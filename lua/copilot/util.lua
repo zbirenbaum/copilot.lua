@@ -46,6 +46,11 @@ M.get_copilot_client = function()
   end
 end
 
+function M.is_attached(client)
+  client = client or M.get_copilot_client()
+  return client and vim.lsp.buf_is_attached(0, client.id) or false
+end
+
 local eol_by_fileformat = {
   unix = "\n",
   dos = "\r\n",
