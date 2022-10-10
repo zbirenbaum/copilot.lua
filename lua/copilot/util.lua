@@ -21,6 +21,17 @@ function M.get_editor_info()
   return info
 end
 
+local copilot_lua_version = nil
+function M.get_copilot_lua_version()
+  if not copilot_lua_version then
+    local plugin_version_ok, plugin_version = pcall(function()
+      return vim.fn.systemlist("git rev-parse HEAD")[1]
+    end)
+    copilot_lua_version = plugin_version_ok and plugin_version or "dev"
+  end
+  return copilot_lua_version
+end
+
 -- keep for debugging reasons
 local get_capabilities = function ()
   return {
@@ -44,6 +55,11 @@ M.get_copilot_client = function()
   for _, client in pairs(vim.lsp.get_active_clients()) do
     if client.name == "copilot" then return client end
   end
+end
+
+function M.is_attached(client)
+  client = client or M.get_copilot_client()
+  return client and vim.lsp.buf_is_attached(0, client.id) or false
 end
 
 local eol_by_fileformat = {
