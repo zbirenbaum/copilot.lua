@@ -101,6 +101,15 @@ function M.setup(client)
   initiate_setup()
 end
 
+function M.signin()
+  local client = u.get_copilot_client()
+  if not client then
+    return
+  end
+
+  M.setup(client)
+end
+
 function M.signout()
   local client = u.get_copilot_client()
   if not client then

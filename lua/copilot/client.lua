@@ -48,19 +48,36 @@ local function is_ft_disabled(ft)
   return false
 end
 
-M.buf_attach_copilot = function()
-  if is_ft_disabled(vim.bo.filetype) then
-    return
-  end
+---@param force? boolean
+function M.buf_attach(client, force)
+  if not force then
+    if is_ft_disabled(vim.bo.filetype) then
+      return
+    end
 
-  if not vim.bo.buflisted or not vim.bo.buftype == "" then return end
-  -- The filter param to get_active_clients() can be used on Neovim 0.8 and later.
-  for _, client in pairs(vim.lsp.get_active_clients()) do
-    if client.name == "copilot" and not vim.lsp.buf_is_attached(0, client.id) then
-      vim.lsp.buf_attach_client(0, client.id)
-      client.completion_function = M.params.extensions
+    if not vim.bo.buflisted or not vim.bo.buftype == "" then
+      return
     end
   end
+
+  client = client or util.get_copilot_client()
+  if client and not util.is_attached(client) then
+    vim.lsp.buf_attach_client(0, client.id)
+
+    ---@todo unknown property, remove this
+    client.completion_function = M.params.extensions
+  end
+end
+
+function M.buf_detach(client)
+  client = client or util.get_copilot_client()
+  if client and util.is_attached(client) then
+    vim.lsp.buf_detach_client(0, client.id)
+  end
+end
+
+M.buf_attach_copilot = function()
+  M.buf_attach()
 end
 
 M.merge_server_opts = function (params)
