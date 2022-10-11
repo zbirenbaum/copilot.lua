@@ -1,32 +1,41 @@
 # copilot.lua
 
-This plugin is the pure lua replacement for https://github.com/github/copilot.vim
+This plugin is the pure lua replacement for [github/copilot.vim](https://github.com/github/copilot.vim).
 
-While using copilot.vim, for the first time since I started using neovim my laptop began to overheat. Additionally, I found the large chunks of ghost text moving around my code, and interfering with my existing cmp ghost text disturbing. As lua is far more efficient and makes things easier to integrate with modern plugins, this repository was created.
+<details>
+<summary>Motivation behind `copilot.lua`</summary>
 
-## (IMPORTANT) Usage:
-
-Note that this plugin will only start up the copilot server. The current usage of this is via https://github.com/zbirenbaum/copilot-cmp, which turns copilot suggestions into menu entries for cmp, and displays the full text body in a float, similar to how documentation would appear, off to the side.
-
-On its own, this plugin will do nothing. You must either use https://github.com/zbirenbaum/copilot-cmp to make the server into a cmp source, or write your own plugin to interface with it, via the request and handler methods located in copilot.utils.lua
+While using `copilot.vim`, for the first time since I started using neovim my laptop began to overheat. Additionally,
+I found the large chunks of ghost text moving around my code, and interfering with my existing cmp ghost text disturbing.
+As lua is far more efficient and makes things easier to integrate with modern plugins, this repository was created.
+</details>
 
 ## Install
 
+Install the plugin with your preferred plugin manager.
+For example, with [packer.nvim](https://github.com/wbthomason/packer.nvim):
+
+```lua
+use { "zbirenbaum/copilot.lua" }
+```
+
 ### Authentication
 
-Once copilot is started, run `:CopilotAuth` to start the authentication process.
+Once copilot is started, run `:Copilot auth` to start the authentication process.
 
-### Setup
+## Setup and Configuration
 
-You have to run the `require("copilot").setup(options)` function in order to start Copilot. If no options are provided, the defaults are used.
+You have to run the `require("copilot").setup(options)` function in order to start Copilot.
+If no options are provided, the defaults are used.
 
-Because the copilot server takes some time to start up, I HIGHLY recommend that you load copilot after startup. This can be done in multiple ways, the best one will depend on your existing config and the speed of your machine:
+Because the copilot server takes some time to start up, It is recommend that you lazy load copilot.
+This can be done in multiple ways, the best one will depend on your existing config and the speed of your machine:
 
-1. On 'VimEnter' + Defer: (My preferred method, works well with fast configs)
+1. On `VimEnter` event + defer (preferred method, works well with fast configs):
 ```lua
 use {
   "zbirenbaum/copilot.lua",
-  event = {"VimEnter"},
+  event = "VimEnter",
   config = function()
     vim.defer_fn(function()
       require("copilot").setup()
@@ -34,80 +43,95 @@ use {
   end,
 }
 ```
-2. Load After Statusline + defer: (If option (1) causes statusline to flicker, try this)
+
+2. Load after statusline + defer (if option 1 causes statusline to flicker, try this):
 ```lua
 use {
   "zbirenbaum/copilot.lua",
-  after = 'feline.nvim', --whichever statusline plugin you use here
+  after = "feline.nvim", -- whichever statusline plugin you use here
   config = function ()
-    vim.defer_fn(function() require("copilot").setup() end, 100)
+    vim.defer_fn(function()
+      require("copilot").setup()
+    end, 100)
   end,
 }
 ```
-3. On 'InsertEnter': (The safest way to avoid statup lag. Note: Your copilot completions may take a moment to start showing up)
 
+3. On `InsertEnter` event (safest way to avoid statup lag):  
+Note: suggestions may take a moment to start showing up.
 ```lua
 use {
   "zbirenbaum/copilot.lua",
   event = "InsertEnter",
   config = function ()
-    vim.schedule(function() require("copilot").setup() end)
+    vim.schedule(function()
+      require("copilot").setup()
+    end)
   end,
 }
 ```
 
-
-#### Configuration
-
 The following is the default configuration:
 
 ```lua
-panel = { -- no config options yet
-  enabled = true,
-  auto_refresh = false,
-  keymap = {
-    jump_prev = "[[",
-    jump_next = "]]",
-    accept = "<CR>",
-    refresh = "gr",
-    open = "<M-CR>"
+require('copilot').setup({
+  panel = {
+    enabled = true,
+    auto_refresh = false,
+    keymap = {
+      jump_prev = "[[",
+      jump_next = "]]",
+      accept = "<CR>",
+      refresh = "gr",
+      open = "<M-CR>"
+    },
   },
-},
-suggestion = {
-  enabled = true,
-  auto_trigger = false,
-  debounce = 75,
-  keymap = {
-   accept = "<M-l>",
-   next = "<M-]>",
-   prev = "<M-[>",
-   dismiss = "<C-]>",
+  suggestion = {
+    enabled = true,
+    auto_trigger = false,
+    debounce = 75,
+    keymap = {
+     accept = "<M-l>",
+     next = "<M-]>",
+     prev = "<M-[>",
+     dismiss = "<C-]>",
+    },
   },
-},
-filetypes = {
-  yaml = false,
-  markdown = false,
-  help = false,
-  gitcommit = false,
-  gitrebase = false,
-  hgcommit = false,
-  svn = false,
-  cvs = false,
-  ["."] = false,
-},
-copilot_node_command = 'node', -- Node version must be < 18
-plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
-server_opts_overrides = {},
+  filetypes = {
+    yaml = false,
+    markdown = false,
+    help = false,
+    gitcommit = false,
+    gitrebase = false,
+    hgcommit = false,
+    svn = false,
+    cvs = false,
+    ["."] = false,
+  },
+  copilot_node_command = 'node', -- Node version must be < 18
+  plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
+  server_opts_overrides = {},
+})
 ```
 
-##### panel
+### panel
 
-Enabling panel creates the `CopilotPanel` command, which allows you to preview suggestions
-in a split window.
+Panel can be used to preview suggestions in a split window. You can run the
+`:Copilot panel` command to open it.
 
 If `auto_refresh` is `true`, the suggestions are refreshed as you type in the buffer.
 
-##### suggestion
+The `copilot.panel` module exposes the following functions:
+
+```lua
+require("copilot.panel").accept()
+require("copilot.panel").jump_next()
+require("copilot.panel").jump_prev()
+require("copilot.panel").open()
+require("copilot.panel").refresh()
+```
+
+### suggestion
 
 When `auto_trigger` is `true`, copilot starts suggesting as soon as you enter insert mode. 
 
@@ -129,8 +153,18 @@ cmp.event:on("menu_closed", function()
 end)
 ```
 
+The `copilot.suggestion` module exposes the following functions:
 
-##### filetypes
+```lua
+require("copilot.suggestion").is_visible()
+require("copilot.suggestion").accept()
+require("copilot.suggestion").next()
+require("copilot.suggestion").prev()
+require("copilot.suggestion").dismiss()
+require("copilot.suggestion").toggle_auto_trigger()
+```
+
+### filetypes
 
 Specify filetypes for attaching copilot.
 
@@ -157,7 +191,7 @@ require("copilot").setup {
 }
 ```
 
-##### copilot_node_command
+### copilot_node_command
 
 Use this field to provide the path to a specific node version such as one installed by nvm. Node version must be < 18. The LTS version of node (16.17.0) is recommended.
 
@@ -167,9 +201,9 @@ Example:
 copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v16.14.2/bin/node", -- Node version must be < 18
 ```
 
-##### plugin_manager_path
+### plugin_manager_path
 
-This is installation path of Packer, change this to the plugin manager installation path of your choice
+This is installation path of Packer, change this to the plugin manager installation path of your choice.
 
 Example:
 
@@ -179,9 +213,11 @@ require("copilot").setup {
 }
 ```
 
-##### server_opts_overrides
+### server_opts_overrides
 
-Override copilot lsp client settings. The `settings` field is where you can set the values of the options defined in SettingsOpts.md. These options are specific to the copilot lsp and can be used to customize its behavior. Ensure that the name field is not overriden as is is used for efficiency reasons in numerous checks to verify copilot is actually running. See `:h vim.lsp.start_client` for list of options.
+Override copilot lsp client settings. The `settings` field is where you can set the values of the options defined in [SettingsOpts.md](./SettingsOpts.md).
+These options are specific to the copilot lsp and can be used to customize its behavior. Ensure that the name field is not overriden as is is used for
+efficiency reasons in numerous checks to verify copilot is actually running. See `:h vim.lsp.start_client` for list of options.
 
 Example:
 
@@ -196,5 +232,15 @@ require("copilot").setup {
       }
     },
   }
-},
+}
 ```
+
+## Commands
+
+`copilot.lua` defines the `:Copilot` command that can perform various actions. It has completion support, so try it out.
+
+## Integrations
+
+The `copilot.api` module can be used to build integrations on top of `copilot.lua`.
+
+- [zbirenbaum/copilot-cmp](https://github.com/zbirenbaum/copilot-cmp): Integration with [`nvim-cmp`](https://github.com/hrsh7th/nvim-cmp).
