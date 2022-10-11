@@ -57,6 +57,65 @@ M.get_copilot_client = function()
   end
 end
 
+local internal_filetypes = {
+  yaml = false,
+  markdown = false,
+  help = false,
+  gitcommit = false,
+  gitrebase = false,
+  hgcommit = false,
+  svn = false,
+  cvs = false,
+  ["."] = false,
+}
+
+---@param ft string
+---@param filetypes table<string, boolean>
+---@return boolean ft_disabled
+---@return string? ft_disabled_reason
+local function is_ft_disabled(ft, filetypes)
+  if filetypes[ft] ~= nil then
+    return not filetypes[ft], string.format("'filetype' %s rejected by config filetypes[%s]", ft, ft)
+  end
+
+  local short_ft = string.gsub(ft, "%..*", "")
+
+  if filetypes[short_ft] ~= nil then
+    return not filetypes[short_ft], string.format("'filetype' %s rejected by config filetypes[%s]", ft, short_ft)
+  end
+
+  if filetypes["*"] ~= nil then
+    return not filetypes["*"], string.format("'filetype' %s rejected by config filetypes[%s]", ft, "*")
+  end
+
+  if internal_filetypes[short_ft] ~= nil then
+    return not internal_filetypes[short_ft], string.format("'filetype' %s rejected by internal_filetypes[%s]", ft, short_ft)
+  end
+
+  return false
+end
+
+---@param filetypes table<string, boolean>
+---@return boolean should_attach
+---@return string? no_attach_reason
+function M.should_attach(filetypes)
+  local ft_disabled, ft_disabled_reason = is_ft_disabled(vim.bo.filetype, filetypes)
+
+  if ft_disabled then
+    return not ft_disabled, ft_disabled_reason
+  end
+
+  if not vim.bo.buflisted then
+    return false, "buffer not 'buflisted'"
+  end
+
+  if not vim.bo.buftype == "" then
+    return false, "buffer 'buftype' is " .. vim.bo.buftype
+  end
+
+  return true
+end
+
 function M.is_attached(client)
   client = client or M.get_copilot_client()
   return client and vim.lsp.buf_is_attached(0, client.id) or false

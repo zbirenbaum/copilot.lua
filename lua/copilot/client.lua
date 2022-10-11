@@ -9,55 +9,10 @@ local register_autocmd = function ()
   })
 end
 
-local default_filetypes = {
-  yaml = false,
-  markdown = false,
-  help = false,
-  gitcommit = false,
-  gitrebase = false,
-  hgcommit = false,
-  svn = false,
-  cvs = false,
-  ["."] = false,
-}
-
-local function is_ft_disabled(ft)
-  --- for backward compatibility
-  if M.params.ft_disable and vim.tbl_contains(M.params.ft_disable, ft) then
-    return true
-  end
-
-  if M.params.filetypes[ft] ~= nil then
-    return not M.params.filetypes[ft]
-  end
-
-  local short_ft = string.gsub(ft, "%..*", "")
-
-  if M.params.filetypes[short_ft] ~= nil then
-    return not M.params.filetypes[short_ft]
-  end
-
-  if M.params.filetypes['*'] ~= nil then
-    return not M.params.filetypes['*']
-  end
-
-  if default_filetypes[short_ft] ~= nil then
-    return not default_filetypes[short_ft]
-  end
-
-  return false
-end
-
 ---@param force? boolean
 function M.buf_attach(client, force)
-  if not force then
-    if is_ft_disabled(vim.bo.filetype) then
-      return
-    end
-
-    if not vim.bo.buflisted or not vim.bo.buftype == "" then
-      return
-    end
+  if not force and not util.should_attach(M.params.filetypes) then
+    return
   end
 
   client = client or util.get_copilot_client()
@@ -106,6 +61,13 @@ end
 
 M.start = function(params)
   M.params = params
+  --- for backward compatibility
+  if M.params.ft_disable then
+    for _, disabled_ft in ipairs(M.params.ft_disable) do
+      M.params.filetypes[disabled_ft] = false
+    end
+  end
+
   vim.lsp.start_client(M.merge_server_opts(params))
 end
 
