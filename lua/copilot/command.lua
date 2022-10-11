@@ -34,45 +34,67 @@ function mod.version()
 end
 
 function mod.status()
-  local function on_output(err)
-    print("[Copilot] " .. err)
+  local lines = {}
+
+  local function add_line(line)
+    lines[#lines + 1] = { "[Copilot] " .. line .. "\n" }
+  end
+
+  local function flush_lines(last_line)
+    if last_line then
+      add_line(last_line)
+    end
+
+    vim.api.nvim_echo(lines, true, {})
   end
 
   local client = u.get_copilot_client()
   if not client then
-    on_output("Not running")
+    flush_lines("Not running")
     return
   end
 
-  coroutine.wrap(function()
-    ---@todo check startup error
+  add_line("Online")
 
+  coroutine.wrap(function()
     local cserr, status = a.check_status(client)
     if cserr then
-      on_output(cserr)
+      flush_lines(cserr)
       return
     end
 
-    ---@todo check enabled status
-
     if not status.user then
-      on_output("Not authenticated. Run ':Copilot auth'")
+      flush_lines("Not authenticated. Run ':Copilot auth'")
       return
+    end
+
+    local should_attach, no_attach_reason = u.should_attach(c.params.filetypes)
+    local is_attached = u.is_attached(client)
+    if is_attached then
+      if not should_attach then
+        add_line("Enabled manually (" .. no_attach_reason .. ")")
+      else
+        add_line("Enabled for " .. vim.bo.filetype)
+      end
+    elseif not is_attached then
+      if should_attach then
+        add_line("Disabled manually for " .. vim.bo.filetype)
+      else
+        add_line("Disabled (" .. no_attach_reason .. ")")
+      end
     end
 
     if string.lower(a.status.data.status) == "error" then
-      on_output(a.status.data.message)
-      return
+      add_line(a.status.data.message)
     end
 
-    on_output("Enabled and online")
+    flush_lines()
   end)()
 end
 
 ---@param opts? { force?: boolean }
 function mod.toggle(opts)
   opts = opts or {}
-  print(vim.inspect(opts))
 
   local client = u.get_copilot_client()
   if not client then
