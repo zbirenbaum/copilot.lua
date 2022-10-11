@@ -103,9 +103,23 @@ function mod.toggle(opts)
 
   if u.is_attached(client) then
     c.buf_detach(client)
-  else
-    c.buf_attach(client, opts.force)
+    return
   end
+
+  if not opts.force then
+    local should_attach, no_attach_reason = u.should_attach(c.params.filetypes)
+    if not should_attach then
+      vim.api.nvim_echo({
+        { "[Copilot] " .. no_attach_reason .. "\n" },
+        { "[Copilot] to force enable, run ':Copilot! toggle'" },
+      }, true, {})
+      return
+    end
+
+    opts.force = true
+  end
+
+  c.buf_attach(client, opts.force)
 end
 
 return mod
