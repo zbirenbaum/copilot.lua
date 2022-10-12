@@ -66,6 +66,12 @@ function mod.status()
     if not status.user then
       flush_lines("Not authenticated. Run ':Copilot auth'")
       return
+    elseif status.status == 'NoTelemetryConsent' then
+      flush_lines("Telemetry terms not accepted")
+      return
+    elseif status.status == 'NotAuthorized' then
+      flush_lines("Not authorized")
+      return
     end
 
     local should_attach, no_attach_reason = u.should_attach(c.params.filetypes)
