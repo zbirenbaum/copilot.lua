@@ -6,7 +6,7 @@ function M.get_next_id()
   return id
 end
 
----@return copilot_set_editor_info_params
+---@return { editorInfo: copilot_editor_info, editorPluginInfo: copilot_editor_plugin_info }
 function M.get_editor_info()
   local info = {
     editorInfo = {
@@ -15,7 +15,7 @@ function M.get_editor_info()
     },
     editorPluginInfo = {
       name = "copilot.vim",
-      version = '1.5.3',
+      version = '1.6.0',
     },
   }
   return info
@@ -205,6 +205,28 @@ end
 ---@deprecated
 M.get_completion_params = function(opts)
   return M.get_doc_params(opts)
+end
+
+
+---@return copilot_editor_configuration
+function M.get_editor_configuration()
+  local c = require("copilot.client")
+
+  local filetypes = vim.deepcopy(c.params.filetypes)
+  if filetypes['*'] == nil then
+    filetypes = vim.tbl_deep_extend('keep', filetypes, internal_filetypes)
+  end
+
+  ---@type string[]
+  local disabled_filetypes = vim.tbl_filter(function(ft)
+    return filetypes[ft] == false
+  end, vim.tbl_keys(filetypes))
+  table.sort(disabled_filetypes)
+
+  return {
+    enableAutoCompletions = not not (c.params.panel.enabled or c.params.suggestion.enabled),
+    disabledLanguages = disabled_filetypes,
+  }
 end
 
 M.get_copilot_path = function(plugin_path)

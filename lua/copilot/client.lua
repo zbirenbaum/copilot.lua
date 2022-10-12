@@ -47,7 +47,10 @@ M.merge_server_opts = function (params)
     autostart = true,
     single_file_support = true,
     on_init = function(client)
-      api.set_editor_info(client, util.get_editor_info())
+      ---@type copilot_set_editor_info_params
+      local set_editor_info_params = util.get_editor_info()
+      set_editor_info_params.editorConfiguration = util.get_editor_configuration()
+      api.set_editor_info(client, set_editor_info_params)
       vim.schedule(M.buf_attach_copilot)
       vim.schedule(register_autocmd)
     end,
@@ -55,7 +58,7 @@ M.merge_server_opts = function (params)
       PanelSolution = api.handlers.PanelSolution,
       PanelSolutionsDone = api.handlers.PanelSolutionsDone,
       statusNotification = api.handlers.statusNotification,
-    }
+    },
   }, params.server_opts_overrides or {})
 end
 
