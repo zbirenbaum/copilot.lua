@@ -46,7 +46,7 @@ function mod.notify_change_configuration(client, params)
 end
 
 ---@alias copilot_check_status_params { options?: { localChecksOnly?: boolean } }
----@alias copilot_check_status_data { user?: string }
+---@alias copilot_check_status_data { user?: string, status: 'OK'|'NotAuthorized'|'NoTelemetryConsent' }
 
 ---@param params? copilot_check_status_params
 ---@return any|nil err
