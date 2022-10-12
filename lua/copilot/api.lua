@@ -28,11 +28,21 @@ function mod.notify(client, method, params)
   return client.notify(method, params)
 end
 
----@alias copilot_set_editor_info_params { editorInfo: { name: string, version: string }, editorPluginInfo: { name: string, version: string } }
+---@alias copilot_editor_info { name: string, version: string }
+---@alias copilot_editor_plugin_info { name: string, version: string }
+---@alias copilot_set_editor_info_params { editorInfo: copilot_editor_info, editorPluginInfo: copilot_editor_plugin_info, editorConfiguration: copilot_editor_configuration  }
 
 ---@param params copilot_set_editor_info_params
 function mod.set_editor_info(client, params)
   return mod.notify(client, "setEditorInfo", params)
+end
+
+---@alias copilot_editor_configuration { enableAutoCompletions: boolean, disabledLanguages: string[] }
+---@alias copilot_notify_change_configuration_params { settings: copilot_editor_configuration  }
+
+---@param params copilot_notify_change_configuration_params
+function mod.notify_change_configuration(client, params)
+  return mod.notify(client, "notifyChangeConfiguration", params)
 end
 
 ---@alias copilot_check_status_params { options?: { localChecksOnly?: boolean } }
