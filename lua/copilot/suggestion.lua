@@ -122,12 +122,12 @@ local function cancel_inflight_requests()
   end)
 end
 
----@return string text
----@return integer outdent
----@return integer delete
----@return string uuid
-local function suggestion_text_with_adjustments()
-  local ok, text, outdent, delete, uuid = pcall(function()
+local function clear_preview()
+  vim.api.nvim_buf_del_extmark(0, copilot.ns_id, copilot.extmark_id)
+end
+
+local function get_current_suggestion()
+  local ok, choice = pcall(function()
     if
       not vim.fn.mode():match("^[iR]")
       or vim.fn.pumvisible() == 1
@@ -135,56 +135,36 @@ local function suggestion_text_with_adjustments()
       or not copilot._copilot.suggestions
       or #copilot._copilot.suggestions == 0
     then
-      return "", 0, 0, ""
+      return nil
     end
 
     local choice = copilot._copilot.suggestions[copilot._copilot.choice]
     if not choice or not choice.range or choice.range.start.line ~= vim.fn.line(".") - 1 then
-      return "", 0, 0, ""
+      return nil
     end
 
     if choice.range.start.character ~= 0 then
       -- unexpected range
-      return "", 0, 0, ""
+      return nil
     end
 
-    local line = vim.fn.getline(".")
-    local offset = vim.fn.col(".") - 1
-
-    local typed = vim.fn.strpart(line, 0, offset)
-    local delete = vim.fn.strpart(line, offset)
-
-    local uuid = choice.uuid or ""
-
-    if typed:match("^%s*$") then
-      local leading = vim.fn.matchstr(choice.text, "^s+")
-      local unindented = vim.fn.strpart(choice.text, #leading)
-      if vim.fn.strpart(typed, 0, #leading) == leading or unindented ~= delete then
-        return unindented, #typed - #leading, vim.fn.strchars(delete), uuid
-      end
-    else
-      return vim.fn.strpart(choice.text, offset), 0, vim.fn.strchars(delete), uuid
-    end
+    return choice
   end)
 
   if ok then
-    return text, outdent, delete, uuid
+    return choice
   end
 
-  return "", 0, 0, ""
-end
-
-local function clear_preview()
-  vim.api.nvim_buf_del_extmark(0, copilot.ns_id, copilot.extmark_id)
+  return nil
 end
 
 local function update_preview()
-  local text, _, delete, uuid = suggestion_text_with_adjustments()
-  text = vim.split(text, "\n", { plain = true, trimempty = true })
+  local suggestion = get_current_suggestion()
+  local displayLines = suggestion and vim.split(suggestion.displayText, "\n", { plain = true }) or {}
 
   clear_preview()
 
-  if #text == 0 then
+  if not suggestion or #displayLines == 0 then
     return
   end
 
@@ -200,16 +180,16 @@ local function update_preview()
   local extmark = {
     id = copilot.extmark_id,
     virt_text_win_col = vim.fn.virtcol(".") - 1,
-    virt_text = { { text[1] .. string.rep(" ", delete - #text[1]), hl_group.CopilotSuggestion } },
+    virt_text = { { displayLines[1], hl_group.CopilotSuggestion } },
   }
 
-  if #text > 1 then
+  if #displayLines > 1 then
     extmark.virt_lines = {}
-    for i = 2, #text do
-      extmark.virt_lines[i - 1] = { { text[i], hl_group.CopilotSuggestion } }
+    for i = 2, #displayLines do
+      extmark.virt_lines[i - 1] = { { displayLines[i], hl_group.CopilotSuggestion } }
     end
     if #annot > 0 then
-      extmark.virt_lines[#text] = { { " " }, { annot, hl_group.CopilotAnnotation } }
+      extmark.virt_lines[#displayLines] = { { " " }, { annot, hl_group.CopilotAnnotation } }
     end
   elseif #annot > 0 then
     extmark.virt_text[2] = { " " }
@@ -220,10 +200,10 @@ local function update_preview()
 
   vim.api.nvim_buf_set_extmark(0, copilot.ns_id, vim.fn.line(".") - 1, vim.fn.col(".") - 1, extmark)
 
-  if uuid ~= copilot.uuid then
-    copilot.uuid = uuid
+  if suggestion.uuid ~= copilot.uuid then
+    copilot.uuid = suggestion.uuid
     with_client(function(client)
-      api.notify_shown(client, { uuid = uuid }, function() end)
+      api.notify_shown(client, { uuid = suggestion.uuid }, function() end)
     end)
   end
 end
@@ -368,33 +348,21 @@ function mod.prev()
   end)
 end
 
-local function get_displayed_suggestion()
-  local text, outdent, delete, uuid = suggestion_text_with_adjustments()
-  return {
-    uuid = uuid,
-    text = text,
-    outdent_size = outdent,
-    delete_size = delete,
-  }
-end
-
 function mod.accept()
-  local s = get_displayed_suggestion()
-  if vim.fn.empty(s.text) == 0 then
+  local suggestion = get_current_suggestion()
+  if suggestion and vim.fn.empty(suggestion.text) == 0 then
     reset_state()
     with_client(function(client)
-      api.notify_accepted(client, { uuid = s.uuid }, function() end)
+      api.notify_accepted(client, { uuid = suggestion.uuid }, function() end)
     end)
     copilot.uuid = nil
     clear_preview()
 
-    local keys = vim.api.nvim_replace_termcodes(
-      string.rep("<Left><Del>", s.outdent_size) .. string.rep("<Del>", s.delete_size),
-      true,
-      false,
-      true
-    ) or ""
-    vim.api.nvim_feedkeys(keys .. s.text, "n", false)
+    -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
+    vim.lsp.util.apply_text_edits({ { range = suggestion.range, newText = suggestion.text } }, 0, "utf-16")
+    -- Put cursor at the end of current line.
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-O>$", true, false, true), "n", false)
   end
 end
 
