@@ -57,7 +57,7 @@ use {
 }
 ```
 
-3. On `InsertEnter` event (safest way to avoid statup lag):  
+3. On `InsertEnter` event (safest way to avoid startup lag):  
 Note: suggestions may take a moment to start showing up.
 ```lua
 use {
