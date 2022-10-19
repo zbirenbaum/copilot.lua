@@ -362,7 +362,7 @@ function mod.accept()
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
     vim.lsp.util.apply_text_edits({ { range = suggestion.range, newText = suggestion.text } }, 0, "utf-16")
     -- Put cursor at the end of current line.
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-O>$", true, false, true), "n", false)
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<End>", true, false, true), "n", false)
   end
 end
 
