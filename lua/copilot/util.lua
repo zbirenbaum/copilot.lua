@@ -229,12 +229,12 @@ function M.get_editor_configuration()
   }
 end
 
-M.get_copilot_path = function(plugin_path)
-  for _, loc in ipairs({ "/opt", "/start", "" }) do
-    local copilot_path = plugin_path .. loc .. "/copilot.lua/copilot/index.js"
-    if vim.fn.filereadable(copilot_path) ~= 0 then
-      return copilot_path
-    end
+M.get_copilot_path = function()
+  local copilot_path = string.gsub(debug.getinfo(1).source:sub(2), "lua/copilot/util.lua", "") .. "copilot/index.js"
+  if vim.fn.filereadable(copilot_path) ~= 0 then
+    return copilot_path
+  else
+    print("[Copilot] could not read" .. copilot_path)  
   end
 end
 

@@ -109,7 +109,6 @@ require('copilot').setup({
     ["."] = false,
   },
   copilot_node_command = 'node', -- Node version must be < 18
-  plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer",
   server_opts_overrides = {},
 })
 ```
@@ -199,18 +198,6 @@ Example:
 
 ```lua
 copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v16.14.2/bin/node", -- Node version must be < 18
-```
-
-### plugin_manager_path
-
-This is installation path of Packer, change this to the plugin manager installation path of your choice.
-
-Example:
-
-```lua
-require("copilot").setup {
-  plugin_manager_path = vim.fn.stdpath("data") .. "/site/pack/packer", 
-}
 ```
 
 ### server_opts_overrides
