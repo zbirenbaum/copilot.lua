@@ -3,7 +3,15 @@ local util = require("copilot.util")
 
 local M = { params = {} }
 
-local register_autocmd = function ()
+local copilot_node_version = nil
+function M.get_node_version()
+  if not copilot_node_version then
+    copilot_node_version = string.match(table.concat(vim.fn.systemlist(M.params.copilot_node_command .. " --version", nil, false)), "v(%S+)")
+  end
+  return copilot_node_version
+end
+
+local register_autocmd = function()
   vim.api.nvim_create_autocmd({ "BufEnter" }, {
     callback = vim.schedule_wrap(M.buf_attach_copilot),
   })
@@ -35,22 +43,25 @@ M.buf_attach_copilot = function()
   M.buf_attach()
 end
 
-M.merge_server_opts = function (params)
+M.merge_server_opts = function(params)
   return vim.tbl_deep_extend("force", {
     cmd = {
-      params.copilot_node_command or "node",
+      params.copilot_node_command,
       require("copilot.util").get_copilot_path(),
     },
-    cmd_cwd = vim.fn.expand('~'),
+    cmd_cwd = vim.fn.expand("~"),
     root_dir = vim.loop.cwd(),
     name = "copilot",
     autostart = true,
     single_file_support = true,
     on_init = function(client)
-      ---@type copilot_set_editor_info_params
-      local set_editor_info_params = util.get_editor_info()
-      set_editor_info_params.editorConfiguration = util.get_editor_configuration()
-      api.set_editor_info(client, set_editor_info_params)
+      vim.schedule(function ()
+        ---@type copilot_set_editor_info_params
+        local set_editor_info_params = util.get_editor_info()
+        set_editor_info_params.editorInfo.version = set_editor_info_params.editorInfo.version .. ' + Node.js ' .. M.get_node_version()
+        set_editor_info_params.editorConfiguration = util.get_editor_configuration()
+        api.set_editor_info(client, set_editor_info_params)
+      end)
       vim.schedule(M.buf_attach_copilot)
       vim.schedule(register_autocmd)
     end,
@@ -69,6 +80,10 @@ M.start = function(params)
     for _, disabled_ft in ipairs(M.params.ft_disable) do
       M.params.filetypes[disabled_ft] = false
     end
+  end
+
+  if not M.params.copilot_node_command then
+    M.params.copilot_node_command = "node"
   end
 
   vim.lsp.start_client(M.merge_server_opts(params))

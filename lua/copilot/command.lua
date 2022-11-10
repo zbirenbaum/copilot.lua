@@ -19,6 +19,7 @@ function mod.version()
     if client then
       local _, data = a.get_version(client)
       lines[#lines + 1] = "copilot/dist/agent.js" .. " " .. data.version
+      lines[#lines + 1] = "Node.js" .. " " .. c.get_node_version()
     else
       lines[#lines + 1] = "copilot/dist/agent.js" .. " " .. "not running"
     end
