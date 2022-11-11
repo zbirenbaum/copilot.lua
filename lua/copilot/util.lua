@@ -230,7 +230,7 @@ function M.get_editor_configuration()
 end
 
 M.get_copilot_path = function()
-  local copilot_path = string.gsub(debug.getinfo(1).source:sub(2), "lua/copilot/util.lua", "") .. "copilot/index.js"
+  local copilot_path = vim.api.nvim_get_runtime_file('copilot/index.js', false)[1]
   if vim.fn.filereadable(copilot_path) ~= 0 then
     return copilot_path
   else
