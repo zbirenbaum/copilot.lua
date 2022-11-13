@@ -47,7 +47,7 @@ M.merge_server_opts = function(params)
   return vim.tbl_deep_extend("force", {
     cmd = {
       params.copilot_node_command,
-      require("copilot.util").get_copilot_path(params.plugin_manager_path),
+      require("copilot.util").get_copilot_path(),
     },
     cmd_cwd = vim.fn.expand("~"),
     root_dir = vim.loop.cwd(),
