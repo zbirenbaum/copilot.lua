@@ -75,7 +75,7 @@ function mod.status()
       return
     end
 
-    local should_attach, no_attach_reason = u.should_attach(c.params.filetypes)
+    local should_attach, no_attach_reason = u.should_attach()
     local is_attached = u.is_attached(client)
     if is_attached then
       if not should_attach then
@@ -114,7 +114,7 @@ function mod.toggle(opts)
   end
 
   if not opts.force then
-    local should_attach, no_attach_reason = u.should_attach(c.params.filetypes)
+    local should_attach, no_attach_reason = u.should_attach()
     if not should_attach then
       vim.api.nvim_echo({
         { "[Copilot] " .. no_attach_reason .. "\n" },
