@@ -1,36 +1,9 @@
 local M = { client_info = nil }
+local config = require("copilot.config")
 local client = require("copilot.client")
 local highlight = require("copilot.highlight")
 local panel = require("copilot.panel")
 local suggestion = require("copilot.suggestion")
-local defaults = {
-  panel = {
-    enabled = true,
-    auto_refresh = false,
-    keymap = {
-      jump_prev = "[[",
-      jump_next = "]]",
-      accept = "<CR>",
-      refresh = "gr",
-      open = "<M-CR>"
-    }
-  },
-  suggestion = {
-    enabled = true,
-    auto_trigger = false,
-    debounce = 75,
-    keymap = {
-      accept = "<M-l>",
-      next = "<M-]>",
-      prev = "<M-[>",
-      dismiss = "<C-]>",
-    }
-  },
-  ft_disable = nil,
-  filetypes = {},
-  copilot_node_command = "node",
-  server_opts_overrides = {},
-}
 
 local create_cmds = function (_)
   vim.api.nvim_create_user_command("CopilotDetach", function()
@@ -57,23 +30,19 @@ local create_cmds = function (_)
   end, {})
 end
 
-local config_handler = function(opts)
-  local user_config = opts and vim.tbl_deep_extend("force", defaults, opts) or defaults
-  return user_config
-end
-
 M.setup = function(opts)
-  local user_config = config_handler(opts)
-  vim.schedule(function ()
-    client.start(user_config)
+  local conf = config.setup(opts)
 
-    if user_config.panel.enabled then
-      panel.setup(user_config.panel)
-      create_cmds(user_config)
+  vim.schedule(function ()
+    client.start(conf)
+
+    if conf.panel.enabled then
+      panel.setup(conf.panel)
+      create_cmds(conf)
     end
 
-    if user_config.suggestion.enabled then
-      suggestion.setup(user_config.suggestion)
+    if conf.suggestion.enabled then
+      suggestion.setup(conf.suggestion)
     end
   end)
 

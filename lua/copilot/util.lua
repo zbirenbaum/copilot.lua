@@ -1,3 +1,5 @@
+local config = require("copilot.config")
+
 local M = {}
 
 local id = 0
@@ -95,11 +97,10 @@ local function is_ft_disabled(ft, filetypes)
   return false
 end
 
----@param filetypes table<string, boolean>
 ---@return boolean should_attach
 ---@return string? no_attach_reason
-function M.should_attach(filetypes)
-  local ft_disabled, ft_disabled_reason = is_ft_disabled(vim.bo.filetype, filetypes)
+function M.should_attach()
+  local ft_disabled, ft_disabled_reason = is_ft_disabled(vim.bo.filetype, config.get("filetypes"))
 
   if ft_disabled then
     return not ft_disabled, ft_disabled_reason
@@ -207,14 +208,14 @@ M.get_completion_params = function(opts)
   return M.get_doc_params(opts)
 end
 
-
 ---@return copilot_editor_configuration
 function M.get_editor_configuration()
-  local c = require("copilot.client")
+  local conf = config.get()
 
-  local filetypes = vim.deepcopy(c.params.filetypes)
-  if filetypes['*'] == nil then
-    filetypes = vim.tbl_deep_extend('keep', filetypes, internal_filetypes)
+  local filetypes = vim.deepcopy(conf.filetypes)
+
+  if filetypes["*"] == nil then
+    filetypes = vim.tbl_deep_extend("keep", filetypes, internal_filetypes)
   end
 
   ---@type string[]
@@ -224,7 +225,7 @@ function M.get_editor_configuration()
   table.sort(disabled_filetypes)
 
   return {
-    enableAutoCompletions = not not (c.params.panel.enabled or c.params.suggestion.enabled),
+    enableAutoCompletions = not not (conf.panel.enabled or conf.suggestion.enabled),
     disabledLanguages = disabled_filetypes,
   }
 end
@@ -234,7 +235,7 @@ M.get_copilot_path = function()
   if vim.fn.filereadable(copilot_path) ~= 0 then
     return copilot_path
   else
-    print("[Copilot] could not read" .. copilot_path)  
+    print("[Copilot] could not read" .. copilot_path)
   end
 end
 

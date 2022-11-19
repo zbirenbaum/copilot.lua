@@ -1,12 +1,13 @@
 local api = require("copilot.api")
+local config = require("copilot.config")
 local util = require("copilot.util")
 
-local M = { params = {} }
+local M = {}
 
 local copilot_node_version = nil
 function M.get_node_version()
   if not copilot_node_version then
-    copilot_node_version = string.match(table.concat(vim.fn.systemlist(M.params.copilot_node_command .. " --version", nil, false)), "v(%S+)")
+    copilot_node_version = string.match(table.concat(vim.fn.systemlist(config.get("copilot_node_command") .. " --version", nil, false)), "v(%S+)")
   end
   return copilot_node_version
 end
@@ -19,16 +20,13 @@ end
 
 ---@param force? boolean
 function M.buf_attach(client, force)
-  if not force and not util.should_attach(M.params.filetypes) then
+  if not force and not util.should_attach() then
     return
   end
 
   client = client or util.get_copilot_client()
   if client and not util.is_attached(client) then
     vim.lsp.buf_attach_client(0, client.id)
-
-    ---@todo unknown property, remove this
-    client.completion_function = M.params.extensions
   end
 end
 
@@ -74,19 +72,8 @@ M.merge_server_opts = function(params)
 end
 
 M.start = function(params)
-  M.params = params
-  --- for backward compatibility
-  if M.params.ft_disable then
-    for _, disabled_ft in ipairs(M.params.ft_disable) do
-      M.params.filetypes[disabled_ft] = false
-    end
-  end
-
-  if not M.params.copilot_node_command then
-    M.params.copilot_node_command = "node"
-  end
-
-  vim.lsp.start_client(M.merge_server_opts(params))
+  local client_config = M.merge_server_opts(params)
+  vim.lsp.start_client(client_config)
 end
 
 return M
