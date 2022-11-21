@@ -9,6 +9,9 @@ vim.api.nvim_create_user_command("Copilot", function(opts)
   local params = vim.split(opts.args, "%s+", { trimempty = true })
 
   local mod_name, action_name = params[1], params[2]
+  if not mod_name then
+    mod_name = "status"
+  end
 
   local u = require("copilot.util")
 
