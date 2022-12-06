@@ -21,6 +21,8 @@ local default_config = {
     ---@type table<'accept'|'next'|'prev'|'dismiss', false|string>
     keymap = {
       accept = "<M-l>",
+      accept_word = false,
+      accept_line = false,
       next = "<M-]>",
       prev = "<M-[>",
       dismiss = "<C-]>",

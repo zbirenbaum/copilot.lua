@@ -71,6 +71,20 @@ local function set_keymap(keymap)
     })
   end
 
+  if keymap.accept_word then
+    vim.keymap.set("i", keymap.accept_word, mod.accept_word, {
+      desc = "[copilot] accept suggestion (word)",
+      silent = true,
+    })
+  end
+
+  if keymap.accept_line then
+    vim.keymap.set("i", keymap.accept_line, mod.accept_line, {
+      desc = "[copilot] accept suggestion (line)",
+      silent = true,
+    })
+  end
+
   if keymap.next then
     vim.keymap.set("i", keymap.next, mod.next, {
       desc = "[copilot] next suggestion",
@@ -348,22 +362,68 @@ function mod.prev()
   end)
 end
 
-function mod.accept()
+---@param partial? 'word'|'line'
+local function accept_suggestion(partial)
   local suggestion = get_current_suggestion()
-  if suggestion and vim.fn.empty(suggestion.text) == 0 then
-    reset_state()
-    with_client(function(client)
-      api.notify_accepted(client, { uuid = suggestion.uuid }, function() end)
-    end)
-    copilot.uuid = nil
-    clear_preview()
-
-    -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
-    vim.lsp.util.apply_text_edits({ { range = suggestion.range, newText = suggestion.text } }, 0, "utf-16")
-    -- Put cursor at the end of current line.
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<End>", true, false, true), "n", false)
+  if not suggestion or vim.fn.empty(suggestion.text) == 1 then
+    return
   end
+
+  reset_state()
+  with_client(function(client)
+    if partial then
+      -- do not notify_accepted for partial accept.
+      -- revisit if upstream copilot.vim adds this feature.
+      return
+    end
+
+    api.notify_accepted(client, { uuid = suggestion.uuid }, function() end)
+  end)
+  copilot.uuid = nil
+  clear_preview()
+
+  local range, newText = suggestion.range, suggestion.text
+
+  if partial then
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local _, character = cursor[1], cursor[2]
+
+    if partial == "word" then
+      local _, char_idx = string.find(newText, "%s*%p*[^%s%p]*%s*", character + 1)
+      if not char_idx then
+        return
+      end
+
+      newText = string.sub(newText, 1, char_idx)
+
+      range["end"].line = range["start"].line
+      range["end"].character = char_idx
+    elseif partial == "line" then
+      local next_char = string.sub(newText, character + 1, character + 1)
+      local _, char_idx = string.find(newText, next_char == "\n" and "\n%s*[^\n]*\n%s*" or "\n%s*", character)
+      if char_idx then
+        newText = string.sub(newText, 1, char_idx)
+      end
+    end
+  end
+
+  -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
+  vim.lsp.util.apply_text_edits({ { range = range, newText = newText } }, 0, "utf-16")
+  -- Put cursor at the end of current line.
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<End>", true, false, true), "n", false)
+end
+
+function mod.accept()
+  accept_suggestion()
+end
+
+function mod.accept_word()
+  accept_suggestion("word")
+end
+
+function mod.accept_line()
+  accept_suggestion("line")
 end
 
 function mod.dismiss()
