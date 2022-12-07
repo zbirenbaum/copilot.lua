@@ -1,5 +1,7 @@
 local config = require("copilot.config")
 
+local unpack = unpack or table.unpack
+
 local M = {}
 
 local id = 0
@@ -227,6 +229,45 @@ function M.get_editor_configuration()
   return {
     enableAutoCompletions = not not (conf.panel.enabled or conf.suggestion.enabled),
     disabledLanguages = disabled_filetypes,
+  }
+end
+
+---@param str string
+local function url_decode(str)
+  return vim.fn.substitute(str, [[%\(\x\x\)]], [[\=iconv(nr2char("0x".submatch(1)), "utf-8", "latin1")]], "g")
+end
+
+---@return copilot_network_proxy|nil
+function M.get_network_proxy()
+  local proxy_uri = vim.g.copilot_proxy
+
+  if type(proxy_uri) ~= "string" then
+    return
+  end
+
+  proxy_uri = string.gsub(proxy_uri, "^[^:]+://", "")
+
+  ---@type string|nil, string|nil
+  local user_pass, host_port = unpack(vim.split(proxy_uri, "@", { plain = true, trimempty = true }))
+
+  if not host_port then
+    host_port = user_pass --[[@as string]]
+    user_pass = nil
+  end
+
+  local host, port = unpack(vim.split(host_port, ":", { plain = true, trimempty = true }))
+  local username, password
+
+  if user_pass then
+    username, password = unpack(vim.split(user_pass, ":", { plain = true, trimempty = true }))
+    username, password = username and url_decode(username), password and url_decode(password)
+  end
+
+  return {
+    host = host,
+    port = tonumber(port or 80),
+    username = username,
+    password = password,
   }
 end
 
