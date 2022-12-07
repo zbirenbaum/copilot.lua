@@ -30,7 +30,8 @@ end
 
 ---@alias copilot_editor_info { name: string, version: string }
 ---@alias copilot_editor_plugin_info { name: string, version: string }
----@alias copilot_set_editor_info_params { editorInfo: copilot_editor_info, editorPluginInfo: copilot_editor_plugin_info, editorConfiguration: copilot_editor_configuration  }
+---@alias copilot_network_proxy { host: string, port: integer, username?: string, password?: string }
+---@alias copilot_set_editor_info_params { editorInfo: copilot_editor_info, editorPluginInfo: copilot_editor_plugin_info, editorConfiguration: copilot_editor_configuration, networkProxy?: copilot_network_proxy }
 
 ---@param params copilot_set_editor_info_params
 function mod.set_editor_info(client, params)
