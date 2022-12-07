@@ -17,7 +17,7 @@ function M.get_editor_info()
     },
     editorPluginInfo = {
       name = "copilot.vim",
-      version = "1.6.1",
+      version = "1.7.0",
     },
   }
   return info
