@@ -1,4 +1,4 @@
-local M = { client_info = nil }
+local M = { setup_done = false }
 local config = require("copilot.config")
 local client = require("copilot.client")
 local highlight = require("copilot.highlight")
@@ -31,6 +31,10 @@ local create_cmds = function (_)
 end
 
 M.setup = function(opts)
+  if M.setup_done then
+    return
+  end
+
   local conf = config.setup(opts)
 
   vim.schedule(function ()
@@ -47,6 +51,8 @@ M.setup = function(opts)
   end)
 
   highlight.setup()
+
+  M.setup_done = true
 end
 
 return M
