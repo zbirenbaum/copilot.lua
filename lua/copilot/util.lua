@@ -19,7 +19,7 @@ function M.get_editor_info()
     },
     editorPluginInfo = {
       name = "copilot.vim",
-      version = "1.7.0",
+      version = "1.8.0",
     },
   }
   return info
@@ -124,12 +124,6 @@ function M.is_attached(client)
   return client and vim.lsp.buf_is_attached(0, client.id) or false
 end
 
-local eol_by_fileformat = {
-  unix = "\n",
-  dos = "\r\n",
-  mac = "\r",
-}
-
 local language_normalization_map = {
   bash = "shellscript",
   bst = "bibtex",
@@ -178,12 +172,6 @@ function M.get_doc()
     indentSize = vim.fn.shiftwidth(),
     position = params.position,
   }
-
-  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-  if vim.bo.endofline and vim.bo.fixendofline then
-    table.insert(lines, "")
-  end
-  doc.source = table.concat(lines, eol_by_fileformat[vim.bo.fileformat] or "\n")
 
   return doc
 end
@@ -255,6 +243,28 @@ function M.get_network_proxy()
     user_pass = nil
   end
 
+  local query_string
+  host_port, query_string = unpack(vim.split(host_port, "?", { plain=true, trimempty=true }))
+
+  local rejectUnauthorized = vim.g.copilot_proxy_strict_ssl
+
+  if query_string then
+    local query_params = vim.split(query_string, '&', { plain = true, trimempty = true })
+    for _, query_param in ipairs(query_params) do
+      local strict_ssl = string.match(query_param, 'strict_?ssl=(.*)')
+
+      if string.find(strict_ssl, '^[1t]') then
+        rejectUnauthorized = true
+        break
+      end
+
+      if string.find(strict_ssl, '^[0f]') then
+        rejectUnauthorized = false
+        break
+      end
+    end
+  end
+
   local host, port = unpack(vim.split(host_port, ":", { plain = true, trimempty = true }))
   local username, password
 
@@ -268,6 +278,7 @@ function M.get_network_proxy()
     port = tonumber(port or 80),
     username = username,
     password = password,
+    rejectUnauthorized = rejectUnauthorized,
   }
 end
 
