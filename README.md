@@ -162,6 +162,8 @@ The `copilot.suggestion` module exposes the following functions:
 ```lua
 require("copilot.suggestion").is_visible()
 require("copilot.suggestion").accept()
+require("copilot.suggestion").accept_word()
+require("copilot.suggestion").accept_line()
 require("copilot.suggestion").next()
 require("copilot.suggestion").prev()
 require("copilot.suggestion").dismiss()
