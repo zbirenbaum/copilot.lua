@@ -35,6 +35,7 @@ This can be done in multiple ways, the best one will depend on your existing con
 ```lua
 use {
   "zbirenbaum/copilot.lua",
+  cmd = "Copilot",
   event = "VimEnter",
   config = function()
     vim.defer_fn(function()
@@ -48,6 +49,7 @@ use {
 ```lua
 use {
   "zbirenbaum/copilot.lua",
+  cmd = "Copilot",
   after = "feline.nvim", -- whichever statusline plugin you use here
   config = function ()
     vim.defer_fn(function()
@@ -62,6 +64,7 @@ Note: suggestions may take a moment to start showing up.
 ```lua
 use {
   "zbirenbaum/copilot.lua",
+  cmd = "Copilot",
   event = "InsertEnter",
   config = function ()
     vim.schedule(function()
