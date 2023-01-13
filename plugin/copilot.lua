@@ -37,7 +37,11 @@ vim.api.nvim_create_user_command("Copilot", function(opts)
     return
   end
 
-  if not u.get_copilot_client() then
+  local is_running = vim.wait(5000, function()
+    return not not u.get_copilot_client()
+  end)
+
+  if not is_running then
     print("[Copilot] Not running")
     return
   end
