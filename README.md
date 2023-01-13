@@ -21,55 +21,23 @@ use { "zbirenbaum/copilot.lua" }
 
 ### Authentication
 
-Once copilot is started, run `:Copilot auth` to start the authentication process.
+Once copilot is running, run `:Copilot auth` to start the authentication process.
 
 ## Setup and Configuration
 
 You have to run the `require("copilot").setup(options)` function in order to start Copilot.
 If no options are provided, the defaults are used.
 
-Because the copilot server takes some time to start up, It is recommend that you lazy load copilot.
-This can be done in multiple ways, the best one will depend on your existing config and the speed of your machine:
+Because the copilot server takes some time to start up, it is recommend that you lazy load copilot.
+For example:
 
-1. On `VimEnter` event + defer (preferred method, works well with fast configs):
-```lua
-use {
-  "zbirenbaum/copilot.lua",
-  cmd = "Copilot",
-  event = "VimEnter",
-  config = function()
-    vim.defer_fn(function()
-      require("copilot").setup()
-    end, 100)
-  end,
-}
-```
-
-2. Load after statusline + defer (if option 1 causes statusline to flicker, try this):
-```lua
-use {
-  "zbirenbaum/copilot.lua",
-  cmd = "Copilot",
-  after = "feline.nvim", -- whichever statusline plugin you use here
-  config = function ()
-    vim.defer_fn(function()
-      require("copilot").setup()
-    end, 100)
-  end,
-}
-```
-
-3. On `InsertEnter` event (safest way to avoid startup lag):  
-Note: suggestions may take a moment to start showing up.
 ```lua
 use {
   "zbirenbaum/copilot.lua",
   cmd = "Copilot",
   event = "InsertEnter",
-  config = function ()
-    vim.schedule(function()
-      require("copilot").setup()
-    end)
+  config = function()
+    require("copilot").setup({})
   end,
 }
 ```
