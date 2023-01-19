@@ -19,7 +19,7 @@ function M.get_editor_info()
     },
     editorPluginInfo = {
       name = "copilot.vim",
-      version = "1.8.0",
+      version = "1.8.1",
     },
   }
   return info
@@ -163,9 +163,9 @@ function M.get_doc()
   local absolute = vim.api.nvim_buf_get_name(0)
   local params = vim.lsp.util.make_position_params(0, "utf-16") -- copilot server uses utf-16
   local doc = {
-    languageId = language_for_file_type(vim.bo.filetype),
-    path = absolute,
     uri = params.textDocument.uri,
+    languageId = language_for_file_type(vim.bo.filetype),
+    version = vim.api.nvim_buf_get_var(0, 'changedtick'),
     relativePath = relative_path(absolute),
     insertSpaces = vim.o.expandtab,
     tabSize = vim.fn.shiftwidth(),
@@ -185,6 +185,7 @@ function M.get_doc_params(overrides)
   params.textDocument = {
     uri = params.doc.uri,
     languageId = params.doc.languageId,
+    version = params.doc.version,
     relativePath = params.doc.relativePath,
   }
   params.position = params.doc.position
