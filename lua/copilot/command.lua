@@ -109,7 +109,7 @@ function mod.toggle(opts)
   end
 
   if u.is_attached(client) then
-    c.buf_detach(client)
+    c.buf_detach()
     return
   end
 
@@ -126,7 +126,7 @@ function mod.toggle(opts)
     opts.force = true
   end
 
-  c.buf_attach(client, opts.force)
+  c.buf_attach(opts.force)
 end
 
 return mod

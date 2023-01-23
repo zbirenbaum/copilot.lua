@@ -37,18 +37,16 @@ M.setup = function(opts)
 
   local conf = config.setup(opts)
 
-  vim.schedule(function ()
-    client.start(conf)
+  client.setup(conf)
 
-    if conf.panel.enabled then
-      panel.setup(conf.panel)
-      create_cmds(conf)
-    end
+  if conf.panel.enabled then
+    panel.setup(conf.panel)
+    create_cmds(conf)
+  end
 
-    if conf.suggestion.enabled then
-      suggestion.setup(conf.suggestion)
-    end
-  end)
+  if conf.suggestion.enabled then
+    suggestion.setup(conf.suggestion)
+  end
 
   highlight.setup()
 
