@@ -72,23 +72,34 @@ local internal_filetypes = {
   ["."] = false,
 }
 
+---@param filetype_enabled boolean|fun():boolean
+local function resolve_filetype_enabled(filetype_enabled)
+  if type(filetype_enabled) == "function" then
+    return filetype_enabled()
+  end
+  return filetype_enabled
+end
+
 ---@param ft string
 ---@param filetypes table<string, boolean>
 ---@return boolean ft_disabled
 ---@return string? ft_disabled_reason
 local function is_ft_disabled(ft, filetypes)
   if filetypes[ft] ~= nil then
-    return not filetypes[ft], string.format("'filetype' %s rejected by config filetypes[%s]", ft, ft)
+    return not resolve_filetype_enabled(filetypes[ft]),
+      string.format("'filetype' %s rejected by config filetypes[%s]", ft, ft)
   end
 
   local short_ft = string.gsub(ft, "%..*", "")
 
   if filetypes[short_ft] ~= nil then
-    return not filetypes[short_ft], string.format("'filetype' %s rejected by config filetypes[%s]", ft, short_ft)
+    return not resolve_filetype_enabled(filetypes[short_ft]),
+      string.format("'filetype' %s rejected by config filetypes[%s]", ft, short_ft)
   end
 
   if filetypes["*"] ~= nil then
-    return not filetypes["*"], string.format("'filetype' %s rejected by config filetypes[%s]", ft, "*")
+    return not resolve_filetype_enabled(filetypes["*"]),
+      string.format("'filetype' %s rejected by config filetypes[%s]", ft, "*")
   end
 
   if internal_filetypes[short_ft] ~= nil then
