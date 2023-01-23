@@ -1,4 +1,5 @@
 local api = require("copilot.api")
+local c = require("copilot.client")
 local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
 
@@ -26,23 +27,15 @@ local copilot = {
   debounce = 75,
 }
 
-local function get_client()
-  if not copilot.client then
-    copilot.client = util.get_copilot_client()
-  end
-  return copilot.client
-end
-
 local function with_client(fn)
-  local client = get_client()
+  local client = c.get()
   if client then
     fn(client)
   end
 end
 
 local function is_enabled()
-  local client = get_client()
-  return client and vim.lsp.buf_is_attached(0, client.id) or false
+  return c.buf_is_attached(0)
 end
 
 local function should_auto_trigger()
