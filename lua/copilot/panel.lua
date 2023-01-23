@@ -1,4 +1,5 @@
 local api = require("copilot.api")
+local c = require("copilot.client")
 local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
 
@@ -355,7 +356,7 @@ function panel:refresh()
     return
   end
 
-  if not vim.lsp.buf_is_attached(0, self.client.id) then
+  if not c.buf_is_attached(0) then
     return
   end
 
@@ -483,7 +484,7 @@ function mod.refresh()
 end
 
 function mod.open()
-  local client = util.get_copilot_client()
+  local client = c.get()
   if not client then
     print("Error, copilot not running")
     return

@@ -13,7 +13,7 @@ function mod.version()
     "copilot.lua" .. " " .. u.get_copilot_lua_version(),
   }
 
-  local client = u.get_copilot_client()
+  local client = c.get()
 
   coroutine.wrap(function()
     if client then
@@ -49,7 +49,7 @@ function mod.status()
     vim.api.nvim_echo(lines, true, {})
   end
 
-  local client = u.get_copilot_client()
+  local client = c.get()
   if not client then
     flush_lines("Not running")
     return
@@ -67,16 +67,16 @@ function mod.status()
     if not status.user then
       flush_lines("Not authenticated. Run ':Copilot auth'")
       return
-    elseif status.status == 'NoTelemetryConsent' then
+    elseif status.status == "NoTelemetryConsent" then
       flush_lines("Telemetry terms not accepted")
       return
-    elseif status.status == 'NotAuthorized' then
+    elseif status.status == "NotAuthorized" then
       flush_lines("Not authorized")
       return
     end
 
     local should_attach, no_attach_reason = u.should_attach()
-    local is_attached = u.is_attached(client)
+    local is_attached = c.buf_is_attached()
     if is_attached then
       if not should_attach then
         add_line("Enabled manually (" .. no_attach_reason .. ")")
@@ -103,12 +103,7 @@ end
 function mod.toggle(opts)
   opts = opts or {}
 
-  local client = u.get_copilot_client()
-  if not client then
-    return
-  end
-
-  if u.is_attached(client) then
+  if c.buf_is_attached(0) then
     c.buf_detach()
     return
   end
