@@ -43,7 +43,7 @@ local mod = {
 function mod.setup(opts)
   if mod.config then
     vim.notify("[copilot] config is already set", vim.log.levels.WARN)
-    return
+    return mod.config
   end
 
   local config = vim.tbl_deep_extend("force", default_config, opts or {})

@@ -1,5 +1,5 @@
 local api = require("copilot.api")
-local u = require("copilot.util")
+local c = require("copilot.client")
 
 local M = {}
 
@@ -102,39 +102,33 @@ function M.setup(client)
 end
 
 function M.signin()
-  local client = u.get_copilot_client()
-  if not client then
-    return
-  end
-
-  M.setup(client)
+  c.use_client(function(client)
+    M.setup(client)
+  end)
 end
 
 function M.signout()
-  local client = u.get_copilot_client()
-  if not client then
-    return
-  end
+  c.use_client(function(client)
+    api.check_status(
+      client,
+      { options = { localChecksOnly = true } },
+      ---@param status copilot_check_status_data
+      function(err, status)
+        if err then
+          echo(err)
+          return
+        end
 
-  api.check_status(
-    client,
-    { options = { localChecksOnly = true } },
-    ---@param status copilot_check_status_data
-    function(err, status)
-      if err then
-        echo(err)
-        return
+        if status.user then
+          echo("Signed out as GitHub user " .. status.user)
+        else
+          echo("Not signed in")
+        end
+
+        api.sign_out(client, function() end)
       end
-
-      if status.user then
-        echo("Signed out as GitHub user " .. status.user)
-      else
-        echo("Not signed in")
-      end
-
-      api.sign_out(client, function() end)
-    end
-  )
+    )
+  end)
 end
 
 local function find_config_path()
