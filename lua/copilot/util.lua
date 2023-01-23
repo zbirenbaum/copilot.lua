@@ -37,28 +37,27 @@ function M.get_copilot_lua_version()
 end
 
 -- keep for debugging reasons
-local get_capabilities = function ()
+local get_capabilities = function()
   return {
     capabilities = {
       textDocumentSync = {
         change = 2,
-        openClose = true
+        openClose = true,
       },
       workspace = {
         workspaceFolders = {
           changeNotifications = true,
-          supported = true
-        }
-      }
-    }
+          supported = true,
+        },
+      },
+    },
   }
 end
 
+-- use `require("copilot.client").get()`
+---@deprecated
 M.get_copilot_client = function()
- --  vim.lsp.get_active_clients({name="copilot"}) -- not in 0.7
-  for _, client in pairs(vim.lsp.get_active_clients()) do
-    if client.name == "copilot" then return client end
-  end
+  return require("copilot.client").get()
 end
 
 local internal_filetypes = {
@@ -93,7 +92,8 @@ local function is_ft_disabled(ft, filetypes)
   end
 
   if internal_filetypes[short_ft] ~= nil then
-    return not internal_filetypes[short_ft], string.format("'filetype' %s rejected by internal_filetypes[%s]", ft, short_ft)
+    return not internal_filetypes[short_ft],
+      string.format("'filetype' %s rejected by internal_filetypes[%s]", ft, short_ft)
   end
 
   return false
@@ -119,9 +119,10 @@ function M.should_attach()
   return true
 end
 
-function M.is_attached(client)
-  client = client or M.get_copilot_client()
-  return client and vim.lsp.buf_is_attached(0, client.id) or false
+-- use `require("copilot.client").buf_is_attached()`
+---@deprecated
+function M.is_attached()
+  return require("copilot.client").buf_is_attached(0)
 end
 
 local language_normalization_map = {
@@ -165,7 +166,7 @@ function M.get_doc()
   local doc = {
     uri = params.textDocument.uri,
     languageId = language_for_file_type(vim.bo.filetype),
-    version = vim.api.nvim_buf_get_var(0, 'changedtick'),
+    version = vim.api.nvim_buf_get_var(0, "changedtick"),
     relativePath = relative_path(absolute),
     insertSpaces = vim.o.expandtab,
     tabSize = vim.fn.shiftwidth(),
@@ -245,21 +246,21 @@ function M.get_network_proxy()
   end
 
   local query_string
-  host_port, query_string = unpack(vim.split(host_port, "?", { plain=true, trimempty=true }))
+  host_port, query_string = unpack(vim.split(host_port, "?", { plain = true, trimempty = true }))
 
   local rejectUnauthorized = vim.g.copilot_proxy_strict_ssl
 
   if query_string then
-    local query_params = vim.split(query_string, '&', { plain = true, trimempty = true })
+    local query_params = vim.split(query_string, "&", { plain = true, trimempty = true })
     for _, query_param in ipairs(query_params) do
-      local strict_ssl = string.match(query_param, 'strict_?ssl=(.*)')
+      local strict_ssl = string.match(query_param, "strict_?ssl=(.*)")
 
-      if string.find(strict_ssl, '^[1t]') then
+      if string.find(strict_ssl, "^[1t]") then
         rejectUnauthorized = true
         break
       end
 
-      if string.find(strict_ssl, '^[0f]') then
+      if string.find(strict_ssl, "^[0f]") then
         rejectUnauthorized = false
         break
       end
@@ -284,7 +285,7 @@ function M.get_network_proxy()
 end
 
 M.get_copilot_path = function()
-  local copilot_path = vim.api.nvim_get_runtime_file('copilot/index.js', false)[1]
+  local copilot_path = vim.api.nvim_get_runtime_file("copilot/index.js", false)[1]
   if vim.fn.filereadable(copilot_path) ~= 0 then
     return copilot_path
   else
@@ -292,14 +293,9 @@ M.get_copilot_path = function()
   end
 end
 
-M.auth = function ()
-  local c = M.get_copilot_client()
-  if not c then
-    print("[Copilot] not running yet!")
-    return
-  end
-  require("copilot.auth").setup(c)
+---@deprecated
+M.auth = function()
+  require("copilot.auth").signin()
 end
-
 
 return M

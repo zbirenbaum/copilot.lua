@@ -13,8 +13,6 @@ vim.api.nvim_create_user_command("Copilot", function(opts)
     mod_name = "status"
   end
 
-  local u = require("copilot.util")
-
   local ok, mod = pcall(require, "copilot." .. mod_name)
   if not ok then
     action_name = mod_name
@@ -37,18 +35,11 @@ vim.api.nvim_create_user_command("Copilot", function(opts)
     return
   end
 
-  local is_running = vim.wait(5000, function()
-    return not not u.get_copilot_client()
+  require("copilot.client").use_client(function()
+    mod[action_name]({
+      force = opts.bang,
+    })
   end)
-
-  if not is_running then
-    print("[Copilot] Not running")
-    return
-  end
-
-  mod[action_name]({
-    force = opts.bang,
-  })
 end, {
   bang = true,
   nargs = "?",
