@@ -16,6 +16,26 @@ local function store_client_id(id)
   M.id = id
 end
 
+local lsp_start = vim.lsp.start
+if not lsp_start then
+  local function reuse_client(client, conf)
+    return client.config.root_dir == conf.root_dir and client.name == conf.name
+  end
+
+  -- shim for neovim < 0.8.2
+  lsp_start = function(lsp_config)
+    local bufnr = vim.api.nvim_get_current_buf()
+    local client = M.get()
+    if client and reuse_client(client, lsp_config) then
+      vim.lsp.buf_attach_client(bufnr, client.id)
+      return client.id
+    end
+    local client_id = vim.lsp.start_client(lsp_config) --[[@as number]]
+    vim.lsp.buf_attach_client(bufnr, client_id)
+    return client_id
+  end
+end
+
 local copilot_node_version = nil
 function M.get_node_version()
   if not copilot_node_version then
@@ -37,7 +57,7 @@ function M.buf_attach(force)
     return
   end
 
-  local client_id = vim.lsp.start(M.config)
+  local client_id = lsp_start(M.config)
   store_client_id(client_id)
 end
 
