@@ -35,6 +35,10 @@ local panel = {
     was_insert = nil,
     auto_refreshing = nil,
   },
+  layout = {
+    position = "bottom",
+    ratio = 0.4
+  },
 
   auto_refresh = false,
   keymap = {},
@@ -303,10 +307,33 @@ function panel:ensure_winid()
     return
   end
 
-  local height = math.floor(vim.api.nvim_win_get_height(0) * 0.4)
+  local position = self.layout.position
+  local ratio = self.layout.ratio
+
+  local get_width = vim.api.nvim_win_get_width
+  local get_height = vim.api.nvim_win_get_height
+
+  local split_map = {
+    top = { cmd_prefix = "topleft ", winsize_fn = get_height },
+    right = { cmd_prefix = "vertical botright ", winsize_fn = get_width },
+    bottom = { cmd_prefix = "botright ", winsize_fn = get_height },
+    left = { cmd_prefix = "vertical topleft ", winsize_fn = get_width },
+  }
+
+  local split_info = split_map[position]
+  if not split_info then
+    print('Error: ' .. position .. ' is not a valid position')
+    return
+  end
+
+  local function resolve_splitcmd()
+    local size = math.floor(split_info.winsize_fn(0) * ratio)
+    local cmd_prefix = split_info.cmd_prefix
+    return "silent noswapfile " .. cmd_prefix .. tostring(size) .. ' split'
+  end
 
   self.winid = vim.api.nvim_win_call(0, function()
-    vim.cmd("silent noswapfile " .. tostring(height) .. "split")
+    vim.cmd(resolve_splitcmd())
     return vim.api.nvim_get_current_win()
   end)
 
@@ -483,7 +510,10 @@ function mod.refresh()
   end)
 end
 
-function mod.open()
+---@param layout {position: string, ratio: number}
+---position: (optional) 'bottom' | 'top' | 'left' | 'right'
+---ratio: (optional) between 0 and 1
+function mod.open(layout)
   local client = c.get()
   if not client then
     print("Error, copilot not running")
@@ -491,6 +521,7 @@ function mod.open()
   end
 
   panel.client = client
+  panel.layout = vim.tbl_deep_extend("force", panel.layout, layout or {})
 
   panel:init()
 end
@@ -505,6 +536,7 @@ function mod.setup(config)
   panel.auto_refresh = config.auto_refresh or false
 
   panel.keymap = config.keymap or {}
+  panel.layout = vim.tbl_deep_extend('force', panel.layout, config.layout or {})
 
   if panel.keymap.open then
     vim.keymap.set("i", panel.keymap.open, mod.open, {
