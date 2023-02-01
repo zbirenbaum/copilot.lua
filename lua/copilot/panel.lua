@@ -37,7 +37,7 @@ local panel = {
   },
   layout = {
     position = "bottom",
-    ratio = 0.4
+    ratio = 0.4,
   },
 
   auto_refresh = false,
@@ -211,8 +211,9 @@ function panel:accept()
   end
 
   local bufnr = vim.uri_to_bufnr(panel_uri_to_doc_uri(self.panel_uri))
+  local winid = vim.fn.bufwinid(bufnr)
 
-  if not vim.api.nvim_buf_is_loaded(bufnr) then
+  if not vim.api.nvim_buf_is_loaded(bufnr) or winid == -1 then
     vim.cmd("echoerr 'Buffer was closed'")
     return
   end
@@ -222,17 +223,19 @@ function panel:accept()
     return
   end
 
-  vim.api.nvim_buf_call(bufnr, function()
-    vim.lsp.util.apply_text_edits({
-      { range = entry.range, newText = entry.completionText },
-    }, 0, "utf-16")
+  vim.api.nvim_set_current_win(winid)
 
-    if self.state.was_insert then
-      vim.cmd("startinsert!")
-    else
-      vim.cmd("normal! $")
-    end
-  end)
+  if self.state.was_insert then
+    vim.cmd("startinsert!")
+  else
+    vim.cmd("normal! $")
+  end
+
+  vim.lsp.util.apply_text_edits({
+    { range = entry.range, newText = entry.completionText },
+  }, 0, "utf-16")
+  -- Put cursor at the end of current line.
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<End>", true, false, true), "n", false)
 
   self:unlock():clear():lock()
 
@@ -322,14 +325,14 @@ function panel:ensure_winid()
 
   local split_info = split_map[position]
   if not split_info then
-    print('Error: ' .. position .. ' is not a valid position')
+    print("Error: " .. position .. " is not a valid position")
     return
   end
 
   local function resolve_splitcmd()
     local size = math.floor(split_info.winsize_fn(0) * ratio)
     local cmd_prefix = split_info.cmd_prefix
-    return "silent noswapfile " .. cmd_prefix .. tostring(size) .. ' split'
+    return "silent noswapfile " .. cmd_prefix .. tostring(size) .. " split"
   end
 
   self.winid = vim.api.nvim_win_call(0, function()
@@ -536,7 +539,7 @@ function mod.setup(config)
   panel.auto_refresh = config.auto_refresh or false
 
   panel.keymap = config.keymap or {}
-  panel.layout = vim.tbl_deep_extend('force', panel.layout, config.layout or {})
+  panel.layout = vim.tbl_deep_extend("force", panel.layout, config.layout or {})
 
   if panel.keymap.open then
     vim.keymap.set("i", panel.keymap.open, mod.open, {
