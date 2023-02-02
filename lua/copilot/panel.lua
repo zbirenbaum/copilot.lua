@@ -371,10 +371,16 @@ function panel:ensure_winid()
     group = self.augroup,
     pattern = tostring(self.winid),
     callback = function()
+      local should_jump_to_prev_win = self.winid == vim.api.nvim_get_current_win()
+
       self.panelId = nil
       self.state = { entries = {} }
       vim.api.nvim_clear_autocmds({ group = self.augroup })
       self.winid = nil
+
+      if should_jump_to_prev_win then
+        vim.cmd("wincmd p")
+      end
     end,
     desc = "[copilot] (panel) win closed cleanup",
     once = true,
