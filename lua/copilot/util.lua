@@ -19,7 +19,7 @@ function M.get_editor_info()
     },
     editorPluginInfo = {
       name = "copilot.vim",
-      version = "1.8.1",
+      version = "1.8.2",
     },
   }
   return info
@@ -229,7 +229,9 @@ function M.get_editor_configuration()
 
   return {
     enableAutoCompletions = not not (conf.panel.enabled or conf.suggestion.enabled),
-    disabledLanguages = disabled_filetypes,
+    disabledLanguages = vim.tbl_map(function(ft)
+      return { languageId = ft }
+    end, disabled_filetypes),
   }
 end
 
