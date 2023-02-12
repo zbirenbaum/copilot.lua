@@ -179,10 +179,11 @@ function mod.unregister_panel_handlers(panelId)
   panel.callback.PanelSolutionsDone[panelId] = nil
 end
 
----@alias copilot_status_notification_data { status: string, message: string }
+---@alias copilot_status_notification_data { status: ''|'Normal'|'InProgress'|'Warning', message: string }
 
 local status = {
   client_id = nil,
+  ---@type copilot_status_notification_data
   data = {
     status = "",
     message = "",
