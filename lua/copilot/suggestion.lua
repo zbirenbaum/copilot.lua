@@ -264,6 +264,7 @@ local function get_suggestions_cycling_callback(state, err, data)
 
   if err then
     print(err)
+    return
   end
 
   local seen = {}
