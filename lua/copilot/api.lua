@@ -207,6 +207,7 @@ status.handlers = {
 ---@param handler fun(data: copilot_status_notification_data): nil
 function mod.register_status_notification_handler(handler)
   status.callback[handler] = true
+  handler(status.data)
 end
 
 ---@param handler fun(data: copilot_status_notification_data): nil
