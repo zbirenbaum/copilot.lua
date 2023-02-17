@@ -105,20 +105,15 @@ function mod.status()
 end
 
 ---@param opts? { force?: boolean }
-function mod.toggle(opts)
+function mod.attach(opts)
   opts = opts or {}
-
-  if c.buf_is_attached(0) then
-    c.buf_detach()
-    return
-  end
 
   if not opts.force then
     local should_attach, no_attach_reason = u.should_attach()
     if not should_attach then
       vim.api.nvim_echo({
         { "[Copilot] " .. no_attach_reason .. "\n" },
-        { "[Copilot] to force enable, run ':Copilot! toggle'" },
+        { "[Copilot] to force attach, run ':Copilot! attach'" },
       }, true, {})
       return
     end
@@ -127,6 +122,24 @@ function mod.toggle(opts)
   end
 
   c.buf_attach(opts.force)
+end
+
+function mod.detach()
+  if c.buf_is_attached(0) then
+    c.buf_detach()
+  end
+end
+
+---@param opts? { force?: boolean }
+function mod.toggle(opts)
+  opts = opts or {}
+
+  if c.buf_is_attached(0) then
+    mod.detach()
+    return
+  end
+
+  mod.attach(opts)
 end
 
 function mod.enable()

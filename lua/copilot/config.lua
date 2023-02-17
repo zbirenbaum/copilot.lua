@@ -14,8 +14,8 @@ local default_config = {
     },
     layout = {
       position = "bottom",
-      ratio = 0.4
-    }
+      ratio = 0.4,
+    },
   },
   ---@class copilot_config_suggestion
   suggestion = {
@@ -46,7 +46,7 @@ local mod = {
 
 function mod.setup(opts)
   if mod.config then
-    vim.notify("[copilot] config is already set", vim.log.levels.WARN)
+    vim.notify("[Copilot] config is already set", vim.log.levels.WARN)
     return mod.config
   end
 
@@ -68,7 +68,11 @@ end
 
 ---@param key? string
 function mod.get(key)
-  if mod.config and key then
+  if not mod.config then
+    error("[Copilot] not initialized")
+  end
+
+  if key then
     return mod.config[key]
   end
 
