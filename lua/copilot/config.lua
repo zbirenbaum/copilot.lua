@@ -22,7 +22,7 @@ local default_config = {
     enabled = true,
     auto_trigger = false,
     debounce = 75,
-    ---@type table<'accept'|'next'|'prev'|'dismiss', false|string>
+    ---@type table<'accept'|'accept_word'|'accept_line'|'next'|'prev'|'dismiss', false|string>
     keymap = {
       accept = "<M-l>",
       accept_word = false,
