@@ -55,7 +55,7 @@ local function get_display_lines(text)
 
   if extra_indent > 0 then
     for i, line in ipairs(lines) do
-      lines[i] = line:sub(1, extra_indent)
+      lines[i] = line:sub(extra_indent + 1)
     end
   end
 
