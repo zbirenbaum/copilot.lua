@@ -4,6 +4,8 @@ local util = require("copilot.util")
 
 local M = {
   id = nil,
+  augroup = "copilot.client",
+  disabled = false,
 }
 
 local function store_client_id(id)
@@ -53,6 +55,11 @@ end
 
 ---@param force? boolean
 function M.buf_attach(force)
+  if M.disabled then
+    print("[Copilot] Offline")
+    return
+  end
+
   if not force and not util.should_attach() then
     return
   end
@@ -67,27 +74,29 @@ function M.buf_detach()
   end
 end
 
----@param should_start? boolean
-function M.get(should_start)
-  if not M.config then
-    error("copilot.setup is not called yet")
-  end
-
-  local client = M.id and vim.lsp.get_client_by_id(M.id) or nil
-
-  if should_start and not (M.id and client) then
-    local client_id = vim.lsp.start_client(M.config)
-    store_client_id(client_id)
-
-    client = vim.lsp.get_client_by_id(M.id)
-  end
-
-  return client
+function M.get()
+  return vim.lsp.get_client_by_id(M.id)
 end
 
 ---@param callback fun(client:table):nil
 function M.use_client(callback)
-  local client = M.get(true) --[[@as table]]
+  if M.disabled then
+    print("[Copilot] Offline")
+    return
+  end
+
+  local client = M.get() --[[@as table]]
+
+  if not client then
+    if not M.config then
+      error("copilot.setup is not called yet")
+    end
+
+    local client_id = vim.lsp.start_client(M.config)
+    store_client_id(client_id)
+
+    client = M.get()
+  end
 
   if client.initialized then
     callback(client)
@@ -136,21 +145,24 @@ M.merge_server_opts = function(params)
   }, params.server_opts_overrides or {})
 end
 
-M.setup = function(params)
-  if vim.fn.executable(params.copilot_node_command) ~= 1 then
+function M.setup()
+  M.disabled = false
+
+  M.config = M.merge_server_opts(config.get())
+
+  if vim.fn.executable(M.config.cmd[1]) ~= 1 then
+    is_disabled = true
     vim.notify(
-      string.format("[copilot] copilot_node_command(%s) is not executable", params.copilot_node_command),
+      string.format("[copilot] copilot_node_command(%s) is not executable", M.config.cmd[1]),
       vim.log.levels.ERROR
     )
     return
   end
 
-  M.config = M.merge_server_opts(params)
-
-  local augroup = vim.api.nvim_create_augroup("copilot.client", { clear = true })
+  vim.api.nvim_create_augroup(M.augroup, { clear = true })
 
   vim.api.nvim_create_autocmd("FileType", {
-    group = augroup,
+    group = M.augroup,
     callback = vim.schedule_wrap(function()
       M.buf_attach()
     end),
@@ -159,6 +171,17 @@ M.setup = function(params)
   vim.schedule(function()
     M.buf_attach()
   end)
+end
+
+function M.teardown()
+  M.disabled = true
+
+  vim.api.nvim_clear_autocmds({ group = M.augroup })
+
+  if M.id then
+    vim.lsp.stop_client(M.id)
+    M.id = nil
+  end
 end
 
 return M
