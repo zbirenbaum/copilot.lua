@@ -1,5 +1,6 @@
 local api = require("copilot.api")
 local c = require("copilot.client")
+local config = require("copilot.config")
 local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
 
@@ -237,9 +238,17 @@ function panel:accept()
   -- Put cursor at the end of current line.
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<End>", true, false, true), "n", false)
 
-  self:unlock():clear():lock()
+  self:close()
+end
 
-  vim.api.nvim_win_close(self.winid, true)
+function panel:close()
+  if self.bufnr and vim.api.nvim_win_is_valid(self.bufnr) then
+    self:unlock():clear():lock()
+  end
+
+  if self.winid and vim.api.nvim_win_is_valid(self.winid) then
+    vim.api.nvim_win_close(self.winid, true)
+  end
 end
 
 local function set_keymap(bufnr)
@@ -533,17 +542,20 @@ function mod.open(layout)
   panel:init()
 end
 
-function mod.setup(config)
+function mod.setup()
+  local opts = config.get("panel") --[[@as copilot_config_panel]]
+  if not opts.enabled then
+    return
+  end
+
   if panel.setup_done then
     return
   end
 
-  config = config or {}
+  panel.auto_refresh = opts.auto_refresh or false
 
-  panel.auto_refresh = config.auto_refresh or false
-
-  panel.keymap = config.keymap or {}
-  panel.layout = vim.tbl_deep_extend("force", panel.layout, config.layout or {})
+  panel.keymap = opts.keymap or {}
+  panel.layout = vim.tbl_deep_extend("force", panel.layout, opts.layout or {})
 
   if panel.keymap.open then
     vim.keymap.set("i", panel.keymap.open, mod.open, {
@@ -553,6 +565,25 @@ function mod.setup(config)
   end
 
   panel.setup_done = true
+end
+
+function mod.teardown()
+  local opts = config.get("panel") --[[@as copilot_config_panel]]
+  if not opts.enabled then
+    return
+  end
+
+  if not panel.setup_done then
+    return
+  end
+
+  if panel.keymap.open then
+    vim.keymap.del("i", panel.keymap.open)
+  end
+
+  panel:close()
+
+  panel.setup_done = false
 end
 
 return mod
