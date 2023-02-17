@@ -49,9 +49,14 @@ function mod.status()
     vim.api.nvim_echo(lines, true, {})
   end
 
+  if c.is_disabled() then
+    flush_lines("Offline")
+    return
+  end
+
   local client = c.get()
   if not client then
-    flush_lines("Not running")
+    flush_lines("Not Started")
     return
   end
 
@@ -122,6 +127,18 @@ function mod.toggle(opts)
   end
 
   c.buf_attach(opts.force)
+end
+
+function mod.enable()
+  c.setup()
+  require("copilot.panel").setup()
+  require("copilot.suggestion").setup()
+end
+
+function mod.disable()
+  c.teardown()
+  require("copilot.panel").teardown()
+  require("copilot.suggestion").teardown()
 end
 
 return mod

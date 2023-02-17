@@ -2,10 +2,11 @@ local api = require("copilot.api")
 local config = require("copilot.config")
 local util = require("copilot.util")
 
+local is_disabled = false
+
 local M = {
   id = nil,
   augroup = "copilot.client",
-  disabled = false,
 }
 
 local function store_client_id(id)
@@ -55,7 +56,7 @@ end
 
 ---@param force? boolean
 function M.buf_attach(force)
-  if M.disabled then
+  if is_disabled then
     print("[Copilot] Offline")
     return
   end
@@ -78,9 +79,13 @@ function M.get()
   return vim.lsp.get_client_by_id(M.id)
 end
 
+function M.is_disabled()
+  return is_disabled
+end
+
 ---@param callback fun(client:table):nil
 function M.use_client(callback)
-  if M.disabled then
+  if is_disabled then
     print("[Copilot] Offline")
     return
   end
@@ -146,7 +151,7 @@ M.merge_server_opts = function(params)
 end
 
 function M.setup()
-  M.disabled = false
+  is_disabled = false
 
   M.config = M.merge_server_opts(config.get())
 
@@ -174,7 +179,7 @@ function M.setup()
 end
 
 function M.teardown()
-  M.disabled = true
+  is_disabled = true
 
   vim.api.nvim_clear_autocmds({ group = M.augroup })
 
