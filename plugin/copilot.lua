@@ -1,8 +1,8 @@
 local completion_store = {
-  [""] = { "auth", "panel", "suggestion", "status", "toggle", "version", "enable", "disable" },
+  [""] = { "auth", "attach", "detach", "disable", "enable", "panel", "status", "suggestion", "toggle", "version" },
   auth = { "signin", "signout" },
   panel = { "accept", "jump_next", "jump_prev", "open", "refresh" },
-  suggestion = { "accept", "accept_word", "accept_line", "dismiss", "next", "prev", "toggle_auto_trigger" },
+  suggestion = { "accept", "accept_line", "accept_word", "dismiss", "next", "prev", "toggle_auto_trigger" },
 }
 
 vim.api.nvim_create_user_command("Copilot", function(opts)
