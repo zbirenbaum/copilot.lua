@@ -4,7 +4,7 @@ local default_config = {
   panel = {
     enabled = true,
     auto_refresh = false,
-    ---@type table<'accept'|'next'|'prev'|'dismiss', false|string>
+    ---@type table<'jump_prev'|'jump_next'|'accept'|'refresh'|'open', false|string>
     keymap = {
       jump_prev = "[[",
       jump_next = "]]",
