@@ -1,5 +1,6 @@
 local api = require("copilot.api")
 local c = require("copilot.client")
+local config = require("copilot.config")
 local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
 
@@ -97,6 +98,32 @@ local function set_keymap(keymap)
       desc = "[copilot] dismiss suggestion",
       silent = true,
     })
+  end
+end
+
+local function unset_keymap(keymap)
+  if keymap.accept then
+    vim.keymap.del("i", keymap.accept)
+  end
+
+  if keymap.accept_word then
+    vim.keymap.del("i", keymap.accept_word)
+  end
+
+  if keymap.accept_line then
+    vim.keymap.del("i", keymap.accept_line)
+  end
+
+  if keymap.next then
+    vim.keymap.del("i", keymap.next)
+  end
+
+  if keymap.prev then
+    vim.keymap.del("i", keymap.prev)
+  end
+
+  if keymap.dismiss then
+    vim.keymap.del("i", keymap.dismiss)
   end
 end
 
@@ -473,48 +500,82 @@ local function on_complete_changed()
   clear()
 end
 
-function mod.setup(config)
-  if copilot.setup_done then
-    return
-  end
-
-  set_keymap(config.keymap or {})
-
-  copilot.auto_trigger = config.auto_trigger
+local function create_autocmds()
+  vim.api.nvim_create_augroup(copilot.augroup, { clear = true })
 
   vim.api.nvim_create_autocmd("InsertLeave", {
+    group = copilot.augroup,
     callback = on_insert_leave,
     desc = "[copilot] (suggestion) insert leave",
   })
 
   vim.api.nvim_create_autocmd("BufLeave", {
+    group = copilot.augroup,
     callback = on_buf_leave,
     desc = "[copilot] (suggestion) buf leave",
   })
 
   vim.api.nvim_create_autocmd("InsertEnter", {
+    group = copilot.augroup,
     callback = on_insert_enter,
     desc = "[copilot] (suggestion) insert enter",
   })
 
   vim.api.nvim_create_autocmd("BufEnter", {
+    group = copilot.augroup,
     callback = on_buf_enter,
     desc = "[copilot] (suggestion) buf enter",
   })
 
   vim.api.nvim_create_autocmd("CursorMovedI", {
+    group = copilot.augroup,
     callback = on_cursor_moved_i,
     desc = "[copilot] (suggestion) cursor moved insert",
   })
 
   vim.api.nvim_create_autocmd("CompleteChanged", {
+    group = copilot.augroup,
     callback = on_complete_changed,
     desc = "[copilot] (suggestion) complete changed",
   })
+end
 
-  copilot.debounce = config.debounce
+function mod.setup()
+  local opts = config.get("suggestion") --[[@as copilot_config_suggestion]]
+  if not opts.enabled then
+    return
+  end
+
+  if copilot.setup_done then
+    return
+  end
+
+  set_keymap(opts.keymap or {})
+
+  copilot.auto_trigger = opts.auto_trigger
+
+  create_autocmds()
+
+  copilot.debounce = opts.debounce
 
   copilot.setup_done = true
+end
+
+function mod.teardown()
+  local opts = config.get("suggestion") --[[@as copilot_config_suggestion]]
+  if not opts.enabled then
+    return
+  end
+
+  if not copilot.setup_done then
+    return
+  end
+
+  unset_keymap(opts.keymap or {})
+
+  vim.api.nvim_clear_autocmds({ group = copilot.augroup })
+
+  copilot.setup_done = false
 end
 
 return mod
