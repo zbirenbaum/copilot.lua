@@ -184,6 +184,13 @@ local function update_preview()
     annot = "(" .. copilot._copilot.choice .. "/" .. #copilot._copilot.suggestions .. ")"
   end
 
+  local cursor_col = vim.fn.col(".")
+
+  displayLines[1] = string.sub(
+    string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1),
+    cursor_col
+  )
+
   local extmark = {
     id = copilot.extmark_id,
     virt_text_win_col = vim.fn.virtcol(".") - 1,
@@ -205,7 +212,7 @@ local function update_preview()
 
   extmark.hl_mode = "combine"
 
-  vim.api.nvim_buf_set_extmark(0, copilot.ns_id, vim.fn.line(".") - 1, vim.fn.col(".") - 1, extmark)
+  vim.api.nvim_buf_set_extmark(0, copilot.ns_id, vim.fn.line(".") - 1, cursor_col - 1, extmark)
 
   if suggestion.uuid ~= copilot.uuid then
     copilot.uuid = suggestion.uuid
