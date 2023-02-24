@@ -137,6 +137,14 @@ M.merge_server_opts = function(params)
 end
 
 M.setup = function(params)
+  if vim.fn.executable(params.copilot_node_command) ~= 1 then
+    vim.notify(
+      string.format("[copilot] copilot_node_command(%s) is not executable", params.copilot_node_command),
+      vim.log.levels.ERROR
+    )
+    return
+  end
+
   M.config = M.merge_server_opts(params)
 
   local augroup = vim.api.nvim_create_augroup("copilot.client", { clear = true })
