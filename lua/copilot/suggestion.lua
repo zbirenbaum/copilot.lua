@@ -369,7 +369,8 @@ local function schedule()
 end
 
 function mod.next()
-  if not copilot._copilot.params and not should_auto_trigger() then
+  -- no suggestion request yet
+  if not copilot._copilot.first then
     schedule()
     return
   end
@@ -380,7 +381,8 @@ function mod.next()
 end
 
 function mod.prev()
-  if not copilot._copilot.params and not should_auto_trigger() then
+  -- no suggestion request yet
+  if not copilot._copilot.first then
     schedule()
     return
   end
