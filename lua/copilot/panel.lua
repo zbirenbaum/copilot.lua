@@ -283,6 +283,14 @@ local function set_keymap(bufnr)
       silent = true,
     })
   end
+
+  if panel.keymap.close then
+    vim.keymap.set("n", panel.keymap.close, mod.teardown, {
+      buffer = bufnr,
+      desc = "[copilot] (panel) close",
+      silent = true,
+    })
+  end
 end
 
 function panel:ensure_bufnr()
