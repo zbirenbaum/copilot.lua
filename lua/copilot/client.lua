@@ -42,18 +42,24 @@ end
 local copilot_node_version = nil
 function M.get_node_version()
   if not copilot_node_version then
-    copilot_node_version = string.match(
-      table.concat(vim.fn.systemlist(config.get("copilot_node_command") .. " --version", nil, false)),
+    local node_version = string.match(
+      table.concat(vim.fn.systemlist(config.get("copilot_node_command") .. " --version", nil, false)) or "",
       "v(%S+)"
     )
 
-    local node_version_major = tonumber(string.match(copilot_node_version, "^(%d+)%."))
+    if not node_version then
+      error("[Copilot] Node.js not found")
+    end
+
+    local node_version_major = tonumber(string.match(node_version, "^(%d+)%."))
     if node_version_major < 16 then
       vim.notify(
         string.format("[Copilot] Node.js version 16.x or newer required but found %s", copilot_node_version),
         vim.log.levels.ERROR
       )
     end
+
+    copilot_node_version = node_version
   end
   return copilot_node_version
 end
