@@ -115,7 +115,8 @@ function mod.notify_shown(client, params, callback)
   return mod.request(client, "notifyShown", params, callback)
 end
 
----@alias copilot_get_completions_data { completions: { displayText: string, position: { character: integer, line: integer }, range: { ['end']: { character: integer, line: integer }, start: { character: integer, line: integer } }, text: string, uuid: string }[] }
+---@alias copilot_get_completions_data_completion { displayText: string, position: { character: integer, line: integer }, range: { ['end']: { character: integer, line: integer }, start: { character: integer, line: integer } }, text: string, uuid: string }
+---@alias copilot_get_completions_data { completions: copilot_get_completions_data_completion[] }
 
 ---@return any|nil err
 ---@return copilot_get_completions_data data
