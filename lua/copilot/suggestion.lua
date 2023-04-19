@@ -20,6 +20,7 @@ local copilot = {
     cycling = nil,
     cycling_callbacks = nil,
     params = nil,
+    ---@type copilot_get_completions_data_completion[]|nil
     suggestions = nil,
     choice = nil,
   },
@@ -160,6 +161,7 @@ local function clear_preview()
   vim.api.nvim_buf_del_extmark(0, copilot.ns_id, copilot.extmark_id)
 end
 
+---@return copilot_get_completions_data_completion|nil
 local function get_current_suggestion()
   local ok, choice = pcall(function()
     if
@@ -392,8 +394,8 @@ function mod.prev()
   end)
 end
 
----@param partial? 'word'|'line'
-local function accept_suggestion(partial)
+---@param modifier? (fun(suggestion: copilot_get_completions_data_completion): copilot_get_completions_data_completion)
+function mod.accept(modifier)
   local suggestion = get_current_suggestion()
   if not suggestion or vim.fn.empty(suggestion.text) == 1 then
     return
@@ -401,7 +403,7 @@ local function accept_suggestion(partial)
 
   reset_state()
   with_client(function(client)
-    if partial then
+    if modifier then
       -- do not notify_accepted for partial accept.
       -- revisit if upstream copilot.vim adds this feature.
       return
@@ -412,30 +414,11 @@ local function accept_suggestion(partial)
   copilot.uuid = nil
   clear_preview()
 
-  local range, newText = suggestion.range, suggestion.text
-
-  if partial then
-    local cursor = vim.api.nvim_win_get_cursor(0)
-    local _, character = cursor[1], cursor[2]
-
-    if partial == "word" then
-      local _, char_idx = string.find(newText, "%s*%p*[^%s%p]*%s*", character + 1)
-      if not char_idx then
-        return
-      end
-
-      newText = string.sub(newText, 1, char_idx)
-
-      range["end"].line = range["start"].line
-      range["end"].character = char_idx
-    elseif partial == "line" then
-      local next_char = string.sub(newText, character + 1, character + 1)
-      local _, char_idx = string.find(newText, next_char == "\n" and "\n%s*[^\n]*\n%s*" or "\n%s*", character)
-      if char_idx then
-        newText = string.sub(newText, 1, char_idx)
-      end
-    end
+  if type(modifier) == "function" then
+    suggestion = modifier(suggestion)
   end
+
+  local range, newText = suggestion.range, suggestion.text
 
   -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
@@ -444,16 +427,40 @@ local function accept_suggestion(partial)
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<End>", true, false, true), "n", false)
 end
 
-function mod.accept()
-  accept_suggestion()
-end
-
 function mod.accept_word()
-  accept_suggestion("word")
+  mod.accept(function(suggestion)
+    local range, text = suggestion.range, suggestion.text
+
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local _, character = cursor[1], cursor[2]
+
+    local _, char_idx = string.find(text, "%s*%p*[^%s%p]*%s*", character + 1)
+    if char_idx then
+      suggestion.text = string.sub(text, 1, char_idx)
+
+      range["end"].line = range["start"].line
+      range["end"].character = char_idx
+    end
+
+    return suggestion
+  end)
 end
 
 function mod.accept_line()
-  accept_suggestion("line")
+  mod.accept(function(suggestion)
+    local text = suggestion.text
+
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local _, character = cursor[1], cursor[2]
+
+    local next_char = string.sub(text, character + 1, character + 1)
+    local _, char_idx = string.find(text, next_char == "\n" and "\n%s*[^\n]*\n%s*" or "\n%s*", character)
+    if char_idx then
+      suggestion.text = string.sub(text, 1, char_idx)
+    end
+
+    return suggestion
+  end)
 end
 
 function mod.dismiss()
