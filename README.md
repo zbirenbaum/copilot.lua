@@ -142,6 +142,42 @@ require("copilot.suggestion").dismiss()
 require("copilot.suggestion").toggle_auto_trigger()
 ```
 
+Use a fallbackable key to accept the suggestion (For example: `<Tab>`):
+
+```lua
+  use {
+    ...
+    config = function ()
+      local copilot = require('copilot')
+
+      copilot.setup {
+        panel = { enabled = false },
+        suggestion = {
+          enabled = true,
+          keymap = {
+            accept = false,
+          }
+        },
+      }
+
+      local keymap_accept = '<Tab>'
+      local keycode = vim.api.nvim_replace_termcodes(keymap_accept, true, false, true)
+      local suggestion = require('copilot.suggestion')
+      local function accept()
+        if not suggestion.is_active() then
+          local buf = vim.api.nvim_get_current_buf()
+          local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+          vim.api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, { keycode })
+          vim.api.nvim_win_set_cursor(0, { row, col + 1 })
+        else
+          return suggestion.accept()
+        end
+      end
+      vim.keymap.set('i', keymap_accept, accept, { remap = false, silent = true })
+    end
+  }
+```
+
 ### filetypes
 
 Specify filetypes for attaching copilot.

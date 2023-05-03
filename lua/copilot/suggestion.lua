@@ -549,6 +549,10 @@ local function create_autocmds()
   })
 end
 
+function mod.is_active()
+  return get_current_suggestion() ~= nil
+end
+
 function mod.setup()
   local opts = config.get("suggestion") --[[@as copilot_config_suggestion]]
   if not opts.enabled then
