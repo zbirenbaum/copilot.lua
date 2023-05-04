@@ -153,7 +153,11 @@ M.merge_server_opts = function(params)
           .. M.get_node_version()
         set_editor_info_params.editorConfiguration = util.get_editor_configuration()
         set_editor_info_params.networkProxy = util.get_network_proxy()
-        api.set_editor_info(client, set_editor_info_params)
+        api.set_editor_info(client, set_editor_info_params, function(err)
+          if err then
+            vim.notify(string.format("[copilot] setEditorInfo failure: %s", err), vim.log.levels.ERROR)
+          end
+        end)
       end)
     end,
     handlers = {

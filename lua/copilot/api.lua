@@ -34,8 +34,11 @@ end
 ---@alias copilot_set_editor_info_params { editorInfo: copilot_editor_info, editorPluginInfo: copilot_editor_plugin_info, editorConfiguration: copilot_editor_configuration, networkProxy?: copilot_network_proxy }
 
 ---@param params copilot_set_editor_info_params
-function mod.set_editor_info(client, params)
-  return mod.notify(client, "setEditorInfo", params)
+---@return any|nil err
+---@return nil data
+---@return table ctx
+function mod.set_editor_info(client, params, callback)
+  return mod.request(client, "setEditorInfo", params, callback)
 end
 
 ---@alias copilot_editor_configuration { enableAutoCompletions: boolean, disabledLanguages: string[] }
