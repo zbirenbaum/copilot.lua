@@ -303,9 +303,13 @@ local function get_suggestions_cycling_callback(state, err, data)
     return
   end
 
+  if not state.suggestions then
+    return
+  end
+
   local seen = {}
 
-  for _, suggestion in ipairs(state.suggestions or {}) do
+  for _, suggestion in ipairs(state.suggestions) do
     seen[suggestion.text] = true
   end
 
@@ -401,7 +405,9 @@ function mod.accept(modifier)
     return
   end
 
+  cancel_inflight_requests()
   reset_state()
+
   with_client(function(client)
     if modifier then
       -- do not notify_accepted for partial accept.
