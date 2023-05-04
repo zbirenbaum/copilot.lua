@@ -37,24 +37,6 @@ function M.get_copilot_lua_version()
   return copilot_lua_version
 end
 
--- keep for debugging reasons
-local get_capabilities = function()
-  return {
-    capabilities = {
-      textDocumentSync = {
-        change = 2,
-        openClose = true,
-      },
-      workspace = {
-        workspaceFolders = {
-          changeNotifications = true,
-          supported = true,
-        },
-      },
-    },
-  }
-end
-
 -- use `require("copilot.client").get()`
 ---@deprecated
 M.get_copilot_client = function()
