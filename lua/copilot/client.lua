@@ -144,6 +144,9 @@ M.merge_server_opts = function(params)
     },
     root_dir = vim.loop.cwd(),
     name = "copilot",
+    get_language_id = function(_, filetype)
+      return util.language_for_file_type(filetype)
+    end,
     on_init = function(client)
       vim.schedule(function()
         ---@type copilot_set_editor_info_params
