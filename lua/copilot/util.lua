@@ -278,6 +278,7 @@ function M.get_network_proxy()
   }
 end
 
+---@deprecated
 M.get_copilot_path = function()
   local copilot_path = vim.api.nvim_get_runtime_file("copilot/index.js", false)[1]
   if vim.fn.filereadable(copilot_path) ~= 0 then

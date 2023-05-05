@@ -9,6 +9,8 @@ local M = {
   id = nil,
   capabilities = nil,
   config = nil,
+  node_version = nil,
+  startup_error = nil,
 }
 
 ---@param id number
@@ -42,29 +44,9 @@ if not lsp_start then
   end
 end
 
-local copilot_node_version = nil
+---@return string|nil
 function M.get_node_version()
-  if not copilot_node_version then
-    local node_version = string.match(
-      table.concat(vim.fn.systemlist(config.get("copilot_node_command") .. " --version", nil, false)) or "",
-      "v(%S+)"
-    )
-
-    if not node_version then
-      error("[Copilot] Node.js not found")
-    end
-
-    local node_version_major = tonumber(string.match(node_version, "^(%d+)%."))
-    if node_version_major < 16 then
-      vim.notify(
-        string.format("[Copilot] Node.js version 16.x or newer required but found %s", copilot_node_version),
-        vim.log.levels.ERROR
-      )
-    end
-
-    copilot_node_version = node_version
-  end
-  return copilot_node_version
+  return M.node_version
 end
 
 function M.buf_is_attached(bufnr)
@@ -139,11 +121,67 @@ function M.use_client(callback)
   )
 end
 
-M.merge_server_opts = function(params)
+local function prepare_client_config(overrides)
+  local node = config.get("copilot_node_command")
+
+  if vim.fn.executable(node) ~= 1 then
+    local err = string.format("copilot_node_command(%s) is not executable", node)
+    vim.notify("[Copilot] " .. err, vim.log.levels.ERROR)
+    M.startup_error = err
+    return
+  end
+
+  if not M.node_version then
+    local cmd = node .. " --version"
+    local cmd_output = table.concat(vim.fn.systemlist(cmd, nil, false))
+    local cmd_exit_code = vim.v.shell_error
+
+    local node_version = string.match(cmd_output, "v(%S+)") or ""
+    local node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or 0
+
+    if node_version_major == 0 then
+      local err = "Could not determine Node.js version"
+      vim.notify("[Copilot] " .. err, vim.log.levels.ERROR)
+      M.startup_error = table.concat({
+        err,
+        "\n",
+        "-----------",
+        "\n",
+        "(exit code) ",
+        tostring(cmd_exit_code),
+        "\n",
+        "   (output) ",
+        cmd_output,
+        "\n",
+        "-----------",
+      })
+      return
+    end
+
+    if node_version_major < 16 then
+      local err = string.format("Node.js version 16.x or newer required but found %s", node_version)
+      vim.notify("[Copilot] " .. err, vim.log.levels.ERROR)
+      M.startup_error = err
+      return
+    end
+
+    M.node_version = node_version
+  end
+
+  local agent_path = vim.api.nvim_get_runtime_file("copilot/index.js", false)[1]
+  if vim.fn.filereadable(agent_path) == 0 then
+    local err = string.format("Could not find agent.js (bad install?) : %s", agent_path)
+    vim.notify("[Copilot] " .. err, vim.log.levels.ERROR)
+    M.startup_error = err
+    return
+  end
+
+  M.startup_error = nil
+
   return vim.tbl_deep_extend("force", {
     cmd = {
-      params.copilot_node_command,
-      require("copilot.util").get_copilot_path(),
+      node,
+      agent_path,
     },
     root_dir = vim.loop.cwd(),
     name = "copilot",
@@ -160,7 +198,7 @@ M.merge_server_opts = function(params)
         local set_editor_info_params = util.get_editor_info()
         set_editor_info_params.editorInfo.version = set_editor_info_params.editorInfo.version
           .. " + Node.js "
-          .. M.get_node_version()
+          .. (M.get_node_version() or "")
         set_editor_info_params.editorConfiguration = util.get_editor_configuration()
         set_editor_info_params.networkProxy = util.get_network_proxy()
         api.set_editor_info(client, set_editor_info_params, function(err)
@@ -181,22 +219,18 @@ M.merge_server_opts = function(params)
       PanelSolutionsDone = api.handlers.PanelSolutionsDone,
       statusNotification = api.handlers.statusNotification,
     },
-  }, params.server_opts_overrides or {})
+  }, overrides)
 end
 
 function M.setup()
-  is_disabled = false
+  M.config = prepare_client_config(config.get("server_opts_overrides"))
 
-  M.config = M.merge_server_opts(config.get())
-
-  if vim.fn.executable(M.config.cmd[1]) ~= 1 then
+  if not M.config then
     is_disabled = true
-    vim.notify(
-      string.format("[copilot] copilot_node_command(%s) is not executable", M.config.cmd[1]),
-      vim.log.levels.ERROR
-    )
     return
   end
+
+  is_disabled = false
 
   vim.api.nvim_create_augroup(M.augroup, { clear = true })
 
