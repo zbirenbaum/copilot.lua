@@ -23,8 +23,8 @@ function mod.version()
       lines[#lines + 1] = "copilot/dist/agent.js" .. " " .. "not running"
     end
 
-    local found_node_version, node_version = pcall(c.get_node_version)
-    lines[#lines + 1] = "Node.js" .. " " .. (found_node_version and node_version or "not found")
+    local node_version = c.get_node_version()
+    lines[#lines + 1] = "Node.js" .. " " .. (node_version or "not found")
 
     vim.api.nvim_echo(
       vim.tbl_map(function(line)
@@ -52,7 +52,8 @@ function mod.status()
   end
 
   if c.is_disabled() then
-    flush_lines("Offline")
+    add_line("Offline")
+    flush_lines(c.startup_error)
     return
   end
 
