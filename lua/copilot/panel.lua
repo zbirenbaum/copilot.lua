@@ -496,6 +496,15 @@ function panel:init()
     return
   end
 
+  if not c.buf_is_attached(0) then
+    local should_attach, no_attach_reason = util.should_attach()
+    vim.notify(
+      string.format("[Copilot] %s", should_attach and ("Disabled manually for " .. vim.bo.filetype) or no_attach_reason),
+      vim.log.levels.ERROR
+    )
+    return
+  end
+
   self.panel_uri = panel_uri_from_doc_uri(doc.uri)
   self.filetype = vim.bo.filetype
 
