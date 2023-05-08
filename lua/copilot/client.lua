@@ -44,8 +44,41 @@ if not lsp_start then
   end
 end
 
----@return string|nil
+---@return string
 function M.get_node_version()
+  if not M.node_version then
+    local node = config.get("copilot_node_command")
+
+    local cmd = node .. " --version"
+    local cmd_output = table.concat(vim.fn.systemlist(cmd, nil, false))
+    local cmd_exit_code = vim.v.shell_error
+
+    local node_version = string.match(cmd_output, "^v(%S+)") or ""
+    local node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or 0
+
+    if node_version_major == 0 then
+      local err = "[Copilot] Could not determine Node.js version"
+      vim.notify(err, vim.log.levels.WARN)
+      vim.api.nvim_echo({
+        {
+          table.concat({
+            err,
+            "-----------",
+            "(exit code) " .. tostring(cmd_exit_code),
+            "   (output) " .. cmd_output,
+            "-----------",
+          }, "\n"),
+          "MoreMsg",
+        },
+      }, true, {})
+    elseif node_version_major < 16 then
+      local err = string.format("[Copilot] Node.js version 16.x or newer required but found %s", node_version)
+      vim.notify(err, vim.log.levels.WARN)
+    end
+
+    M.node_version = node_version or ""
+  end
+
   return M.node_version
 end
 
@@ -131,43 +164,6 @@ local function prepare_client_config(overrides)
     return
   end
 
-  if not M.node_version then
-    local cmd = node .. " --version"
-    local cmd_output = table.concat(vim.fn.systemlist(cmd, nil, false))
-    local cmd_exit_code = vim.v.shell_error
-
-    local node_version = string.match(cmd_output, "v(%S+)") or ""
-    local node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or 0
-
-    if node_version_major == 0 then
-      local err = "Could not determine Node.js version"
-      vim.notify("[Copilot] " .. err, vim.log.levels.ERROR)
-      M.startup_error = table.concat({
-        err,
-        "\n",
-        "-----------",
-        "\n",
-        "(exit code) ",
-        tostring(cmd_exit_code),
-        "\n",
-        "   (output) ",
-        cmd_output,
-        "\n",
-        "-----------",
-      })
-      return
-    end
-
-    if node_version_major < 16 then
-      local err = string.format("Node.js version 16.x or newer required but found %s", node_version)
-      vim.notify("[Copilot] " .. err, vim.log.levels.ERROR)
-      M.startup_error = err
-      return
-    end
-
-    M.node_version = node_version
-  end
-
   local agent_path = vim.api.nvim_get_runtime_file("copilot/index.js", false)[1]
   if vim.fn.filereadable(agent_path) == 0 then
     local err = string.format("Could not find agent.js (bad install?) : %s", agent_path)
@@ -198,7 +194,7 @@ local function prepare_client_config(overrides)
         local set_editor_info_params = util.get_editor_info()
         set_editor_info_params.editorInfo.version = set_editor_info_params.editorInfo.version
           .. " + Node.js "
-          .. (M.get_node_version() or "")
+          .. M.get_node_version()
         set_editor_info_params.editorConfiguration = util.get_editor_configuration()
         set_editor_info_params.networkProxy = util.get_network_proxy()
         api.set_editor_info(client, set_editor_info_params, function(err)
