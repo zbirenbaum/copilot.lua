@@ -24,7 +24,7 @@ function mod.version()
     end
 
     local node_version = c.get_node_version()
-    lines[#lines + 1] = "Node.js" .. " " .. (node_version or "not found")
+    lines[#lines + 1] = "Node.js" .. " " .. (#node_version == 0 and "(unknown)" or node_version)
 
     vim.api.nvim_echo(
       vim.tbl_map(function(line)
