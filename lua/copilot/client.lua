@@ -50,7 +50,8 @@ function M.get_node_version()
     local node = config.get("copilot_node_command")
 
     local cmd = node .. " --version"
-    local cmd_output = table.concat(vim.fn.systemlist(cmd, nil, false))
+    local cmd_output_table = vim.fn.systemlist(cmd, nil, false)
+    local cmd_output = cmd_output_table[#cmd_output_table]
     local cmd_exit_code = vim.v.shell_error
 
     local node_version = string.match(cmd_output, "^v(%S+)") or ""
