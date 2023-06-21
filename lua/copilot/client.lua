@@ -49,7 +49,7 @@ function M.get_node_version()
   if not M.node_version then
     local node = config.get("copilot_node_command")
 
-    local cmd = { "node", "--version" }
+    local cmd = { node, "--version" }
     local cmd_output_table = vim.fn.systemlist(cmd, nil, false)
     local cmd_output = cmd_output_table[#cmd_output_table]
     local cmd_exit_code = vim.v.shell_error
