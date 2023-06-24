@@ -21,9 +21,9 @@ jobs:
           fetch-depth: 1
           path: copilot.vim
 
-      - name: Copy latest copilot/dist
+      - name: Copy latest copilot.vim/dist
         run: |
-          cp copilot.vim/copilot/dist/* copilot/dist/
+          cp -r copilot.vim/dist/* copilot/dist/
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
@@ -32,6 +32,6 @@ jobs:
           author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           base: master
           branch: create-pull-request/update-copilot-dist
-          commit-message: "feat: update to latest copilot/dist"
+          commit-message: "feat: update to latest copilot.vim/dist"
           reviewers: MunifTanjim,zbirenbaum
-          title: "Update copilot/dist"
+          title: "Update copilot.vim/dist"
