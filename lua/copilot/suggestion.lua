@@ -95,7 +95,14 @@ local function set_keymap(keymap)
   end
 
   if keymap.dismiss then
-    vim.keymap.set("i", keymap.dismiss, mod.dismiss, {
+    vim.keymap.set("i", keymap.dismiss, function()
+      if mod.is_visible() then
+        mod.dismiss()
+        return "<Ignore>"
+      else
+        return keymap.dismiss
+      end
+    end, {
       desc = "[copilot] dismiss suggestion",
       silent = true,
     })
@@ -215,10 +222,8 @@ local function update_preview()
 
   local cursor_col = vim.fn.col(".")
 
-  displayLines[1] = string.sub(
-    string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1),
-    cursor_col
-  )
+  displayLines[1] =
+    string.sub(string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1), cursor_col)
 
   local extmark = {
     id = copilot.extmark_id,
