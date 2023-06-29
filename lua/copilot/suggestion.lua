@@ -104,6 +104,7 @@ local function set_keymap(keymap)
       end
     end, {
       desc = "[copilot] dismiss suggestion",
+      expr = true,
       silent = true,
     })
   end
