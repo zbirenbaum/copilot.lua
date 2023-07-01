@@ -19,7 +19,7 @@ function M.get_editor_info()
     },
     editorPluginInfo = {
       name = "copilot.vim",
-      version = "1.9.0",
+      version = "1.9.1",
     },
   }
   return info
