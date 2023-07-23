@@ -47,9 +47,10 @@ end
 ---@return string
 function M.get_node_version()
   if not M.node_version then
-    local node = config.get("copilot_node_command")
+    -- local node = config.get("copilot_node_command")
+    local cmd = { "/home/zach/Dev/copilot/copilot-rs/target/debug/copilot-rs" }
 
-    local cmd = { node, "--version" }
+    -- local cmd = { node, "--version" }
     local cmd_output_table = vim.fn.systemlist(cmd, nil, false)
     local cmd_output = cmd_output_table[#cmd_output_table]
     local cmd_exit_code = vim.v.shell_error
@@ -176,10 +177,11 @@ local function prepare_client_config(overrides)
   M.startup_error = nil
 
   return vim.tbl_deep_extend("force", {
-    cmd = {
-      node,
-      agent_path,
-    },
+    cmd = { "/home/zach/Dev/copilot/copilot-rs/target/debug/copilot-rs" },
+    -- cmd = {
+    --   node,
+    --   agent_path,
+    -- },
     root_dir = vim.loop.cwd(),
     name = "copilot",
     get_language_id = function(_, filetype)
@@ -190,20 +192,20 @@ local function prepare_client_config(overrides)
         M.capabilities = initialize_result.capabilities
       end
 
-      vim.schedule(function()
-        ---@type copilot_set_editor_info_params
-        local set_editor_info_params = util.get_editor_info()
-        set_editor_info_params.editorInfo.version = set_editor_info_params.editorInfo.version
-          .. " + Node.js "
-          .. M.get_node_version()
-        set_editor_info_params.editorConfiguration = util.get_editor_configuration()
-        set_editor_info_params.networkProxy = util.get_network_proxy()
-        api.set_editor_info(client, set_editor_info_params, function(err)
-          if err then
-            vim.notify(string.format("[copilot] setEditorInfo failure: %s", err), vim.log.levels.ERROR)
-          end
-        end)
-      end)
+      -- vim.schedule(function()
+      --   ---@type copilot_set_editor_info_params
+      --   local set_editor_info_params = util.get_editor_info()
+      --   set_editor_info_params.editorInfo.version = set_editor_info_params.editorInfo.version
+      --     .. " + Node.js "
+      --     .. M.get_node_version()
+      --   set_editor_info_params.editorConfiguration = util.get_editor_configuration()
+      --   set_editor_info_params.networkProxy = util.get_network_proxy()
+      --   -- api.set_editor_info(client, set_editor_info_params, function(err)
+      --     -- if err then
+      --     --   vim.notify(string.format("[copilot] setEditorInfo failure: %s", err), vim.log.levels.ERROR)
+      --     -- end
+      --   end)
+      -- end)
     end,
     on_exit = function(_code, _signal, client_id)
       if M.id == client_id then

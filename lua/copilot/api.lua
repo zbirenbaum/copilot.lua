@@ -1,5 +1,4 @@
 local mod = {}
-
 ---@param callback? fun(err: any|nil, data: table, ctx: table): nil
 ---@return any|nil err
 ---@return table data

@@ -1,4 +1,6 @@
 local api = require("copilot.api")
+local auth = require("copilot.auth")
+
 local c = require("copilot.client")
 
 local M = {}
