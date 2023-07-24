@@ -182,8 +182,6 @@ function M.get_doc_params(overrides)
     relativePath = params.doc.relativePath,
   }
   params.position = params.doc.position
-  print(vim.inspect(params))
-
   return params
 end
 
