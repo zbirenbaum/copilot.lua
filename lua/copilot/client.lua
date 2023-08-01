@@ -2,6 +2,7 @@ local api = require("copilot.api")
 local config = require("copilot.config")
 local util = require("copilot.util")
 
+local cmd = {"/home/zach/Dev/copilot/copilot-rs/target/release/copilot-rs" }
 local is_disabled = false
 
 local M = {
@@ -48,7 +49,6 @@ end
 function M.get_node_version()
   if not M.node_version then
     -- local node = config.get("copilot_node_command")
-    local cmd = { "/home/zach/Dev/copilot/copilot-rs/target/release/copilot-rs" }
 
     -- local cmd = { node, "--version" }
     local cmd_output_table = vim.fn.systemlist(cmd, nil, false)
@@ -177,7 +177,11 @@ local function prepare_client_config(overrides)
   M.startup_error = nil
 
   return vim.tbl_deep_extend("force", {
-    cmd = { "/home/zach/Dev/copilot/copilot-rs/target/debug/copilot-rs" },
+    cmd = cmd,
+    cmd_env = {
+      RUST_LOG="info",
+      RUST_BACKTRACE="FULL",
+    },
     root_dir = vim.loop.cwd(),
     name = "copilot",
     get_language_id = function(_, filetype)
