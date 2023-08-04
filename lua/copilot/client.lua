@@ -179,7 +179,7 @@ local function prepare_client_config(overrides)
   return vim.tbl_deep_extend("force", {
     cmd = cmd,
     cmd_env = {
-      RUST_LOG="info",
+      RUST_LOG="debug",
       RUST_BACKTRACE="FULL",
     },
     root_dir = vim.loop.cwd(),
