@@ -250,6 +250,7 @@ local function update_preview()
   vim.api.nvim_buf_set_extmark(0, copilot.ns_id, vim.fn.line(".") - 1, cursor_col - 1, extmark)
 
   if suggestion.uuid ~= copilot.uuid then
+    reject_current()
     copilot.uuid = suggestion.uuid
     with_client(function(client)
       api.notify_shown(client, { uuid = suggestion.uuid }, function() end)
@@ -259,7 +260,6 @@ end
 
 local function clear()
   stop_timer()
-  reject_current()
   cancel_inflight_requests()
   update_preview()
   reset_state()
@@ -476,6 +476,7 @@ function mod.accept_line()
 end
 
 function mod.dismiss()
+  reject_current()
   clear()
   update_preview()
 end
@@ -521,6 +522,10 @@ local function on_complete_changed()
   clear()
 end
 
+local function on_vim_leave_pre()
+  reject_current()
+end
+
 local function create_autocmds()
   vim.api.nvim_create_augroup(copilot.augroup, { clear = true })
 
@@ -558,6 +563,12 @@ local function create_autocmds()
     group = copilot.augroup,
     callback = on_complete_changed,
     desc = "[copilot] (suggestion) complete changed",
+  })
+
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    group = copilot.augroup,
+    callback = on_vim_leave_pre,
+    desc = "[copilot] (suggestion) vim leave pre",
   })
 end
 
