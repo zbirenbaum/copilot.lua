@@ -13,7 +13,6 @@ local copilot = {
   ns_id = vim.api.nvim_create_namespace("copilot.suggestion"),
   extmark_id = 1,
 
-  uuid = nil,
   _copilot_timer = nil,
   _copilot = {
     first = nil,
@@ -143,12 +142,14 @@ local function stop_timer()
   end
 end
 
-local function reject_current()
-  if copilot.uuid then
+---@param bufnr integer
+local function reject(bufnr)
+  local uuid = vim.fn.getbufvar(bufnr, "_copilot_uuid", "")
+  if uuid ~= "" then
     with_client(function(client)
-      api.notify_rejected(client, { uuids = { copilot.uuid } }, function() end)
+      api.notify_rejected(client, { uuids = { uuid } }, function() end)
     end)
-    copilot.uuid = nil
+    vim.api.nvim_buf_set_var(bufnr, "_copilot_uuid", "")
   end
 end
 
@@ -249,9 +250,9 @@ local function update_preview()
 
   vim.api.nvim_buf_set_extmark(0, copilot.ns_id, vim.fn.line(".") - 1, cursor_col - 1, extmark)
 
-  if suggestion.uuid ~= copilot.uuid then
-    reject_current()
-    copilot.uuid = suggestion.uuid
+  if suggestion.uuid ~= vim.fn.getbufvar(0, "_copilot_uuid", "") then
+    reject(0)
+    vim.api.nvim_buf_set_var(0, "_copilot_uuid", suggestion.uuid)
     with_client(function(client)
       api.notify_shown(client, { uuid = suggestion.uuid }, function() end)
     end)
@@ -414,6 +415,7 @@ function mod.accept(modifier)
   cancel_inflight_requests()
   reset_state()
 
+  vim.api.nvim_buf_set_var(0, "_copilot_uuid", "")
   with_client(function(client)
     if modifier then
       -- do not notify_accepted for partial accept.
@@ -423,7 +425,6 @@ function mod.accept(modifier)
 
     api.notify_accepted(client, { uuid = suggestion.uuid }, function() end)
   end)
-  copilot.uuid = nil
   clear_preview()
 
   if type(modifier) == "function" then
@@ -476,7 +477,7 @@ function mod.accept_line()
 end
 
 function mod.dismiss()
-  reject_current()
+  reject(0)
   clear()
   update_preview()
 end
@@ -522,8 +523,13 @@ local function on_complete_changed()
   clear()
 end
 
+---@param info { buf: integer }
+local function on_buf_unload(info)
+  reject(info.buf)
+end
+
 local function on_vim_leave_pre()
-  reject_current()
+  reject(0)
 end
 
 local function create_autocmds()
@@ -563,6 +569,12 @@ local function create_autocmds()
     group = copilot.augroup,
     callback = on_complete_changed,
     desc = "[copilot] (suggestion) complete changed",
+  })
+
+  vim.api.nvim_create_autocmd("BufUnload", {
+    group = copilot.augroup,
+    callback = on_buf_unload,
+    desc = "[copilot] (suggestion) buf unload",
   })
 
   vim.api.nvim_create_autocmd("VimLeavePre", {
