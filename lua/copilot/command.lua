@@ -9,7 +9,7 @@ function mod.version()
 
   local lines = {
     info.editorInfo.name .. " " .. info.editorInfo.version,
-    info.editorPluginInfo.name .. " " .. info.editorPluginInfo.version,
+    "copilot.vim" .. " " .. info.editorPluginInfo.version,
     "copilot.lua" .. " " .. u.get_copilot_lua_version(),
   }
 
