@@ -18,7 +18,8 @@ function M.get_editor_info()
       version = string.match(vim.fn.execute("version"), "NVIM v(%S+)"),
     },
     editorPluginInfo = {
-      name = "copilot.vim",
+      name = "copilot.lua",
+      -- reflects version of github/copilot.vim
       version = "1.10.0",
     },
   }
