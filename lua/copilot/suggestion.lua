@@ -6,6 +6,8 @@ local util = require("copilot.util")
 
 local mod = {}
 
+---@alias copilot_suggestion_context { first?: integer, cycling?: integer, cycling_callbacks?: (fun(ctx: copilot_suggestion_context):nil)[], params?: table, suggestions?: copilot_get_completions_data_completion[], choice?: integer }
+
 local copilot = {
   setup_done = false,
 
@@ -14,15 +16,7 @@ local copilot = {
   extmark_id = 1,
 
   _copilot_timer = nil,
-  _copilot = {
-    first = nil,
-    cycling = nil,
-    cycling_callbacks = nil,
-    params = nil,
-    ---@type copilot_get_completions_data_completion[]|nil
-    suggestions = nil,
-    choice = nil,
-  },
+  context = {},
 
   auto_trigger = false,
   debounce = 75,
@@ -46,15 +40,26 @@ local function should_auto_trigger()
   return vim.b.copilot_suggestion_auto_trigger
 end
 
-local function reset_state()
-  copilot._copilot = {
-    first = nil,
-    cycling = nil,
-    cycling_callbacks = nil,
-    params = nil,
-    suggestions = nil,
-    choice = nil,
-  }
+---@param bufnr? integer
+---@return copilot_suggestion_context
+local function get_ctx(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  local ctx = copilot.context[bufnr]
+  if not ctx then
+    ctx = {}
+    copilot.context[bufnr] = ctx
+  end
+  return ctx
+end
+
+---@param ctx copilot_suggestion_context
+local function reset_ctx(ctx)
+  ctx.first = nil
+  ctx.cycling = nil
+  ctx.cycling_callbacks = nil
+  ctx.params = nil
+  ctx.suggestions = nil
+  ctx.choice = nil
 end
 
 local function set_keymap(keymap)
@@ -153,15 +158,18 @@ local function reject(bufnr)
   end
 end
 
-local function cancel_inflight_requests()
+---@param ctx? copilot_suggestion_context
+local function cancel_inflight_requests(ctx)
+  ctx = ctx or get_ctx()
+
   with_client(function(client)
-    if copilot._copilot.first then
-      client.cancel_request(copilot._copilot.first)
-      copilot._copilot.first = nil
+    if ctx.first then
+      client.cancel_request(ctx.first)
+      ctx.first = nil
     end
-    if copilot._copilot.cycling then
-      client.cancel_request(copilot._copilot.cycling)
-      copilot._copilot.cycling = nil
+    if ctx.cycling then
+      client.cancel_request(ctx.cycling)
+      ctx.cycling = nil
     end
   end)
 end
@@ -170,20 +178,23 @@ local function clear_preview()
   vim.api.nvim_buf_del_extmark(0, copilot.ns_id, copilot.extmark_id)
 end
 
+---@param ctx? copilot_suggestion_context
 ---@return copilot_get_completions_data_completion|nil
-local function get_current_suggestion()
+local function get_current_suggestion(ctx)
+  ctx = ctx or get_ctx()
+
   local ok, choice = pcall(function()
     if
       not vim.fn.mode():match("^[iR]")
       or vim.fn.pumvisible() == 1
       or vim.b.copilot_suggestion_hidden
-      or not copilot._copilot.suggestions
-      or #copilot._copilot.suggestions == 0
+      or not ctx.suggestions
+      or #ctx.suggestions == 0
     then
       return nil
     end
 
-    local choice = copilot._copilot.suggestions[copilot._copilot.choice]
+    local choice = ctx.suggestions[ctx.choice]
     if not choice or not choice.range or choice.range.start.line ~= vim.fn.line(".") - 1 then
       return nil
     end
@@ -203,8 +214,11 @@ local function get_current_suggestion()
   return nil
 end
 
-local function update_preview()
-  local suggestion = get_current_suggestion()
+---@param ctx? copilot_suggestion_context
+local function update_preview(ctx)
+  ctx = ctx or get_ctx()
+
+  local suggestion = get_current_suggestion(ctx)
   local displayLines = suggestion and vim.split(suggestion.displayText, "\n", { plain = true }) or {}
 
   clear_preview()
@@ -216,10 +230,10 @@ local function update_preview()
   ---@todo support popup preview
 
   local annot = ""
-  if copilot._copilot.cycling_callbacks then
+  if ctx.cycling_callbacks then
     annot = "(1/…)"
-  elseif copilot._copilot.cycling then
-    annot = "(" .. copilot._copilot.choice .. "/" .. #copilot._copilot.suggestions .. ")"
+  elseif ctx.cycling then
+    annot = "(" .. ctx.choice .. "/" .. #ctx.suggestions .. ")"
   end
 
   local cursor_col = vim.fn.col(".")
@@ -259,23 +273,27 @@ local function update_preview()
   end
 end
 
-local function clear()
+---@param ctx? copilot_suggestion_context
+local function clear(ctx)
+  ctx = ctx or get_ctx()
   stop_timer()
-  cancel_inflight_requests()
-  update_preview()
-  reset_state()
+  cancel_inflight_requests(ctx)
+  update_preview(ctx)
+  reset_ctx(ctx)
 end
 
 ---@param callback fun(err: any|nil, data: copilot_get_completions_data): nil
 local function complete(callback)
   stop_timer()
 
+  local ctx = get_ctx()
   local params = util.get_doc_params()
 
-  if not vim.deep_equal(copilot._copilot.params, params) then
+  if not vim.deep_equal(ctx.params, params) then
     with_client(function(client)
       local _, id = api.get_completions(client, params, callback)
-      copilot._copilot = { params = params, first = id }
+      ctx.params = params
+      ctx.first = id --[[@as integer]]
     end)
   end
 end
@@ -285,8 +303,9 @@ local function handle_trigger_request(err, data)
   if err then
     print(err)
   end
-  copilot._copilot.suggestions = data and data.completions or {}
-  copilot._copilot.choice = 1
+  local ctx = get_ctx()
+  ctx.suggestions = data and data.completions or {}
+  ctx.choice = 1
   update_preview()
 end
 
@@ -301,71 +320,74 @@ local function trigger(bufnr, timer)
   complete(handle_trigger_request)
 end
 
-local function get_suggestions_cycling_callback(state, err, data)
-  local callbacks = state.cycling_callbacks
-  state.cycling_callbacks = nil
+---@param ctx copilot_suggestion_context
+local function get_suggestions_cycling_callback(ctx, err, data)
+  local callbacks = ctx.cycling_callbacks or {}
+  ctx.cycling_callbacks = nil
 
   if err then
     print(err)
     return
   end
 
-  if not state.suggestions then
+  if not ctx.suggestions then
     return
   end
 
   local seen = {}
 
-  for _, suggestion in ipairs(state.suggestions) do
+  for _, suggestion in ipairs(ctx.suggestions) do
     seen[suggestion.text] = true
   end
 
   for _, suggestion in ipairs(data.completions or {}) do
     if not seen[suggestion.text] then
-      table.insert(state.suggestions, suggestion)
+      table.insert(ctx.suggestions, suggestion)
       seen[suggestion.text] = true
     end
   end
 
   for _, callback in ipairs(callbacks) do
-    callback(state)
+    callback(ctx)
   end
 end
 
-local function get_suggestions_cycling(callback)
-  if copilot._copilot.cycling_callbacks then
-    table.insert(copilot._copilot.cycling_callbacks, callback)
+---@param callback fun(ctx: copilot_suggestion_context): nil
+---@param ctx copilot_suggestion_context
+local function get_suggestions_cycling(callback, ctx)
+  if ctx.cycling_callbacks then
+    table.insert(ctx.cycling_callbacks, callback)
     return
   end
 
-  if copilot._copilot.cycling then
-    callback(copilot._copilot)
+  if ctx.cycling then
+    callback(ctx)
     return
   end
 
-  if copilot._copilot.suggestions then
-    copilot._copilot.cycling_callbacks = { callback }
+  if ctx.suggestions then
+    ctx.cycling_callbacks = { callback }
     with_client(function(client)
-      local _, id = api.get_completions_cycling(client, copilot._copilot.params, function(err, data)
-        get_suggestions_cycling_callback(copilot._copilot, err, data)
+      local _, id = api.get_completions_cycling(client, ctx.params, function(err, data)
+        get_suggestions_cycling_callback(ctx, err, data)
       end)
-      copilot._copilot.cycling = id
-      update_preview()
+      ctx.cycling = id --[[@as integer]]
+      update_preview(ctx)
     end)
   end
 end
 
-local function advance(count, state)
-  if state ~= copilot._copilot then
+local function advance(count, ctx)
+  if ctx ~= get_ctx() then
     return
   end
 
-  state.choice = (state.choice + count) % #state.suggestions
-  if state.choice < 1 then
-    state.choice = #state.suggestions
+  ctx.choice = (ctx.choice + count) % #ctx.suggestions
+  if ctx.choice < 1 then
+    ctx.choice = #ctx.suggestions
   end
 
-  update_preview()
+  update_preview(ctx)
 end
 
 local function schedule()
@@ -382,38 +404,44 @@ local function schedule()
 end
 
 function mod.next()
+  local ctx = get_ctx()
+
   -- no suggestion request yet
-  if not copilot._copilot.first then
+  if not ctx.first then
     schedule()
     return
   end
 
-  get_suggestions_cycling(function(state)
-    advance(1, state)
-  end)
+  get_suggestions_cycling(function(context)
+    advance(1, context)
+  end, ctx)
 end
 
 function mod.prev()
+  local ctx = get_ctx()
+
   -- no suggestion request yet
-  if not copilot._copilot.first then
+  if not ctx.first then
     schedule()
     return
   end
 
-  get_suggestions_cycling(function(state)
-    advance(-1, state)
-  end)
+  get_suggestions_cycling(function(context)
+    advance(-1, context)
+  end, ctx)
 end
 
 ---@param modifier? (fun(suggestion: copilot_get_completions_data_completion): copilot_get_completions_data_completion)
 function mod.accept(modifier)
-  local suggestion = get_current_suggestion()
+  local ctx = get_ctx()
+
+  local suggestion = get_current_suggestion(ctx)
   if not suggestion or vim.fn.empty(suggestion.text) == 1 then
     return
   end
 
-  cancel_inflight_requests()
-  reset_state()
+  cancel_inflight_requests(ctx)
+  reset_ctx(ctx)
 
   vim.api.nvim_buf_set_var(0, "_copilot_uuid", "")
   with_client(function(client)
@@ -477,9 +505,10 @@ function mod.accept_line()
 end
 
 function mod.dismiss()
+  local ctx = get_ctx()
   reject(0)
-  clear()
-  update_preview()
+  clear(ctx)
+  update_preview(ctx)
 end
 
 function mod.is_visible()
@@ -514,7 +543,8 @@ local function on_buf_enter()
 end
 
 local function on_cursor_moved_i()
-  if copilot._copilot_timer or copilot._copilot.params or should_auto_trigger() then
+  local ctx = get_ctx()
+  if copilot._copilot_timer or ctx.params or should_auto_trigger() then
     schedule()
   end
 end
@@ -526,6 +556,7 @@ end
 ---@param info { buf: integer }
 local function on_buf_unload(info)
   reject(info.buf)
+  copilot.context[info.buf] = nil
 end
 
 local function on_vim_leave_pre()
