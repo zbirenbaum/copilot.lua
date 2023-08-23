@@ -6,7 +6,7 @@ local util = require("copilot.util")
 
 local mod = {}
 
----@alias copilot_suggestion_context { first?: integer, cycling?: integer, cycling_callbacks?: (fun(ctx: copilot_suggestion_context):nil)[], params?: table, suggestions?: copilot_get_completions_data_completion[], choice?: integer }
+---@alias copilot_suggestion_context { first?: integer, cycling?: integer, cycling_callbacks?: (fun(ctx: copilot_suggestion_context):nil)[], params?: table, suggestions?: copilot_get_completions_data_completion[], choice?: integer, shown_choices?: table<string, true> }
 
 local copilot = {
   setup_done = false,
@@ -60,6 +60,7 @@ local function reset_ctx(ctx)
   ctx.params = nil
   ctx.suggestions = nil
   ctx.choice = nil
+  ctx.shown_choices = nil
 end
 
 local function set_keymap(keymap)
@@ -147,14 +148,19 @@ local function stop_timer()
   end
 end
 
----@param bufnr integer
+---@param bufnr? integer
 local function reject(bufnr)
-  local uuid = vim.fn.getbufvar(bufnr, "_copilot_uuid", "")
-  if uuid ~= "" then
+  local ctx = get_ctx(bufnr)
+  if not ctx.shown_choices then
+    return
+  end
+
+  local uuids = vim.tbl_keys(ctx.shown_choices)
+  if #uuids > 0 then
     with_client(function(client)
-      api.notify_rejected(client, { uuids = { uuid } }, function() end)
+      api.notify_rejected(client, { uuids = uuids }, function() end)
     end)
-    vim.api.nvim_buf_set_var(bufnr, "_copilot_uuid", "")
+    ctx.shown_choices = {}
   end
 end
 
@@ -264,9 +270,8 @@ local function update_preview(ctx)
 
   vim.api.nvim_buf_set_extmark(0, copilot.ns_id, vim.fn.line(".") - 1, cursor_col - 1, extmark)
 
-  if suggestion.uuid ~= vim.fn.getbufvar(0, "_copilot_uuid", "") then
-    reject(0)
-    vim.api.nvim_buf_set_var(0, "_copilot_uuid", suggestion.uuid)
+  if not ctx.shown_choices[suggestion.uuid] then
+    ctx.shown_choices[suggestion.uuid] = true
     with_client(function(client)
       api.notify_shown(client, { uuid = suggestion.uuid }, function() end)
     end)
@@ -306,6 +311,7 @@ local function handle_trigger_request(err, data)
   local ctx = get_ctx()
   ctx.suggestions = data and data.completions or {}
   ctx.choice = 1
+  ctx.shown_choices = {}
   update_preview()
 end
 
@@ -443,7 +449,6 @@ function mod.accept(modifier)
   cancel_inflight_requests(ctx)
   reset_ctx(ctx)
 
-  vim.api.nvim_buf_set_var(0, "_copilot_uuid", "")
   with_client(function(client)
     if modifier then
       -- do not notify_accepted for partial accept.
@@ -506,7 +511,7 @@ end
 
 function mod.dismiss()
   local ctx = get_ctx()
-  reject(0)
+  reject()
   clear(ctx)
   update_preview(ctx)
 end
@@ -560,7 +565,7 @@ local function on_buf_unload(info)
 end
 
 local function on_vim_leave_pre()
-  reject(0)
+  reject()
 end
 
 local function create_autocmds()
