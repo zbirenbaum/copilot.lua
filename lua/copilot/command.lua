@@ -1,12 +1,25 @@
 local a = require("copilot.api")
 local c = require("copilot.client")
+local config = require("copilot.config")
 local u = require("copilot.util")
 
 local mod = {}
 
+local function node_version_warning(node_version)
+  if string.match(node_version, "^16%.") then
+    local line = "Warning: Node.js 16 is approaching end of life and support will be dropped in a future release."
+    if config.get("copilot_node_command") ~= "node" then
+      line = line
+        .. " 'copilot_node_command' is set to a non-default value. Consider removing it from your configuration."
+    end
+    return { line, "WarningMsg" }
+  end
+end
+
 function mod.version()
   local info = u.get_editor_info()
 
+  ---@type (string|table)[]
   local lines = {
     info.editorInfo.name .. " " .. info.editorInfo.version,
     "copilot.vim" .. " " .. info.editorPluginInfo.version,
@@ -25,14 +38,15 @@ function mod.version()
 
     local node_version = c.get_node_version()
     lines[#lines + 1] = "Node.js" .. " " .. (#node_version == 0 and "(unknown)" or node_version)
+    lines[#lines + 1] = node_version_warning(node_version)
 
-    vim.api.nvim_echo(
-      vim.tbl_map(function(line)
-        return { line .. "\n" }
-      end, lines),
-      true,
-      {}
-    )
+    local chunks = {}
+    for _, line in ipairs(lines) do
+      chunks[#chunks + 1] = type(line) == "table" and line or { line }
+      chunks[#chunks + 1] = { "\n", "NONE" }
+    end
+
+    vim.api.nvim_echo(chunks, true, {})
   end)()
 end
 
@@ -40,12 +54,19 @@ function mod.status()
   local lines = {}
 
   local function add_line(line)
-    lines[#lines + 1] = { "[Copilot] " .. line .. "\n" }
+    if not line then
+      return
+    end
+
+    lines[#lines + 1] = type(line) == "table" and line or { "[Copilot] " .. line }
+    lines[#lines + 1] = { "\n", "NONE" }
   end
 
-  local function flush_lines(last_line)
-    if last_line then
-      add_line(last_line)
+  local function flush_lines(last_line, is_off)
+    add_line(last_line)
+
+    if not is_off then
+      add_line(node_version_warning(c.get_node_version()))
     end
 
     vim.api.nvim_echo(lines, true, {})
@@ -53,13 +74,13 @@ function mod.status()
 
   if c.is_disabled() then
     add_line("Offline")
-    flush_lines(c.startup_error)
+    flush_lines(c.startup_error, true)
     return
   end
 
   local client = c.get()
   if not client then
-    flush_lines("Not Started")
+    flush_lines("Not Started", true)
     return
   end
 
