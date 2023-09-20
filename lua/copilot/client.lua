@@ -27,7 +27,7 @@ end
 local lsp_start = vim.lsp.start
 if not lsp_start then
   local function reuse_client(client, conf)
-    return client.name == conf.name
+    return client.conf.root_dir == conf.root_dir and client.name == conf.name
   end
 
   -- shim for neovim < 0.8.2
@@ -97,6 +97,11 @@ function M.buf_attach(force)
   if not force and not util.should_attach() then
     return
   end
+
+  local bufnr = vim.api.nvim_get_current_buf()
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+
+  M.config.root_dir = M.config.get_root_dir(require("lspconfig.util").path.sanitize(bufname), bufnr)
 
   local client_id = lsp_start(M.config)
   store_client_id(client_id)
@@ -180,7 +185,8 @@ local function prepare_client_config(overrides)
       node,
       agent_path,
     },
-    root_dir = require("lspconfig.util").find_git_ancestor,
+    root_dir = vim.loop.cwd(),
+    get_root_dir = require("lspconfig.util").find_git_ancestor,
     name = "copilot",
     get_language_id = function(_, filetype)
       return util.language_for_file_type(filetype)
