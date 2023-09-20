@@ -27,7 +27,7 @@ end
 local lsp_start = vim.lsp.start
 if not lsp_start then
   local function reuse_client(client, conf)
-    return client.config.root_dir() == conf.root_dir() and client.name == conf.name
+    return client.config.root_dir == conf.root_dir and client.name == conf.name
   end
 
   -- shim for neovim < 0.8.2
