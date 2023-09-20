@@ -180,7 +180,7 @@ local function prepare_client_config(overrides)
       node,
       agent_path,
     },
-    root_dir = vim.loop.cwd(),
+    root_dir = require("lspconfig.util").find_git_ancestor,
     name = "copilot",
     get_language_id = function(_, filetype)
       return util.language_for_file_type(filetype)
