@@ -73,7 +73,11 @@ function M.get_node_version()
           "MoreMsg",
         },
       }, true, {})
-    elseif node_version_major < 16 or (node_version_major == 16 and node_version_minor < 14) then
+    elseif
+      node_version_major < 16
+      or (node_version_major == 16 and node_version_minor < 14)
+      or (node_version_major == 17 and node_version_minor < 3)
+    then
       local err = string.format("[Copilot] Node.js version 18.x or newer required but found %s", node_version)
       vim.notify(err, vim.log.levels.WARN)
     end
