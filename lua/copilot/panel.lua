@@ -109,7 +109,8 @@ function panel:refresh_header()
     virt_text = {
       {
         string.format(
-          " Synthesizing %s/%s solutions (Duplicates hidden) [%s]",
+          " %s %s/%s solutions (Duplicates hidden) [%s]",
+          state.status == "done" and "Synthesized" or "Synthesizing",
           state.received_count or "?",
           state.expected_count or "?",
           state.status or "..."
