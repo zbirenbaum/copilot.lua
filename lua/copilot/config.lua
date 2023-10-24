@@ -21,7 +21,7 @@ local default_config = {
   suggestion = {
     enabled = true,
     auto_trigger = false,
-    debounce = 75,
+    debounce = 15,
     ---@type table<'accept'|'accept_word'|'accept_line'|'next'|'prev'|'dismiss', false|string>
     keymap = {
       accept = "<M-l>",
