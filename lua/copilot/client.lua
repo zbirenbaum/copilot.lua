@@ -207,7 +207,13 @@ local function prepare_client_config(overrides)
         end)
       end)
     end,
-    on_exit = function(_code, _signal, client_id)
+    on_exit = function(code, _signal, client_id)
+      if code > 0 then
+        vim.schedule(function()
+          -- in case for unsupported node
+          M.get_node_version()
+        end)
+      end
       if M.id == client_id then
         M.id = nil
         M.capabilities = nil
