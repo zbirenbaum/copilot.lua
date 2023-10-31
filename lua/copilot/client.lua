@@ -56,6 +56,7 @@ function M.get_node_version()
 
     local node_version = string.match(cmd_output, "^v(%S+)") or ""
     local node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or 0
+    local node_version_minor = tonumber(string.match(node_version, "^%d+%.(%d+)%.")) or 0
 
     if node_version_major == 0 then
       local err = "[Copilot] Could not determine Node.js version"
@@ -72,8 +73,12 @@ function M.get_node_version()
           "MoreMsg",
         },
       }, true, {})
-    elseif node_version_major < 16 then
-      local err = string.format("[Copilot] Node.js version 16.x or newer required but found %s", node_version)
+    elseif
+      node_version_major < 16
+      or (node_version_major == 16 and node_version_minor < 14)
+      or (node_version_major == 17 and node_version_minor < 3)
+    then
+      local err = string.format("[Copilot] Node.js version 18.x or newer required but found %s", node_version)
       vim.notify(err, vim.log.levels.WARN)
     end
 
@@ -199,9 +204,6 @@ local function prepare_client_config(overrides)
       vim.schedule(function()
         ---@type copilot_set_editor_info_params
         local set_editor_info_params = util.get_editor_info()
-        set_editor_info_params.editorInfo.version = set_editor_info_params.editorInfo.version
-          .. " + Node.js "
-          .. M.get_node_version()
         set_editor_info_params.editorConfiguration = util.get_editor_configuration()
         set_editor_info_params.networkProxy = util.get_network_proxy()
         api.set_editor_info(client, set_editor_info_params, function(err)
@@ -211,7 +213,13 @@ local function prepare_client_config(overrides)
         end)
       end)
     end,
-    on_exit = function(_code, _signal, client_id)
+    on_exit = function(code, _signal, client_id)
+      if code > 0 then
+        vim.schedule(function()
+          -- in case for unsupported node
+          M.get_node_version()
+        end)
+      end
       if M.id == client_id then
         M.id = nil
         M.capabilities = nil
