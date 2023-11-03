@@ -20,7 +20,7 @@ function M.get_editor_info()
     editorPluginInfo = {
       name = "copilot.lua",
       -- reflects version of github/copilot.vim
-      version = "1.11.2",
+      version = "1.11.3",
     },
   }
   return info
