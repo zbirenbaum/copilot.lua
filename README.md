@@ -85,7 +85,7 @@ require('copilot').setup({
     cvs = false,
     ["."] = false,
   },
-  copilot_node_command = 'node', -- Node.js version must be > 16.x
+  copilot_node_command = 'node', -- Node.js version must be > 18.x
   server_opts_overrides = {},
 })
 ```
@@ -178,12 +178,12 @@ require("copilot").setup {
 
 ### copilot_node_command
 
-Use this field to provide the path to a specific node version such as one installed by nvm. Node.js version must be 16.x or newer.
+Use this field to provide the path to a specific node version such as one installed by nvm. Node.js version must be 18.x or newer.
 
 Example:
 
 ```lua
-copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v16.14.2/bin/node", -- Node.js version must be > 16.x
+copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v18.18.2/bin/node", -- Node.js version must be > 18.x
 ```
 
 ### server_opts_overrides
