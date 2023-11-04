@@ -4,6 +4,10 @@ local config = require("copilot.config")
 local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
 
+local _, has_nvim_0_10_x = pcall(function()
+  return vim.version().minor == 10
+end)
+
 local mod = {}
 
 ---@alias copilot_suggestion_context { first?: integer, cycling?: integer, cycling_callbacks?: (fun(ctx: copilot_suggestion_context):nil)[], params?: table, suggestions?: copilot_get_completions_data_completion[], choice?: integer, shown_choices?: table<string, true> }
@@ -470,7 +474,11 @@ function mod.accept(modifier)
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
   vim.lsp.util.apply_text_edits({ { range = range, newText = newText } }, 0, "utf-16")
   -- Put cursor at the end of current line.
-  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<End>", true, false, true), "n", false)
+  local cursor_keys = "<End>"
+  if has_nvim_0_10_x then
+    cursor_keys = string.rep("<Down>", #vim.split(newText, "\n", { plain = true }) - 1) .. cursor_keys
+  end
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(cursor_keys, true, false, true), "n", false)
 end
 
 function mod.accept_word()
