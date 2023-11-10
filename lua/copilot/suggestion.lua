@@ -317,9 +317,11 @@ local function handle_trigger_request(err, data)
   ctx.choice = 1
   ctx.shown_choices = {}
   update_preview()
+  vim.api.nvim_exec_autocmds("User", { pattern = "CopilotSuggestionCompleted", modeline = false })
 end
 
 local function trigger(bufnr, timer)
+  vim.api.nvim_exec_autocmds("User", { pattern = "CopilotRequestInitiated", modeline = false })
   local _timer = copilot._copilot_timer
   copilot._copilot_timer = nil
 
