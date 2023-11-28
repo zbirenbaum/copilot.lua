@@ -10,6 +10,7 @@ local M = {
   capabilities = nil,
   config = nil,
   node_version = nil,
+  node_version_error = nil,
   startup_error = nil,
 }
 
@@ -44,13 +45,14 @@ if not lsp_start then
   end
 end
 
----@return string
+---@return string node_version
+---@return nil|string node_version_error
 function M.get_node_version()
   if not M.node_version then
     local node = config.get("copilot_node_command")
 
     local cmd = { node, "--version" }
-    local cmd_output_table = vim.fn.systemlist(cmd, nil, false)
+    local cmd_output_table = vim.fn.executable(node) == 1 and vim.fn.systemlist(cmd, nil, false) or { "" }
     local cmd_output = cmd_output_table[#cmd_output_table]
     local cmd_exit_code = vim.v.shell_error
 
@@ -59,33 +61,25 @@ function M.get_node_version()
     local node_version_minor = tonumber(string.match(node_version, "^%d+%.(%d+)%.")) or 0
 
     if node_version_major == 0 then
-      local err = "[Copilot] Could not determine Node.js version"
-      vim.notify(err, vim.log.levels.WARN)
-      vim.api.nvim_echo({
-        {
-          table.concat({
-            err,
-            "-----------",
-            "(exit code) " .. tostring(cmd_exit_code),
-            "   (output) " .. cmd_output,
-            "-----------",
-          }, "\n"),
-          "MoreMsg",
-        },
-      }, true, {})
+      M.node_version_error = table.concat({
+        "Could not determine Node.js version",
+        "-----------",
+        "(exit code) " .. tostring(cmd_exit_code),
+        "   (output) " .. cmd_output,
+        "-----------",
+      }, "\n")
     elseif
       node_version_major < 16
       or (node_version_major == 16 and node_version_minor < 14)
       or (node_version_major == 17 and node_version_minor < 3)
     then
-      local err = string.format("[Copilot] Node.js version 18.x or newer required but found %s", node_version)
-      vim.notify(err, vim.log.levels.WARN)
+      M.node_version_error = string.format("Node.js version 18.x or newer required but found %s", node_version)
     end
 
     M.node_version = node_version or ""
   end
 
-  return M.node_version
+  return M.node_version, M.node_version_error
 end
 
 function M.buf_is_attached(bufnr)
@@ -208,15 +202,17 @@ local function prepare_client_config(overrides)
       end)
     end,
     on_exit = function(code, _signal, client_id)
-      if code > 0 then
+      if M.id == client_id then
         vim.schedule(function()
-          -- in case for unsupported node
-          M.get_node_version()
+          M.teardown()
+          M.id = nil
+          M.capabilities = nil
         end)
       end
-      if M.id == client_id then
-        M.id = nil
-        M.capabilities = nil
+      if code > 0 then
+        vim.schedule(function()
+          require("copilot.command").status()
+        end)
       end
     end,
     handlers = {
