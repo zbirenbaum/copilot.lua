@@ -300,7 +300,7 @@ function M.strutf16len(str)
   return vim.fn.strchars(vim.fn.substitute(str, [==[\\%#=2[^\u0001-\uffff]]==], "  ", "g"))
 end
 
-if vim.fn.strutf16len then
+if vim.fn.exists("*strutf16len") == 1 then
   M.strutf16len = vim.fn.strutf16len
 end
 
