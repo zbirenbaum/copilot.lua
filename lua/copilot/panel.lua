@@ -233,6 +233,8 @@ function panel:accept()
     vim.cmd("normal! $")
   end
 
+  api.notify_accepted(self.client, { uuid = entry.solutionId }, function() end)
+
   vim.lsp.util.apply_text_edits({
     { range = entry.range, newText = entry.completionText },
   }, 0, "utf-16")
