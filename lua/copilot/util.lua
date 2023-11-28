@@ -294,4 +294,14 @@ M.auth = function()
   require("copilot.auth").signin()
 end
 
+---@param str string
+---@return integer
+function M.strutf16len(str)
+  return vim.fn.strchars(vim.fn.substitute(str, [==[\\%#=2[^\u0001-\uffff]]==], "  ", "g"))
+end
+
+if vim.fn.strutf16len then
+  M.strutf16len = vim.fn.strutf16len
+end
+
 return M

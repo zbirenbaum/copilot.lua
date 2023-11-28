@@ -97,7 +97,7 @@ function mod.get_version(client, callback)
   return mod.request(client, "getVersion", {}, callback)
 end
 
----@alias copilot_notify_accepted_params { uuid: string }
+---@alias copilot_notify_accepted_params { uuid: string, acceptedLength?: integer }
 
 ---@param params copilot_notify_accepted_params
 function mod.notify_accepted(client, params, callback)
