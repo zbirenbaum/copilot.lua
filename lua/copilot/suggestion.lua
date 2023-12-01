@@ -248,8 +248,10 @@ local function update_preview(ctx)
 
   local cursor_col = vim.fn.col(".")
 
-  displayLines[1] =
-    string.sub(string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1), cursor_col)
+  displayLines[1] = string.sub(
+    string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1),
+    cursor_col
+  )
 
   local extmark = {
     id = copilot.extmark_id,
@@ -458,11 +460,19 @@ function mod.accept(modifier)
   end
 
   with_client(function(client)
-    api.notify_accepted(
-      client,
-      { uuid = suggestion.uuid, acceptedLength = util.strutf16len(suggestion.text) },
-      function() end
-    )
+    local ok, err = pcall(function()
+      api.notify_accepted(
+        client,
+        { uuid = suggestion.uuid, acceptedLength = util.strutf16len(suggestion.text) },
+        function() end
+      )
+    end)
+    if not ok then
+      vim.notify(
+        table.concat({ "[Copilot] failed to notify_accepted for: " .. suggestion.text, "Error: " .. err }, "\n\n"),
+        vim.log.levels.ERROR
+      )
+    end
   end)
 
   clear_preview()
