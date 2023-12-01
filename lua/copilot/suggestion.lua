@@ -453,20 +453,19 @@ function mod.accept(modifier)
   cancel_inflight_requests(ctx)
   reset_ctx(ctx)
 
-  with_client(function(client)
-    if modifier then
-      -- do not notify_accepted for partial accept.
-      -- revisit if upstream copilot.vim adds this feature.
-      return
-    end
-
-    api.notify_accepted(client, { uuid = suggestion.uuid }, function() end)
-  end)
-  clear_preview()
-
   if type(modifier) == "function" then
     suggestion = modifier(suggestion)
   end
+
+  with_client(function(client)
+    api.notify_accepted(
+      client,
+      { uuid = suggestion.uuid, acceptedLength = util.strutf16len(suggestion.text) },
+      function() end
+    )
+  end)
+
+  clear_preview()
 
   local range, newText = suggestion.range, suggestion.text
 

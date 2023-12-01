@@ -12,7 +12,7 @@ local function node_version_warning(node_version)
       line = line
         .. " 'copilot_node_command' is set to a non-default value. Consider removing it from your configuration."
     end
-    return { line, "WarningMsg" }
+    return { line, "MoreMsg" }
   end
 end
 
@@ -36,8 +36,11 @@ function mod.version()
       lines[#lines + 1] = "copilot/dist/agent.js" .. " " .. "not running"
     end
 
-    local node_version = c.get_node_version()
+    local node_version, node_version_error = c.get_node_version()
     lines[#lines + 1] = "Node.js" .. " " .. (#node_version == 0 and "(unknown)" or node_version)
+    if node_version_error then
+      lines[#lines + 1] = { node_version_error, "WarningMsg" }
+    end
     lines[#lines + 1] = node_version_warning(node_version)
 
     local chunks = {}
@@ -58,23 +61,31 @@ function mod.status()
       return
     end
 
-    lines[#lines + 1] = type(line) == "table" and line or { "[Copilot] " .. line }
+    lines[#lines + 1] = type(line) == "table" and { "[Copilot] " .. line[1], line[2] } or { "[Copilot] " .. line }
     lines[#lines + 1] = { "\n", "NONE" }
   end
 
   local function flush_lines(last_line, is_off)
     add_line(last_line)
 
+    if c.startup_error then
+      add_line({ c.startup_error, "WarningMsg" })
+    end
+
+    local node_version, node_version_error = c.get_node_version()
+    if node_version_error then
+      add_line({ node_version_error, "WarningMsg" })
+    end
+
     if not is_off then
-      add_line(node_version_warning(c.get_node_version()))
+      add_line(node_version_warning(node_version))
     end
 
     vim.api.nvim_echo(lines, true, {})
   end
 
   if c.is_disabled() then
-    add_line("Offline")
-    flush_lines(c.startup_error, true)
+    flush_lines("Offline", true)
     return
   end
 

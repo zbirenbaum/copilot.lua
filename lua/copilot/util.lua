@@ -20,7 +20,7 @@ function M.get_editor_info()
     editorPluginInfo = {
       name = "copilot.lua",
       -- reflects version of github/copilot.vim
-      version = "1.11.4",
+      version = "1.12.1",
     },
   }
   return info
@@ -292,6 +292,16 @@ end
 ---@deprecated
 M.auth = function()
   require("copilot.auth").signin()
+end
+
+---@param str string
+---@return integer
+function M.strutf16len(str)
+  return vim.fn.strchars(vim.fn.substitute(str, [==[\\%#=2[^\u0001-\uffff]]==], "  ", "g"))
+end
+
+if vim.fn.exists("*strutf16len") == 1 then
+  M.strutf16len = vim.fn.strutf16len
 end
 
 return M
