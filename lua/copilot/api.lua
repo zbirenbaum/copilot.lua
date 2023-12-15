@@ -219,10 +219,21 @@ function mod.unregister_status_notification_handler(handler)
   status.callback[handler] = nil
 end
 
+---@alias copilot_open_url_data { target: string }
+
 mod.handlers = {
   PanelSolution = panel.handlers.PanelSolution,
   PanelSolutionsDone = panel.handlers.PanelSolutionsDone,
   statusNotification = status.handlers.statusNotification,
+  ---@param result copilot_open_url_data
+  ["copilot/openURL"] = function(_, result)
+    vim.api.nvim_echo({
+      { "copilot/openURL" },
+      { vim.inspect({ _, result }) },
+      { "\n", "NONE" },
+    }, true, {})
+    error("not implemented: copilot.api.handlers['copilot/openURL']")
+  end,
 }
 mod.panel = panel
 mod.status = status
