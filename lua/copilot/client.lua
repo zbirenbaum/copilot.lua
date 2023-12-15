@@ -174,6 +174,18 @@ local function prepare_client_config(overrides)
 
   M.startup_error = nil
 
+  local capabilities = vim.lsp.protocol.make_client_capabilities()
+  capabilities.copilot = {
+    openURL = true,
+  }
+
+  local handlers = {
+    PanelSolution = api.handlers.PanelSolution,
+    PanelSolutionsDone = api.handlers.PanelSolutionsDone,
+    statusNotification = api.handlers.statusNotification,
+    ["copilot/openURL"] = api.handlers["copilot/openURL"],
+  }
+
   return vim.tbl_deep_extend("force", {
     cmd = {
       node,
@@ -181,6 +193,7 @@ local function prepare_client_config(overrides)
     },
     root_dir = vim.loop.cwd(),
     name = "copilot",
+    capabilities = capabilities,
     get_language_id = function(_, filetype)
       return util.language_for_file_type(filetype)
     end,
@@ -215,11 +228,7 @@ local function prepare_client_config(overrides)
         end)
       end
     end,
-    handlers = {
-      PanelSolution = api.handlers.PanelSolution,
-      PanelSolutionsDone = api.handlers.PanelSolutionsDone,
-      statusNotification = api.handlers.statusNotification,
-    },
+    handlers = handlers,
   }, overrides)
 end
 
