@@ -403,12 +403,12 @@ local function advance(count, ctx)
 end
 
 local function schedule()
-  clear()
-
   if not is_enabled() then
+    clear()
     return
   end
 
+  update_preview()
   local bufnr = vim.api.nvim_get_current_buf()
   copilot._copilot_timer = vim.fn.timer_start(copilot.debounce, function(timer)
     trigger(bufnr, timer)
