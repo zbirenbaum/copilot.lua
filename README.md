@@ -217,3 +217,4 @@ require("copilot").setup {
 The `copilot.api` module can be used to build integrations on top of `copilot.lua`.
 
 - [zbirenbaum/copilot-cmp](https://github.com/zbirenbaum/copilot-cmp): Integration with [`nvim-cmp`](https://github.com/hrsh7th/nvim-cmp).
+- [AndreM222/copilot-lualine](https://github.com/AndreM222/copilot-lualine): Integration with [`lualine.nvim`](https://github.com/nvim-lualine/lualine.nvim).
