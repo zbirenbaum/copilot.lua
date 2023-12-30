@@ -69,7 +69,14 @@ end
 
 local function set_keymap(keymap)
   if keymap.accept then
-    vim.keymap.set("i", keymap.accept, mod.accept, {
+    vim.keymap.set("i", keymap.accept, function ()
+      if mod.is_visible() then
+         mod.accept()
+      else
+        local termcode = vim.api.nvim_replace_termcodes(keymap.accept, true, false, true)
+        vim.api.nvim_feedkeys(termcode, "n", true)
+      end
+    end, {
       desc = "[copilot] accept suggestion",
       silent = true,
     })
