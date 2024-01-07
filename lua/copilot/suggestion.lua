@@ -478,6 +478,11 @@ function mod.accept(modifier)
   clear_preview()
 
   local range, newText = suggestion.range, suggestion.text
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local line, character = cursor[1] - 1, cursor[2]
+  if range["end"].line == line and range["end"].character < character then
+    range["end"].character = character
+  end
 
   -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
