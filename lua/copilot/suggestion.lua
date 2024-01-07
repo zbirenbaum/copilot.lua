@@ -248,10 +248,8 @@ local function update_preview(ctx)
 
   local cursor_col = vim.fn.col(".")
 
-  displayLines[1] = string.sub(
-    string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1),
-    cursor_col
-  )
+  displayLines[1] =
+    string.sub(string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1), cursor_col)
 
   local extmark = {
     id = copilot.extmark_id,
@@ -402,13 +400,13 @@ local function advance(count, ctx)
   update_preview(ctx)
 end
 
-local function schedule()
+local function schedule(ctx)
   if not is_enabled() then
     clear()
     return
   end
 
-  update_preview()
+  update_preview(ctx)
   local bufnr = vim.api.nvim_get_current_buf()
   copilot._copilot_timer = vim.fn.timer_start(copilot.debounce, function(timer)
     trigger(bufnr, timer)
@@ -420,7 +418,7 @@ function mod.next()
 
   -- no suggestion request yet
   if not ctx.first then
-    schedule()
+    schedule(ctx)
     return
   end
 
@@ -434,7 +432,7 @@ function mod.prev()
 
   -- no suggestion request yet
   if not ctx.first then
-    schedule()
+    schedule(ctx)
     return
   end
 
@@ -572,7 +570,7 @@ end
 local function on_cursor_moved_i()
   local ctx = get_ctx()
   if copilot._copilot_timer or ctx.params or should_auto_trigger() then
-    schedule()
+    schedule(ctx)
   end
 end
 
