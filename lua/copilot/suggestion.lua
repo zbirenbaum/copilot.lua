@@ -400,13 +400,13 @@ local function advance(count, ctx)
   update_preview(ctx)
 end
 
-local function schedule()
-  clear()
-
+local function schedule(ctx)
   if not is_enabled() then
+    clear()
     return
   end
 
+  update_preview(ctx)
   local bufnr = vim.api.nvim_get_current_buf()
   copilot._copilot_timer = vim.fn.timer_start(copilot.debounce, function(timer)
     trigger(bufnr, timer)
@@ -418,7 +418,7 @@ function mod.next()
 
   -- no suggestion request yet
   if not ctx.first then
-    schedule()
+    schedule(ctx)
     return
   end
 
@@ -432,7 +432,7 @@ function mod.prev()
 
   -- no suggestion request yet
   if not ctx.first then
-    schedule()
+    schedule(ctx)
     return
   end
 
@@ -458,16 +458,29 @@ function mod.accept(modifier)
   end
 
   with_client(function(client)
-    api.notify_accepted(
-      client,
-      { uuid = suggestion.uuid, acceptedLength = util.strutf16len(suggestion.text) },
-      function() end
-    )
+    local ok, err = pcall(function()
+      api.notify_accepted(
+        client,
+        { uuid = suggestion.uuid, acceptedLength = util.strutf16len(suggestion.text) },
+        function() end
+      )
+    end)
+    if not ok then
+      vim.notify(
+        table.concat({ "[Copilot] failed to notify_accepted for: " .. suggestion.text, "Error: " .. err }, "\n\n"),
+        vim.log.levels.ERROR
+      )
+    end
   end)
 
   clear_preview()
 
   local range, newText = suggestion.range, suggestion.text
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local line, character = cursor[1] - 1, cursor[2]
+  if range["end"].line == line and range["end"].character < character then
+    range["end"].character = character
+  end
 
   -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
@@ -557,7 +570,7 @@ end
 local function on_cursor_moved_i()
   local ctx = get_ctx()
   if copilot._copilot_timer or ctx.params or should_auto_trigger() then
-    schedule()
+    schedule(ctx)
   end
 end
 
