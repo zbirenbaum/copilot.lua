@@ -237,7 +237,7 @@ function panel:accept()
 
   vim.lsp.util.apply_text_edits({
     { range = entry.range, newText = entry.completionText },
-  }, 0, "utf-16")
+  }, vim.api.nvim_get_current_buf(), "utf-16")
   -- Put cursor at the end of current line.
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<End>", true, false, true), "n", false)
 

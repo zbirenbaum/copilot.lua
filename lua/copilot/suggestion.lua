@@ -484,7 +484,7 @@ function mod.accept(modifier)
 
   -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
-  vim.lsp.util.apply_text_edits({ { range = range, newText = newText } }, 0, "utf-16")
+  vim.lsp.util.apply_text_edits({ { range = range, newText = newText } }, vim.api.nvim_get_current_buf(), "utf-16")
   -- Put cursor at the end of current line.
   local cursor_keys = "<End>"
   if has_nvim_0_10_x then
