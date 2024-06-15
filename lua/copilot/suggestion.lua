@@ -23,6 +23,7 @@ local copilot = {
   context = {},
 
   auto_trigger = false,
+  hide_during_completion = true,
   debounce = 75,
 }
 
@@ -196,7 +197,7 @@ local function get_current_suggestion(ctx)
   local ok, choice = pcall(function()
     if
       not vim.fn.mode():match("^[iR]")
-      or vim.fn.pumvisible() == 1
+      or (copilot.hide_during_completion and vim.fn.pumvisible() == 1)
       or vim.b.copilot_suggestion_hidden
       or not ctx.suggestions
       or #ctx.suggestions == 0
@@ -574,6 +575,13 @@ local function on_cursor_moved_i()
   end
 end
 
+local function on_text_changed_p()
+  local ctx = get_ctx()
+  if not copilot.hide_during_completion and (copilot._copilot_timer or ctx.params or should_auto_trigger()) then
+    schedule(ctx)
+  end
+end
+
 local function on_complete_changed()
   clear()
 end
@@ -621,6 +629,12 @@ local function create_autocmds()
     desc = "[copilot] (suggestion) cursor moved insert",
   })
 
+  vim.api.nvim_create_autocmd("TextChangedP", {
+    group = copilot.augroup,
+    callback = on_text_changed_p,
+    desc = "[copilot] (suggestion) text changed pum",
+  })
+
   vim.api.nvim_create_autocmd("CompleteChanged", {
     group = copilot.augroup,
     callback = on_complete_changed,
@@ -653,6 +667,7 @@ function mod.setup()
   set_keymap(opts.keymap or {})
 
   copilot.auto_trigger = opts.auto_trigger
+  copilot.hide_during_completion = opts.hide_during_completion
 
   create_autocmds()
 

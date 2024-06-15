@@ -21,6 +21,7 @@ local default_config = {
   suggestion = {
     enabled = true,
     auto_trigger = false,
+    hide_during_completion = true,
     debounce = 15,
     ---@type table<'accept'|'accept_word'|'accept_line'|'next'|'prev'|'dismiss', false|string>
     keymap = {
