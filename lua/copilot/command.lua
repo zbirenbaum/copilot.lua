@@ -10,7 +10,7 @@ local function node_version_warning(node_version)
     local line = "Warning: Node.js 16 is approaching end of life and support will be dropped in a future release."
     if config.get("copilot_node_command") ~= "node" then
       line = line
-        .. " 'copilot_node_command' is set to a non-default value. Consider removing it from your configuration."
+          .. " 'copilot_node_command' is set to a non-default value. Consider removing it from your configuration."
     end
     return { line, "MoreMsg" }
   end
@@ -31,9 +31,9 @@ function mod.version()
   coroutine.wrap(function()
     if client then
       local _, data = a.get_version(client)
-      lines[#lines + 1] = "copilot/dist/agent.js" .. " " .. data.version
+      lines[#lines + 1] = "copilot/dist/language-server.js" .. " " .. data.version
     else
-      lines[#lines + 1] = "copilot/dist/agent.js" .. " " .. "not running"
+      lines[#lines + 1] = "copilot/dist/language-server.js" .. " " .. "not running"
     end
 
     local node_version, node_version_error = c.get_node_version()
