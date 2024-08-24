@@ -227,12 +227,18 @@ mod.handlers = {
   statusNotification = status.handlers.statusNotification,
   ---@param result copilot_open_url_data
   ["copilot/openURL"] = function(_, result)
-    vim.api.nvim_echo({
-      { "copilot/openURL" },
-      { vim.inspect({ _, result }) },
-      { "\n", "NONE" },
-    }, true, {})
-    error("not implemented: copilot.api.handlers['copilot/openURL']")
+    if package.config:sub(1, 1) == '/' then
+        vim.fn.jobstart("open", { result.target })
+    elseif package.config:sub(1, 1) == '\\' then
+        vim.fn.jobstart("start", { result.target })
+    else
+        vim.api.nvim_echo({
+            { "copilot/openURL" },
+            { vim.inspect({ _, result }) },
+            { "\n", "NONE" },
+        }, true, {})
+        error("Unsupported OS: copilot.api.handlers['copilot/openURL']")
+    end
   end,
 }
 mod.panel = panel
