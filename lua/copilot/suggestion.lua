@@ -5,7 +5,7 @@ local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
 
 local _, has_nvim_0_10_x = pcall(function()
-  return vim.version().minor == 10
+  return vim.version().minor >= 10
 end)
 
 local mod = {}
@@ -196,11 +196,11 @@ local function get_current_suggestion(ctx)
 
   local ok, choice = pcall(function()
     if
-      not vim.fn.mode():match("^[iR]")
-      or (copilot.hide_during_completion and vim.fn.pumvisible() == 1)
-      or vim.b.copilot_suggestion_hidden
-      or not ctx.suggestions
-      or #ctx.suggestions == 0
+        not vim.fn.mode():match("^[iR]")
+        or (copilot.hide_during_completion and vim.fn.pumvisible() == 1)
+        or vim.b.copilot_suggestion_hidden
+        or not ctx.suggestions
+        or #ctx.suggestions == 0
     then
       return nil
     end
@@ -250,7 +250,7 @@ local function update_preview(ctx)
   local cursor_col = vim.fn.col(".")
 
   displayLines[1] =
-    string.sub(string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1), cursor_col)
+      string.sub(string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1), cursor_col)
 
   local extmark = {
     id = copilot.extmark_id,
