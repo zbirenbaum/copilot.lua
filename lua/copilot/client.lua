@@ -207,6 +207,10 @@ local function prepare_client_config(overrides)
         local set_editor_info_params = util.get_editor_info()
         set_editor_info_params.editorConfiguration = util.get_editor_configuration()
         set_editor_info_params.networkProxy = util.get_network_proxy()
+        local provider_url = config.get("auth_provider_url")
+        set_editor_info_params.authProvider = provider_url and {
+          url = provider_url,
+        } or nil
         api.set_editor_info(client, set_editor_info_params, function(err)
           if err then
             vim.notify(string.format("[copilot] setEditorInfo failure: %s", err), vim.log.levels.ERROR)

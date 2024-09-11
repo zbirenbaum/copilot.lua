@@ -37,6 +37,8 @@ local default_config = {
   ft_disable = nil,
   ---@type table<string, boolean>
   filetypes = {},
+  ---@type string|nil
+  auth_provider_url = nil,
   copilot_node_command = "node",
   server_opts_overrides = {},
 }
