@@ -484,14 +484,16 @@ function mod.accept(modifier)
   end
 
   -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
-  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
-  vim.lsp.util.apply_text_edits({ { range = range, newText = newText } }, vim.api.nvim_get_current_buf(), "utf-16")
-  -- Put cursor at the end of current line.
-  local cursor_keys = "<End>"
-  if has_nvim_0_10_x then
-    cursor_keys = string.rep("<Down>", #vim.split(newText, "\n", { plain = true }) - 1) .. cursor_keys
-  end
-  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(cursor_keys, true, false, true), "n", false)
+  vim.schedule_wrap(function()
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
+    vim.lsp.util.apply_text_edits({ { range = range, newText = newText } }, vim.api.nvim_get_current_buf(), "utf-16")
+    -- Put cursor at the end of current line.
+    local cursor_keys = "<End>"
+    if has_nvim_0_10_x then
+      cursor_keys = string.rep("<Down>", #vim.split(newText, "\n", { plain = true }) - 1) .. cursor_keys
+    end
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(cursor_keys, true, false, true), "n", false)
+  end)()
 end
 
 function mod.accept_word()
