@@ -226,21 +226,28 @@ mod.handlers = {
   PanelSolutionsDone = panel.handlers.PanelSolutionsDone,
   statusNotification = status.handlers.statusNotification,
   ---@param result copilot_open_url_data
-  ["copilot/openURL"] = function(_, result)
-    if package.config:sub(1, 1) == '/' then
-        vim.fn.jobstart("open", { result.target })
-    elseif package.config:sub(1, 1) == '\\' then
-        vim.fn.jobstart("start", { result.target })
-    else
+   ["copilot/openURL"] = function(_, result)
+    local success, _ = pcall(vim.ui.open, result.target)
+    if not success then
+      if vim.ui.open ~= nil then
         vim.api.nvim_echo({
             { "copilot/openURL" },
             { vim.inspect({ _, result }) },
             { "\n", "NONE" },
         }, true, {})
-        error("Unsupported OS: copilot.api.handlers['copilot/openURL']")
+        error("Unsupported OS: vim.ui.open exists but failed to execute.")
+      else
+        vim.api.nvim_echo({
+            { "copilot/openURL" },
+            { vim.inspect({ _, result }) },
+            { "\n", "NONE" },
+        }, true, {})
+        error("Unsupported Version: vim.ui.open requires Neovim > 0.10")
+      end
     end
-  end,
+  end
 }
+
 mod.panel = panel
 mod.status = status
 
