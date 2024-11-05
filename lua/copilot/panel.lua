@@ -469,6 +469,9 @@ function panel:refresh()
     params.position.character = params.doc.position.character
   end
 
+  -- on_solutions_done can be invoked before the api.get_panel_completions callback
+  self.state.status = "loading"
+
   local _, id = api.get_panel_completions(
     self.client,
     params,
@@ -481,7 +484,6 @@ function panel:refresh()
         return
       end
 
-      self.state.status = "loading"
       self.state.expected_count = result.solutionCountTarget
       panel:unlock():refresh_header():lock()
     end
