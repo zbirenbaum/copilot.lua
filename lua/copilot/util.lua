@@ -139,10 +139,10 @@ local language_normalization_map = {
 }
 
 function M.language_for_file_type(filetype)
-  -- trim filetypes after dot, e.g. `yaml.gotexttmpl` -> `yaml`
-  local ft = string.gsub(filetype, "%..*", "")
-  if not ft or ft == "" then
-    ft = "text"
+  local ft = "text"
+  if filetype then
+    -- trim filetypes after dot, e.g. `yaml.gotexttmpl` -> `yaml`
+    ft = string.gsub(filetype, "%..*", "") or "text"
   end
   return language_normalization_map[ft] or ft
 end
