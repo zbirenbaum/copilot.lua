@@ -194,7 +194,8 @@ local function prepare_client_config(overrides)
     root_dir = vim.loop.cwd(),
     name = "copilot",
     capabilities = capabilities,
-    get_language_id = function(_, filetype)
+    get_language_id = function(buf, filetype)
+      filetype = filetype or vim.bo[buf].filetype
       return util.language_for_file_type(filetype)
     end,
     on_init = function(client, initialize_result)
