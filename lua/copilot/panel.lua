@@ -331,6 +331,8 @@ function panel:ensure_winid()
     right = { cmd_prefix = "vertical botright ", winsize_fn = get_width },
     bottom = { cmd_prefix = "botright ", winsize_fn = get_height },
     left = { cmd_prefix = "vertical topleft ", winsize_fn = get_width },
+    horizontal = { cmd_prefix = "horizontal ", winsize_fn = get_height },
+    vertical = { cmd_prefix = "vertical ", winsize_fn = get_width },
   }
 
   local split_info = split_map[position]
@@ -541,7 +543,7 @@ function mod.refresh()
 end
 
 ---@param layout {position: string, ratio: number}
----position: (optional) 'bottom' | 'top' | 'left' | 'right'
+---position: (optional) 'bottom' | 'top' | 'left' | 'right' | 'horizontal' | 'vertical'
 ---ratio: (optional) between 0 and 1
 function mod.open(layout)
   local client = c.get()
