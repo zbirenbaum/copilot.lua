@@ -97,11 +97,6 @@ function M.buf_attach(force)
     return
   end
 
-  local bufnr = vim.api.nvim_get_current_buf()
-  local bufname = vim.api.nvim_buf_get_name(bufnr)
-
-  M.config.root_dir = M.config.get_root_dir(require("lspconfig.util").path.sanitize(bufname), bufnr)
-
   local client_id = lsp_start(M.config)
   store_client_id(client_id)
 end
@@ -197,7 +192,6 @@ local function prepare_client_config(overrides)
       agent_path,
     },
     root_dir = vim.loop.cwd(),
-    get_root_dir = require("lspconfig.util").find_git_ancestor,
     name = "copilot",
     capabilities = capabilities,
     get_language_id = function(_, filetype)
