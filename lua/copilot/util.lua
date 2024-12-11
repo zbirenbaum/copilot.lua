@@ -107,7 +107,7 @@ function M.should_attach()
     return false, "buffer not 'buflisted'"
   end
 
-  if not vim.bo.buftype == "" then
+  if vim.bo.buftype ~= "" then
     return false, "buffer 'buftype' is " .. vim.bo.buftype
   end
 
