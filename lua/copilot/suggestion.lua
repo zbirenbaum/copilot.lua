@@ -446,6 +446,12 @@ end
 function mod.accept(modifier)
   local ctx = get_ctx()
 
+  -- no suggestion request yet
+  if not ctx.first then
+    schedule(ctx)
+    return
+  end
+
   local suggestion = get_current_suggestion(ctx)
   if not suggestion or vim.fn.empty(suggestion.text) == 1 then
     return
