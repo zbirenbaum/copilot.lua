@@ -121,7 +121,7 @@ menu for completion, you can set the `copilot_suggestion_hidden` buffer variable
 same behavior.
 
 <details>
-<summary>Example using `nvim-cmp`</summary>
+<summary>Example using nvim-cmp</summary>
 
 ```lua
 cmp.event:on("menu_opened", function()
@@ -135,7 +135,7 @@ end)
 </details>
 
 <details>
-<summary>Example using `blink.cmp`</summary>
+<summary>Example using blink.cmp</summary>
 
 ```lua
 vim.api.nvim_create_autocmd("User", {
