@@ -190,6 +190,7 @@ local function prepare_client_config(overrides)
     cmd = {
       node,
       agent_path,
+      "--stdio",
     },
     root_dir = vim.loop.cwd(),
     name = "copilot",
@@ -233,6 +234,9 @@ local function prepare_client_config(overrides)
       end
     end,
     handlers = handlers,
+    init_options = {
+      copilotIntegrationId = "vscode-chat",
+    },
   }, overrides)
 end
 
