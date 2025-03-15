@@ -121,17 +121,17 @@ There are a few ways of handling this:
 
 - Folders in configuration
   Adding folders in `workspace_folders` will ensure they are always passed along Copilot to improve suggestions, though this means for any opened project these same folders are used.
-  The format is as follwos:
+  The format is as follows, `uri` can either be an actual URI or just the folder path, it will be converted to an URI:
   ```lua
     workspace = {
       workspace_folders = {
         {
           name: "gits",
-          folder: "/home/user/gits"
+          uri: "/home/user/gits"
         },
         {
           name: "projects",
-          folder: "/home/user/projects"
+          uri: "/home/user/projects"
         }
       },
     ...

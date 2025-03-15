@@ -219,7 +219,11 @@ local function prepare_client_config(overrides)
   end
 
   -- Code fails further down if included empty or nil
-  if #workspace.workspace_folders > 0 then
+  if workspace and workspace.workspace_folders and #workspace.workspace_folders > 0 then
+    for _, workspace_folder in ipairs(workspace.workspace_folders) do
+      workspace_folder.uri = workspace_folder.uri:match("^%a+://") and workspace_folder.uri
+        or vim.uri_from_fname(workspace_folder.uri)
+    end
     workspace_config = {
       workspace_folders = workspace.workspace_folders,
     }
