@@ -8,6 +8,7 @@ This plugin is the pure lua replacement for [github/copilot.vim](https://github.
 While using `copilot.vim`, for the first time since I started using neovim my laptop began to overheat. Additionally,
 I found the large chunks of ghost text moving around my code, and interfering with my existing cmp ghost text disturbing.
 As lua is far more efficient and makes things easier to integrate with modern plugins, this repository was created.
+
 </details>
 
 ## Install
@@ -61,6 +62,10 @@ require('copilot').setup({
       ratio = 0.4
     },
   },
+  workspace = {
+    workspace_folders = {},
+    auto_add_root_dir = true,
+  },
   suggestion = {
     enabled = true,
     auto_trigger = false,
@@ -109,9 +114,37 @@ require("copilot.panel").open({position, ratio})
 require("copilot.panel").refresh()
 ```
 
+### workspace
+
+Adding workspace folders will improve suggestions from Copilot.
+There are a few ways of handling this:
+
+- Folders in configuration
+  Adding folders in `workspace_folders` will ensure they are always passed along Copilot to improve suggestions, though this means for any opened project these same folders are used.
+  The format is as follwos:
+  ```lua
+    workspace = {
+      workspace_folders = {
+        {
+          name: "gits",
+          folder: "/home/user/gits"
+        },
+        {
+          name: "projects",
+          folder: "/home/user/projects"
+        }
+      },
+    ...
+    }
+  ```
+- When `auto_add_root_dir` it `true` (default), the folder in which you open NeoVim will be automatically used as a workspace folder.
+- Using the command `:Copilot workspace add [folderpath]` where `[folderpath]` is the folder you would like to add.
+- Using the command `:CopilotAddWorkspaceFolder [folderpath]` where `[folderpath]` is the folder you would like to add.
+  This command supports autocomplete of folders.
+
 ### suggestion
 
-When `auto_trigger` is `true`, copilot starts suggesting as soon as you enter insert mode. 
+When `auto_trigger` is `true`, copilot starts suggesting as soon as you enter insert mode.
 
 When `auto_trigger` is `false`, use the `next` or `prev` keymap to trigger copilot suggestion.
 
