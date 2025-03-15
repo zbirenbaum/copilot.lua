@@ -18,7 +18,7 @@ local M = {
 local function store_client_id(id)
   if M.id and M.id ~= id then
     if vim.lsp.get_client_by_id(M.id) then
-      error("unexpectedly started multiple copilot server")
+      error("unexpectedly started multiple copilot servers")
     end
   end
 
@@ -233,8 +233,7 @@ local function prepare_client_config(overrides)
       end
 
       vim.schedule(function()
-        ---@type copilot_set_editor_info_params
-        local set_editor_info_params = util.get_editor_info()
+        local set_editor_info_params = util.get_editor_info() --[[@as copilot_set_editor_info_params]]
         set_editor_info_params.editorConfiguration = util.get_editor_configuration()
         set_editor_info_params.networkProxy = util.get_network_proxy()
         local provider_url = config.get("auth_provider_url")
@@ -248,7 +247,7 @@ local function prepare_client_config(overrides)
         end)
       end)
     end,
-    on_exit = function(code, _signal, client_id)
+    on_exit = function(code, _, client_id)
       if M.id == client_id then
         vim.schedule(function()
           M.teardown()
