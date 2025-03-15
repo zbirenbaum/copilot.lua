@@ -97,8 +97,22 @@ function M.buf_attach(force)
     return
   end
 
-  local client_id = lsp_start(M.config)
-  store_client_id(client_id)
+  if not M.config then
+    vim.notify("[Copilot] Cannot attach: configuration not initialized", vim.log.levels.ERROR)
+    return
+  end
+
+  local ok, client_id_or_err = pcall(lsp_start, M.config)
+  if not ok then
+    vim.notify(string.format("[Copilot] Failed to start LSP client: %s", client_id_or_err), vim.log.levels.ERROR)
+    return
+  end
+
+  if client_id_or_err then
+    store_client_id(client_id_or_err)
+  else
+    vim.notify("[Copilot] LSP client failed to start (no client ID returned)", vim.log.levels.ERROR)
+  end
 end
 
 function M.buf_detach()
