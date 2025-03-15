@@ -186,13 +186,42 @@ local function prepare_client_config(overrides)
     ["copilot/openURL"] = api.handlers["copilot/openURL"],
   }
 
+  local root_dir = vim.loop.cwd()
+  if not root_dir then
+    root_dir = vim.fn.getcwd()
+  end
+
+  local workspace_folders = {
+    --- @type workspace_folder
+    {
+      uri = vim.uri_from_fname(root_dir),
+      -- important to keep root_dir as-is for the name as lsp.lua uses this to check the workspace has not changed
+      name = root_dir,
+    },
+  }
+
+  local config_workspace_folders = config.get("workspace_folders") --[[@as table<string>]]
+
+  for _, config_workspace_folder in ipairs(config_workspace_folders) do
+    if config_workspace_folder ~= "" then
+      table.insert(
+        workspace_folders,
+        --- @type workspace_folder
+        {
+          uri = vim.uri_from_fname(config_workspace_folder),
+          name = config_workspace_folder,
+        }
+      )
+    end
+  end
+
   return vim.tbl_deep_extend("force", {
     cmd = {
       node,
       agent_path,
       "--stdio",
     },
-    root_dir = vim.loop.cwd(),
+    root_dir = root_dir,
     name = "copilot",
     capabilities = capabilities,
     get_language_id = function(_, filetype)
@@ -237,6 +266,7 @@ local function prepare_client_config(overrides)
     init_options = {
       copilotIntegrationId = "vscode-chat",
     },
+    workspace_folders = workspace_folders,
   }, overrides)
 end
 
@@ -250,6 +280,7 @@ function M.setup()
 
   is_disabled = false
 
+  M.id = nil
   vim.api.nvim_create_augroup(M.augroup, { clear = true })
 
   vim.api.nvim_create_autocmd("FileType", {
@@ -272,6 +303,56 @@ function M.teardown()
   if M.id then
     vim.lsp.stop_client(M.id)
   end
+end
+
+function M.add_workspace_folder(folder_path)
+  if type(folder_path) ~= "string" then
+    vim.notify("[Copilot] Workspace folder path must be a string", vim.log.levels.ERROR)
+    return false
+  end
+
+  if vim.fn.isdirectory(folder_path) ~= 1 then
+    vim.notify("[Copilot] Invalid workspace folder: " .. folder_path, vim.log.levels.ERROR)
+    return false
+  end
+
+  -- Normalize path
+  folder_path = vim.fn.fnamemodify(folder_path, ":p")
+
+  --- @type workspace_folder
+  local workspace_folder = {
+    uri = vim.uri_from_fname(folder_path),
+    name = folder_path,
+  }
+
+  local workspace_folders = config.get("workspace_folders") --[[@as table<string>]]
+  if not workspace_folders then
+    workspace_folders = {}
+  end
+
+  for _, existing_folder in ipairs(workspace_folders) do
+    if existing_folder == folder_path then
+      return
+    end
+  end
+
+  table.insert(workspace_folders, { folder_path })
+  config.set("workspace_folders", workspace_folders)
+
+  local client = M.get()
+  if client and client.initialized then
+    client.notify("workspace/didChangeWorkspaceFolders", {
+      event = {
+        added = { workspace_folder },
+        removed = {},
+      },
+    })
+    vim.notify("[Copilot] Added workspace folder: " .. folder_path, vim.log.levels.INFO)
+  else
+    vim.notify("[Copilot] Workspace folder added for next session: " .. folder_path, vim.log.levels.INFO)
+  end
+
+  return true
 end
 
 return M
