@@ -25,12 +25,12 @@ local function store_client_id(id)
   M.id = id
 end
 
+local function reuse_client(client, conf)
+  return client.config.root_dir == conf.root_dir and client.name == conf.name
+end
+
 local lsp_start = vim.lsp.start
 if not lsp_start then
-  local function reuse_client(client, conf)
-    return client.config.root_dir == conf.root_dir and client.name == conf.name
-  end
-
   -- shim for neovim < 0.8.2
   lsp_start = function(lsp_config)
     local bufnr = vim.api.nvim_get_current_buf()
@@ -102,7 +102,7 @@ function M.buf_attach(force)
     return
   end
 
-  local ok, client_id_or_err = pcall(lsp_start, M.config)
+  local ok, client_id_or_err = pcall(lsp_start, M.config, { reuse_client = reuse_client, bufnr = 0 })
   if not ok then
     vim.notify(string.format("[Copilot] Failed to start LSP client: %s", client_id_or_err), vim.log.levels.ERROR)
     return
