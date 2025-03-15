@@ -24,6 +24,14 @@ local create_cmds = function ()
     vim.deprecate("':CopilotAuth'", "':Copilot auth'", "in future", "copilot.lua")
     vim.cmd("Copilot auth")
   end, {})
+
+  vim.api.nvim_create_user_command("CopilotAddWorkspaceFolder", function(opts)
+    require("copilot.workspace").add(opts)
+  end, {
+    desc = "Add a workspace folder to Copilot",
+    nargs = "?",
+    complete = "dir",
+  })
 end
 
 M.setup = function(opts)

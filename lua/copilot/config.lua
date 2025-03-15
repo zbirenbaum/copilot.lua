@@ -17,6 +17,12 @@ local default_config = {
       ratio = 0.4,
     },
   },
+  ---@class copilot_config_workspace
+  workspace = {
+    ---@type workspace_folder[]
+    workspace_folders = {},
+    auto_add_root_dir = true,
+  },
   ---@class copilot_config_suggestion
   suggestion = {
     enabled = true,
@@ -80,6 +86,16 @@ function mod.get(key)
   end
 
   return mod.config
+end
+
+---@param key string
+---@param value any
+function mod.set(key, value)
+  if not mod.config then
+    error("[Copilot] not initialized")
+  end
+
+  mod.config[key] = value
 end
 
 return mod
