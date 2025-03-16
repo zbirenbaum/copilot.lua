@@ -7,6 +7,8 @@ local is_disabled = false
 local M = {
   augroup = "copilot.client",
   id = nil,
+  --- @class copilot_capabilities:lsp.ClientCapabilities
+  --- @field copilot table<'openURL', boolean>
   capabilities = nil,
   config = nil,
   node_version = nil,
@@ -14,7 +16,7 @@ local M = {
   startup_error = nil,
 }
 
----@param id number
+---@param id integer
 local function store_client_id(id)
   if M.id and M.id ~= id then
     if vim.lsp.get_client_by_id(M.id) then
@@ -52,7 +54,7 @@ function M.get_node_version()
     local node = config.get("copilot_node_command")
 
     local cmd = { node, "--version" }
-    local cmd_output_table = vim.fn.executable(node) == 1 and vim.fn.systemlist(cmd, nil, false) or { "" }
+    local cmd_output_table = vim.fn.executable(node) == 1 and vim.fn.systemlist(cmd, nil, 0) or { "" }
     local cmd_output = cmd_output_table[#cmd_output_table]
     local cmd_exit_code = vim.v.shell_error
 
@@ -143,10 +145,16 @@ function M.use_client(callback)
       error("copilot.setup is not called yet")
     end
 
-    local client_id = vim.lsp.start_client(M.config)
+    local client_id, err = vim.lsp.start_client(M.config)
+
+    if not client_id then
+      error(string.format("[Copilot] Error starting LSP Client: %s", err))
+      return
+    end
+
     store_client_id(client_id)
 
-    client = M.get()
+    client = M.get() --[[@as table]]
   end
 
   if client.initialized then
@@ -154,7 +162,13 @@ function M.use_client(callback)
     return
   end
 
-  local timer = vim.loop.new_timer()
+  local timer, err, _ = vim.loop.new_timer()
+
+  if not timer then
+    error(string.format("[Copilot] Error creating timer: %s", err))
+    return
+  end
+
   timer:start(
     0,
     100,
@@ -188,7 +202,7 @@ local function prepare_client_config(overrides)
 
   M.startup_error = nil
 
-  local capabilities = vim.lsp.protocol.make_client_capabilities()
+  local capabilities = vim.lsp.protocol.make_client_capabilities() --[[@as copilot_capabilities]]
   capabilities.copilot = {
     openURL = true,
   }
