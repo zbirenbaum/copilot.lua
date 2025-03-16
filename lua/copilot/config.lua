@@ -46,7 +46,7 @@ local default_config = {
   ---@type string|nil
   copilot_model = nil,
   ---@type function
-  get_root_folder = function()
+  get_root_dir = function()
     vim.fs.dirname(vim.fs.find(".git", { path = ".", upward = true })[1])
   end,
 }
