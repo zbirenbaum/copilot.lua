@@ -8,6 +8,7 @@ This plugin is the pure lua replacement for [github/copilot.vim](https://github.
 While using `copilot.vim`, for the first time since I started using neovim my laptop began to overheat. Additionally,
 I found the large chunks of ghost text moving around my code, and interfering with my existing cmp ghost text disturbing.
 As lua is far more efficient and makes things easier to integrate with modern plugins, this repository was created.
+
 </details>
 
 ## Install
@@ -87,7 +88,12 @@ require('copilot').setup({
     ["."] = false,
   },
   copilot_node_command = 'node', -- Node.js version must be > 18.x
+  workspace_folders = {},
   server_opts_overrides = {},
+  copilot_model = "",  -- Current LSP default is gpt-35-turbo, supports gpt-4o-copilot
+  get_root_folder = function()
+    vim.fs.dirname(vim.fs.find(".git", { path = ".", upward = true })[1])
+  end,
 })
 ```
 
@@ -110,7 +116,7 @@ require("copilot.panel").refresh()
 
 ### suggestion
 
-When `auto_trigger` is `true`, copilot starts suggesting as soon as you enter insert mode. 
+When `auto_trigger` is `true`, copilot starts suggesting as soon as you enter insert mode.
 
 When `auto_trigger` is `false`, use the `next` or `prev` keymap to trigger copilot suggestion.
 
@@ -208,6 +214,26 @@ require("copilot").setup {
   }
 }
 ```
+
+### workspace_folders
+
+Workspace folders improve Copilot's suggestions.
+By default, the root_dir is used as a wokspace_folder.
+
+Additional folders can be added through the configuration as such:
+
+```lua
+workspace_folders = {
+  "/home/user/gits",
+  "/home/user/projects",
+}
+```
+
+They can also be added runtime, using the command `:Copilot workspace add [folderpath]` where `[folderpath]` is the workspace folder.
+
+### get_root_folder
+
+This allows changing the function that gets the root folder, the default looks for a parent folder that contains the folder `.git`.
 
 ## Commands
 
