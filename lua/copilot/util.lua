@@ -30,7 +30,7 @@ local copilot_lua_version = nil
 function M.get_copilot_lua_version()
   if not copilot_lua_version then
     local plugin_version_ok, plugin_version = pcall(function()
-      local plugin_dir = vim.fn.fnamemodify(M.get_copilot_path(), ":h:h")
+      local plugin_dir = M.get_plugin_path()
       return vim.fn.systemlist(string.format("cd %s && git rev-parse HEAD", plugin_dir))[1]
     end)
     copilot_lua_version = plugin_version_ok and plugin_version or "dev"
@@ -286,11 +286,10 @@ function M.get_network_proxy()
   }
 end
 
----@deprecated
-M.get_copilot_path = function()
-  local copilot_path = vim.api.nvim_get_runtime_file("copilot/index.js", false)[1]
+M.get_plugin_path = function()
+  local copilot_path = vim.api.nvim_get_runtime_file("lua/copilot/init.lua", false)[1]
   if vim.fn.filereadable(copilot_path) ~= 0 then
-    return copilot_path
+    return vim.fn.fnamemodify(copilot_path, ":h:h:h")
   else
     print("[Copilot] could not read" .. copilot_path)
   end
