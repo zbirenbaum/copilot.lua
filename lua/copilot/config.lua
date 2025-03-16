@@ -43,6 +43,8 @@ local default_config = {
   ---@type string[]
   workspace_folders = {},
   server_opts_overrides = {},
+  ---@type string|nil
+  copilot_model = nil,
 }
 
 local mod = {
