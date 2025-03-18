@@ -206,6 +206,9 @@ local function prepare_client_config(overrides)
   capabilities.copilot = {
     openURL = true,
   }
+  capabilities.workspace = {
+    workspaceFolders = true,
+  }
 
   local handlers = {
     PanelSolution = api.handlers.PanelSolution,
