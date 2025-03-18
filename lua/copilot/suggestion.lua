@@ -3,6 +3,7 @@ local c = require("copilot.client")
 local config = require("copilot.config")
 local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
+local logger = require("copilot.logger")
 
 local _, has_nvim_0_10_x = pcall(function()
   return vim.version().minor >= 10
@@ -311,7 +312,7 @@ end
 ---@param data copilot_get_completions_data
 local function handle_trigger_request(err, data)
   if err then
-    print(err)
+    logger.error(err)
   end
   local ctx = get_ctx()
   ctx.suggestions = data and data.completions or {}
@@ -337,7 +338,7 @@ local function get_suggestions_cycling_callback(ctx, err, data)
   ctx.cycling_callbacks = nil
 
   if err then
-    print(err)
+    logger.error(err)
     return
   end
 
@@ -467,10 +468,7 @@ function mod.accept(modifier)
       )
     end)
     if not ok then
-      vim.notify(
-        table.concat({ "[Copilot] failed to notify_accepted for: " .. suggestion.text, "Error: " .. err }, "\n\n"),
-        vim.log.levels.ERROR
-      )
+      logger.error(string.format("failed to notify_accepted for: %s, Error: %s", suggestion.text))
     end
   end)
 
@@ -678,7 +676,6 @@ function mod.setup()
   create_autocmds()
 
   copilot.debounce = opts.debounce
-
   copilot.setup_done = true
 end
 
