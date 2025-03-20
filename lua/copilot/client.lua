@@ -190,7 +190,7 @@ local function prepare_client_config(overrides)
     cmd = {
       node,
       agent_path,
-      "--stdio",
+      '--stdio'
     },
     root_dir = vim.loop.cwd(),
     name = "copilot",
