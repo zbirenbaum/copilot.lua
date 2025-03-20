@@ -164,7 +164,7 @@ local function prepare_client_config(overrides)
     return
   end
 
-  local agent_path = vim.api.nvim_get_runtime_file("copilot/index.js", false)[1]
+  local agent_path = vim.api.nvim_get_runtime_file("copilot/dist/language-server.js", false)[1]
   if vim.fn.filereadable(agent_path) == 0 then
     local err = string.format("Could not find agent.js (bad install?) : %s", agent_path)
     vim.notify("[Copilot] " .. err, vim.log.levels.ERROR)
