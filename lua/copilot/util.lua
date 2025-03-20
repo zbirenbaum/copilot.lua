@@ -1,7 +1,9 @@
 local config = require("copilot.config")
 local logger = require("copilot.logger")
 
-local M = {}
+local M = {
+  os_path = nil,
+}
 
 local id = 0
 function M.get_next_id()
@@ -18,8 +20,8 @@ function M.get_editor_info()
     },
     editorPluginInfo = {
       name = "copilot.lua",
-      -- reflects version of github/copilot.vim
-      version = "1.43.0",
+      -- reflects version of github/copilot-language-server-release
+      version = "1.290.0",
     },
   }
   return info
@@ -293,6 +295,53 @@ M.get_plugin_path = function()
   else
     logger.error("could not read" .. copilot_path)
   end
+end
+
+---@return boolean
+local function is_arm()
+  local fh, err = assert(io.popen("uname -m 2>/dev/null", "r"))
+  if err then
+    logger.error("could not determine if cpu is arm, assuming it is not: " .. err)
+    return false -- we assume not arm
+  end
+
+  local os_name
+  if fh then
+    os_name = fh:read()
+    fh:close()
+  end
+
+  return os_name == "aarch64" or string.sub(os_name, 1, 3) == "arm"
+end
+
+--- @return string|nil
+function M.get_os_specific_binary()
+  if M.os_path then
+    return M.os_path
+  end
+
+  local os_path = nil
+  local os = vim.loop.os_uname().sysname
+  if os == "Linux" then
+    if is_arm() then
+      os_path = "linux-arm64/copilot-language-server"
+    end
+    os_path = "linux-x64/copilot-language-server"
+  elseif os == "Darwin" then
+    if is_arm() then
+      os_path = "darwin-arm64/copilot-language-server"
+    end
+    os_path = "darwin-x64/copilot-language-server"
+  elseif os == "Windows_NT" then
+    os_path = "win32-x64/copilot-language-server.exe"
+  end
+
+  if os_path == nil then
+    logger.error("could not determine OS, please report this issue with the output of `uname -a`")
+  end
+
+  M.os_path = os_path
+  return os_path
 end
 
 ---@deprecated

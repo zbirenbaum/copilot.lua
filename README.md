@@ -96,7 +96,6 @@ require('copilot').setup({
     trace_lsp = "off", -- "off" | "messages" | "verbose"
     trace_lsp_progress = false,
   },
-  copilot_node_command = 'node', -- Node.js version must be > 18.x
   workspace_folders = {},
   server_opts_overrides = {},
   copilot_model = "",  -- Current LSP default is gpt-35-turbo, supports gpt-4o-copilot
@@ -217,16 +216,6 @@ vim.log = {
 When `trace_lsp_progress` is true, LSP progress messages will also be logged.
 
 Careful turning on all logging features as the log files may get very large over time, and are not pruned by the application.
-
-### copilot_node_command
-
-Use this field to provide the path to a specific node version such as one installed by nvm. Node.js version must be 18.x or newer.
-
-Example:
-
-```lua
-copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v18.18.2/bin/node", -- Node.js version must be > 18.x
-```
 
 ### server_opts_overrides
 
