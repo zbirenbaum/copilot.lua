@@ -51,7 +51,7 @@ local panel = {
 local function get_display_lines(text)
   local lines = vim.split(text, "\n", { plain = true, trimempty = true })
 
-  local extra_indent = math.min(table.unpack(vim.tbl_map(function(line)
+  local extra_indent = math.min(unpack(vim.tbl_map(function(line)
     return #(string.match(line, "^%s*") or "")
   end, lines)))
 

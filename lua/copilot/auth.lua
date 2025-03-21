@@ -32,7 +32,7 @@ function M.setup(client)
       " ...waiting, it might take a while and ",
       " this popup will auto close once done... ",
     }
-    local height, width = #lines, math.max(table.unpack(vim.tbl_map(function(line)
+    local height, width = #lines, math.max(unpack(vim.tbl_map(function(line)
       return #line
     end, lines)))
 
