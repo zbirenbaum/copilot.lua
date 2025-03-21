@@ -34,7 +34,7 @@ M.setup = function(opts)
   highlight.setup()
 
   local conf = config.setup(opts)
-  if conf.panel.enabled then
+  if conf and conf.panel.enabled then
     create_cmds()
   end
 
