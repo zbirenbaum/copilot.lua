@@ -402,7 +402,7 @@ local function advance(count, ctx)
 end
 
 local function schedule(ctx)
-  if not is_enabled() then
+  if not is_enabled() or not c.initialized then
     clear()
     return
   end
