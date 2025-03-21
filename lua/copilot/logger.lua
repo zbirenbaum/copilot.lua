@@ -147,29 +147,6 @@ function mod.setup(conf)
       mod.trace(string.format("LSP progress - token %s", result.token), result.value)
     end
   end
-
-  vim.lsp.handlers["window/logMessage"] = function(_, result, _)
-    if not result then
-      return
-    end
-
-    local message = string.format("LSP message: %s", result.message)
-    local message_type = result.type --[[@as integer]]
-
-    if message_type == 1 then
-      mod.error(message)
-    elseif message_type == 2 then
-      mod.warn(message)
-    elseif message_type == 3 then
-      mod.info(message)
-    elseif message_type == 4 then
-      mod.info(message)
-    elseif message_type == 5 then
-      mod.debug(message)
-    else
-      mod.trace(message)
-    end
-  end
 end
 
 return mod
