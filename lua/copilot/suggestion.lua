@@ -3,6 +3,7 @@ local c = require("copilot.client")
 local config = require("copilot.config")
 local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
+local logger = require("copilot.logger")
 
 local _, has_nvim_0_10_x = pcall(function()
   return vim.version().minor >= 10
@@ -196,11 +197,11 @@ local function get_current_suggestion(ctx)
 
   local ok, choice = pcall(function()
     if
-        not vim.fn.mode():match("^[iR]")
-        or (copilot.hide_during_completion and vim.fn.pumvisible() == 1)
-        or vim.b.copilot_suggestion_hidden
-        or not ctx.suggestions
-        or #ctx.suggestions == 0
+      not vim.fn.mode():match("^[iR]")
+      or (copilot.hide_during_completion and vim.fn.pumvisible() == 1)
+      or vim.b.copilot_suggestion_hidden
+      or not ctx.suggestions
+      or #ctx.suggestions == 0
     then
       return nil
     end
@@ -250,7 +251,7 @@ local function update_preview(ctx)
   local cursor_col = vim.fn.col(".")
 
   displayLines[1] =
-      string.sub(string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1), cursor_col)
+    string.sub(string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1), cursor_col)
 
   local extmark = {
     id = copilot.extmark_id,
@@ -311,7 +312,7 @@ end
 ---@param data copilot_get_completions_data
 local function handle_trigger_request(err, data)
   if err then
-    print(err)
+    logger.error(err)
   end
   local ctx = get_ctx()
   ctx.suggestions = data and data.completions or {}
@@ -337,7 +338,7 @@ local function get_suggestions_cycling_callback(ctx, err, data)
   ctx.cycling_callbacks = nil
 
   if err then
-    print(err)
+    logger.error(err)
     return
   end
 
@@ -467,10 +468,7 @@ function mod.accept(modifier)
       )
     end)
     if not ok then
-      vim.notify(
-        table.concat({ "[Copilot] failed to notify_accepted for: " .. suggestion.text, "Error: " .. err }, "\n\n"),
-        vim.log.levels.ERROR
-      )
+      logger.error(string.format("failed to notify_accepted for: %s, Error: %s", suggestion.text))
     end
   end)
 
@@ -486,7 +484,7 @@ function mod.accept(modifier)
   -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
   vim.schedule_wrap(function()
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
-      local bufnr = vim.api.nvim_get_current_buf()
+    local bufnr = vim.api.nvim_get_current_buf()
     local encoding = vim.api.nvim_get_option_value("fileencoding", { buf = bufnr }) ~= ""
         and vim.api.nvim_get_option_value("fileencoding", { buf = bufnr })
       or vim.api.nvim_get_option_value("encoding", { scope = "global" })
@@ -678,7 +676,6 @@ function mod.setup()
   create_autocmds()
 
   copilot.debounce = opts.debounce
-
   copilot.setup_done = true
 end
 

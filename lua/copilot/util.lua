@@ -1,4 +1,5 @@
 local config = require("copilot.config")
+local logger = require("copilot.logger")
 local unpack = unpack or table.unpack
 
 local M = {}
@@ -291,7 +292,7 @@ M.get_plugin_path = function()
   if vim.fn.filereadable(copilot_path) ~= 0 then
     return vim.fn.fnamemodify(copilot_path, ":h:h:h")
   else
-    print("[Copilot] could not read" .. copilot_path)
+    logger.error("could not read" .. copilot_path)
   end
 end
 
