@@ -23,8 +23,7 @@ local M = {
 local function store_client_id(id)
   if M.id and M.id ~= id then
     if vim.lsp.get_client_by_id(M.id) then
-      logger.error("unexpectedly started multiple copilot servers")
-      return
+      vim.lsp.stop_client(M.id)
     end
   end
 
