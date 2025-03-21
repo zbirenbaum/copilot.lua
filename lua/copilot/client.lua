@@ -106,8 +106,7 @@ function M.buf_attach(force)
   end
 
   -- In case it has changed, we update it
-  local get_root_dir = config.get("get_root_dir") --[[@as function]]
-  M.config.root_dir = vim.fn.fnamemodify(get_root_dir(), ":p:h")
+  M.config.root_dir = config.get_root_dir()
 
   local ok, client_id_or_err = pcall(lsp_start, M.config)
   if not ok then
@@ -222,9 +221,7 @@ local function prepare_client_config(overrides)
     ["copilot/openURL"] = api.handlers["copilot/openURL"],
   }
 
-  local get_root_dir = config.get("get_root_dir") --[[@as function]]
-  local root_dir = vim.fn.fnamemodify(get_root_dir(), ":p:h")
-
+  local root_dir = config.get_root_dir()
   local workspace_folders = {
     --- @type workspace_folder
     {
