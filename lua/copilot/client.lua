@@ -293,7 +293,7 @@ local function prepare_client_config(overrides)
       end
 
       vim.schedule(function()
-        local set_editor_info_params = util.get_editor_info() --[[@as copilot_set_editor_info_params]]
+        local set_editor_info_params = {} --[[@as copilot_set_editor_info_params]]
         set_editor_info_params.editorConfiguration = util.get_editor_configuration()
         set_editor_info_params.networkProxy = util.get_network_proxy()
         local provider_url = config.get("auth_provider_url")
