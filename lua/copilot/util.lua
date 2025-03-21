@@ -1,4 +1,5 @@
 local config = require("copilot.config")
+local unpack = unpack or table.unpack
 
 local M = {}
 
@@ -239,7 +240,7 @@ function M.get_network_proxy()
   proxy_uri = string.gsub(proxy_uri, "^[^:]+://", "")
 
   ---@type string|nil, string|nil
-  local user_pass, host_port = table.unpack(vim.split(proxy_uri, "@", { plain = true, trimempty = true }))
+  local user_pass, host_port = unpack(vim.split(proxy_uri, "@", { plain = true, trimempty = true }))
 
   if not host_port then
     host_port = user_pass --[[@as string]]
@@ -247,7 +248,7 @@ function M.get_network_proxy()
   end
 
   local query_string
-  host_port, query_string = table.unpack(vim.split(host_port, "?", { plain = true, trimempty = true }))
+  host_port, query_string = unpack(vim.split(host_port, "?", { plain = true, trimempty = true }))
 
   local rejectUnauthorized = vim.g.copilot_proxy_strict_ssl
 
@@ -268,11 +269,11 @@ function M.get_network_proxy()
     end
   end
 
-  local host, port = table.unpack(vim.split(host_port, ":", { plain = true, trimempty = true }))
+  local host, port = unpack(vim.split(host_port, ":", { plain = true, trimempty = true }))
   local username, password
 
   if user_pass then
-    username, password = table.unpack(vim.split(user_pass, ":", { plain = true, trimempty = true }))
+    username, password = unpack(vim.split(user_pass, ":", { plain = true, trimempty = true }))
     username, password = username and url_decode(username), password and url_decode(password)
   end
 
