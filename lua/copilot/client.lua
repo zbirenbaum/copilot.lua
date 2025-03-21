@@ -234,6 +234,9 @@ local function prepare_client_config(overrides)
       end
     end,
     handlers = handlers,
+    init_options = {
+      copilotIntegrationId = "vscode-chat",
+    },
   }, overrides)
 end
 

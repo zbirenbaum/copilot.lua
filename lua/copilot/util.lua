@@ -203,6 +203,8 @@ function M.get_editor_configuration()
     filetypes = vim.tbl_deep_extend("keep", filetypes, internal_filetypes)
   end
 
+  local copilot_model = conf.copilot_model ~= "" and conf.copilot_model or ""
+
   ---@type string[]
   local disabled_filetypes = vim.tbl_filter(function(ft)
     return filetypes[ft] == false
@@ -210,6 +212,11 @@ function M.get_editor_configuration()
   table.sort(disabled_filetypes)
 
   return {
+    github = {
+      copilot = {
+        selectedCompletionModel = copilot_model,
+      },
+    },
     enableAutoCompletions = not not (conf.panel.enabled or conf.suggestion.enabled),
     disabledLanguages = vim.tbl_map(function(ft)
       return { languageId = ft }
