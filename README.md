@@ -89,11 +89,11 @@ require('copilot').setup({
   },
   copilot_node_command = 'node', -- Node.js version must be > 18.x
   workspace_folders = {},
-  server_opts_overrides = {},
   copilot_model = "",  -- Current LSP default is gpt-35-turbo, supports gpt-4o-copilot
   root_dir = function()
     vim.fs.dirname(vim.fs.find(".git", { path = ".", upward = true })[1])
   end,
+  server_opts_overrides = {},
 })
 ```
 
