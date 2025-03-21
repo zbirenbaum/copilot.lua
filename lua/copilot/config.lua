@@ -37,14 +37,13 @@ local default_config = {
   },
   ---@class copilot_config_logging
   logger = {
-    log_to_file = false,
     file = vim.fn.stdpath("log") .. "/copilot-lua.log",
-    file_log_level = vim.log.levels.WARN,
-    print_log = true,
+    file_log_level = vim.log.levels.OFF,
     print_log_level = vim.log.levels.WARN,
     ---@type string<'off'|'messages'|'verbose'>
     trace_lsp = "off",
     trace_lsp_progress = false,
+    log_lsp_messages = false,
   },
   ---@deprecated
   ft_disable = nil,
