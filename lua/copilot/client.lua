@@ -189,6 +189,37 @@ function M.use_client(callback)
   )
 end
 
+local function get_handlers()
+  local handlers = {
+    PanelSolution = api.handlers.PanelSolution,
+    PanelSolutionsDone = api.handlers.PanelSolutionsDone,
+    statusNotification = api.handlers.statusNotification,
+    ["copilot/openURL"] = api.handlers["copilot/openURL"],
+  }
+
+  -- optional handlers
+  local logger_conf = config.get("logger") --[[@as copilot_config_logging]]
+  if logger_conf.trace_lsp ~= "off" then
+    handlers = vim.tbl_extend("force", handlers, {
+      ["$/logTrace"] = logger.handle_lsp_trace,
+    })
+  end
+
+  if logger_conf.trace_lsp_progress then
+    handlers = vim.tbl_extend("force", handlers, {
+      ["$/progress"] = logger.handle_lsp_progress,
+    })
+  end
+
+  if logger_conf.log_lsp_messages then
+    handlers = vim.tbl_extend("force", handlers, {
+      ["window/logMessage"] = logger.handle_log_lsp_messages,
+    })
+  end
+
+  return handlers
+end
+
 local function prepare_client_config(overrides)
   local node = config.get("copilot_node_command")
 
@@ -215,36 +246,6 @@ local function prepare_client_config(overrides)
   }
   capabilities.workspace = {
     workspaceFolders = true,
-  }
-
-  local handlers = {
-    PanelSolution = api.handlers.PanelSolution,
-    PanelSolutionsDone = api.handlers.PanelSolutionsDone,
-    statusNotification = api.handlers.statusNotification,
-    ["copilot/openURL"] = api.handlers["copilot/openURL"],
-    -- set up "window/logMessage" handler here instead of in `logger.lua`, since some other lsp servers don't support this method, such as jsonlsp
-    ["window/logMessage"] = function(_, result, _)
-      if not result then
-        return
-      end
-
-      local message = string.format("LSP message: %s", result.message)
-      local message_type = result.type --[[@as integer]]
-
-      if message_type == 1 then
-        logger.error(message)
-      elseif message_type == 2 then
-        logger.warn(message)
-      elseif message_type == 3 then
-        logger.info(message)
-      elseif message_type == 4 then
-        logger.info(message)
-      elseif message_type == 5 then
-        logger.debug(message)
-      else
-        logger.trace(message)
-      end
-    end,
   }
 
   local root_dir = config.get_root_dir()
@@ -325,7 +326,7 @@ local function prepare_client_config(overrides)
         end)
       end
     end,
-    handlers = handlers,
+    handlers = get_handlers(),
     init_options = {
       copilotIntegrationId = "vscode-chat",
       -- Fix LSP warning: editorInfo and editorPluginInfo will soon be required in initializationOptions
