@@ -14,6 +14,7 @@ local M = {
   node_version = nil,
   node_version_error = nil,
   startup_error = nil,
+  initialized = false,
 }
 
 ---@param id integer
@@ -276,6 +277,7 @@ local function prepare_client_config(overrides)
             vim.notify(string.format("[copilot] setEditorInfo failure: %s", err), vim.log.levels.ERROR)
           end
         end)
+        M.initialized = true
       end)
     end,
     on_exit = function(code, _, client_id)
