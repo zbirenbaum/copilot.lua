@@ -98,11 +98,11 @@ require('copilot').setup({
   },
   copilot_node_command = 'node', -- Node.js version must be > 18.x
   workspace_folders = {},
-  server_opts_overrides = {},
   copilot_model = "",  -- Current LSP default is gpt-35-turbo, supports gpt-4o-copilot
-  get_root_dir = function()
+  root_dir = function()
     vim.fs.dirname(vim.fs.find(".git", { path = ".", upward = true })[1])
   end,
+  server_opts_overrides = {},
 })
 ```
 
@@ -266,7 +266,7 @@ workspace_folders = {
 
 They can also be added runtime, using the command `:Copilot workspace add [folderpath]` where `[folderpath]` is the workspace folder.
 
-### get_root_dir
+### root_dir
 
 This allows changing the function that gets the root folder, the default looks for a parent folder that contains the folder `.git`.
 
