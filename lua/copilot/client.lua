@@ -1,24 +1,29 @@
 local api = require("copilot.api")
 local config = require("copilot.config")
 local util = require("copilot.util")
+local logger = require("copilot.logger")
 
 local is_disabled = false
 
 local M = {
   augroup = "copilot.client",
   id = nil,
+  --- @class copilot_capabilities:lsp.ClientCapabilities
+  --- @field copilot table<'openURL', boolean>
+  --- @field workspace table<'workspaceFolders', boolean>
   capabilities = nil,
   config = nil,
   node_version = nil,
   node_version_error = nil,
   startup_error = nil,
+  initialized = false,
 }
 
----@param id number
+---@param id integer
 local function store_client_id(id)
   if M.id and M.id ~= id then
     if vim.lsp.get_client_by_id(M.id) then
-      error("unexpectedly started multiple copilot server")
+      vim.lsp.stop_client(M.id)
     end
   end
 
@@ -52,7 +57,7 @@ function M.get_node_version()
     local node = config.get("copilot_node_command")
 
     local cmd = { node, "--version" }
-    local cmd_output_table = vim.fn.executable(node) == 1 and vim.fn.systemlist(cmd, nil, false) or { "" }
+    local cmd_output_table = vim.fn.executable(node) == 1 and vim.fn.systemlist(cmd, nil, 0) or { "" }
     local cmd_output = cmd_output_table[#cmd_output_table]
     local cmd_exit_code = vim.v.shell_error
 
@@ -89,7 +94,7 @@ end
 ---@param force? boolean
 function M.buf_attach(force)
   if is_disabled then
-    print("[Copilot] Offline")
+    logger.warn("copilot is disabled")
     return
   end
 
@@ -97,8 +102,25 @@ function M.buf_attach(force)
     return
   end
 
-  local client_id = lsp_start(M.config)
-  store_client_id(client_id)
+  if not M.config then
+    logger.error("cannot attach: configuration not initialized")
+    return
+  end
+
+  -- In case it has changed, we update it
+  M.config.root_dir = config.get_root_dir()
+
+  local ok, client_id_or_err = pcall(lsp_start, M.config)
+  if not ok then
+    logger.error(string.format("failed to start LSP client: %s", client_id_or_err))
+    return
+  end
+
+  if client_id_or_err then
+    store_client_id(client_id_or_err)
+  else
+    logger.error("LSP client failed to start (no client ID returned)")
+  end
 end
 
 function M.buf_detach()
@@ -118,7 +140,7 @@ end
 ---@param callback fun(client:table):nil
 function M.use_client(callback)
   if is_disabled then
-    print("[Copilot] Offline")
+    logger.warn("copilot is offline")
     return
   end
 
@@ -126,13 +148,20 @@ function M.use_client(callback)
 
   if not client then
     if not M.config then
-      error("copilot.setup is not called yet")
+      logger.error("copilot.setup is not called yet")
+      return
     end
 
-    local client_id = vim.lsp.start_client(M.config)
+    local client_id, err = vim.lsp.start_client(M.config)
+
+    if not client_id then
+      logger.error(string.format("error starting LSP client: %s", err))
+      return
+    end
+
     store_client_id(client_id)
 
-    client = M.get()
+    client = M.get() --[[@as table]]
   end
 
   if client.initialized then
@@ -140,7 +169,13 @@ function M.use_client(callback)
     return
   end
 
-  local timer = vim.loop.new_timer()
+  local timer, err, _ = vim.uv.new_timer()
+
+  if not timer then
+    logger.error(string.format("error creating timer: %s", err))
+    return
+  end
+
   timer:start(
     0,
     100,
@@ -154,31 +189,7 @@ function M.use_client(callback)
   )
 end
 
-local function prepare_client_config(overrides)
-  local node = config.get("copilot_node_command")
-
-  if vim.fn.executable(node) ~= 1 then
-    local err = string.format("copilot_node_command(%s) is not executable", node)
-    vim.notify("[Copilot] " .. err, vim.log.levels.ERROR)
-    M.startup_error = err
-    return
-  end
-
-  local agent_path = vim.api.nvim_get_runtime_file("copilot/index.js", false)[1]
-  if vim.fn.filereadable(agent_path) == 0 then
-    local err = string.format("Could not find agent.js (bad install?) : %s", agent_path)
-    vim.notify("[Copilot] " .. err, vim.log.levels.ERROR)
-    M.startup_error = err
-    return
-  end
-
-  M.startup_error = nil
-
-  local capabilities = vim.lsp.protocol.make_client_capabilities()
-  capabilities.copilot = {
-    openURL = true,
-  }
-
+local function get_handlers()
   local handlers = {
     PanelSolution = api.handlers.PanelSolution,
     PanelSolutionsDone = api.handlers.PanelSolutionsDone,
@@ -186,12 +197,92 @@ local function prepare_client_config(overrides)
     ["copilot/openURL"] = api.handlers["copilot/openURL"],
   }
 
+  -- optional handlers
+  local logger_conf = config.get("logger") --[[@as copilot_config_logging]]
+  if logger_conf.trace_lsp ~= "off" then
+    handlers = vim.tbl_extend("force", handlers, {
+      ["$/logTrace"] = logger.handle_lsp_trace,
+    })
+  end
+
+  if logger_conf.trace_lsp_progress then
+    handlers = vim.tbl_extend("force", handlers, {
+      ["$/progress"] = logger.handle_lsp_progress,
+    })
+  end
+
+  if logger_conf.log_lsp_messages then
+    handlers = vim.tbl_extend("force", handlers, {
+      ["window/logMessage"] = logger.handle_log_lsp_messages,
+    })
+  end
+
+  return handlers
+end
+
+local function prepare_client_config(overrides)
+  local node = config.get("copilot_node_command")
+
+  if vim.fn.executable(node) ~= 1 then
+    local err = string.format("copilot_node_command(%s) is not executable", node)
+    logger.error(err)
+    M.startup_error = err
+    return
+  end
+
+  local agent_path = vim.api.nvim_get_runtime_file("copilot/dist/language-server.js", false)[1]
+  if not agent_path or vim.fn.filereadable(agent_path) == 0 then
+    local err = string.format("Could not find language-server.js (bad install?) : %s", tostring(agent_path))
+    logger.error(err)
+    M.startup_error = err
+    return
+  end
+
+  M.startup_error = nil
+
+  local capabilities = vim.lsp.protocol.make_client_capabilities() --[[@as copilot_capabilities]]
+  capabilities.copilot = {
+    openURL = true,
+  }
+  capabilities.workspace = {
+    workspaceFolders = true,
+  }
+
+  local root_dir = config.get_root_dir()
+  local workspace_folders = {
+    --- @type workspace_folder
+    {
+      uri = vim.uri_from_fname(root_dir),
+      -- important to keep root_dir as-is for the name as lsp.lua uses this to check the workspace has not changed
+      name = root_dir,
+    },
+  }
+
+  local config_workspace_folders = config.get("workspace_folders") --[[@as table<string>]]
+
+  for _, config_workspace_folder in ipairs(config_workspace_folders) do
+    if config_workspace_folder ~= "" then
+      table.insert(
+        workspace_folders,
+        --- @type workspace_folder
+        {
+          uri = vim.uri_from_fname(config_workspace_folder),
+          name = config_workspace_folder,
+        }
+      )
+    end
+  end
+
+  local editor_info = util.get_editor_info()
+
+  -- LSP config, not to be confused with config.lua
   return vim.tbl_deep_extend("force", {
     cmd = {
       node,
       agent_path,
+      "--stdio",
     },
-    root_dir = vim.loop.cwd(),
+    root_dir = root_dir,
     name = "copilot",
     capabilities = capabilities,
     get_language_id = function(_, filetype)
@@ -203,22 +294,25 @@ local function prepare_client_config(overrides)
       end
 
       vim.schedule(function()
-        ---@type copilot_set_editor_info_params
-        local set_editor_info_params = util.get_editor_info()
+        local set_editor_info_params = util.get_editor_info() --[[@as copilot_set_editor_info_params]]
         set_editor_info_params.editorConfiguration = util.get_editor_configuration()
         set_editor_info_params.networkProxy = util.get_network_proxy()
         local provider_url = config.get("auth_provider_url")
         set_editor_info_params.authProvider = provider_url and {
           url = provider_url,
         } or nil
+
+        logger.debug("data for setEditorInfo LSP call", set_editor_info_params)
         api.set_editor_info(client, set_editor_info_params, function(err)
           if err then
-            vim.notify(string.format("[copilot] setEditorInfo failure: %s", err), vim.log.levels.ERROR)
+            logger.error(string.format("setEditorInfo failure: %s", err))
           end
         end)
+        logger.trace("setEditorInfo has been called")
+        M.initialized = true
       end)
     end,
-    on_exit = function(code, _signal, client_id)
+    on_exit = function(code, _, client_id)
       if M.id == client_id then
         vim.schedule(function()
           M.teardown()
@@ -232,7 +326,17 @@ local function prepare_client_config(overrides)
         end)
       end
     end,
-    handlers = handlers,
+    handlers = get_handlers(),
+    init_options = {
+      copilotIntegrationId = "vscode-chat",
+      -- Fix LSP warning: editorInfo and editorPluginInfo will soon be required in initializationOptions
+      -- We are sending these twice for the time being as it will become required here and we get a warning if not set.
+      -- However if not passed in setEditorInfo, that one returns an error.
+      editorInfo = editor_info.editorInfo,
+      editorPluginInfo = editor_info.editorPluginInfo,
+    },
+    workspace_folders = workspace_folders,
+    trace = config.get("trace") or "off",
   }, overrides)
 end
 
@@ -246,6 +350,7 @@ function M.setup()
 
   is_disabled = false
 
+  M.id = nil
   vim.api.nvim_create_augroup(M.augroup, { clear = true })
 
   vim.api.nvim_create_autocmd("FileType", {
@@ -268,6 +373,56 @@ function M.teardown()
   if M.id then
     vim.lsp.stop_client(M.id)
   end
+end
+
+function M.add_workspace_folder(folder_path)
+  if type(folder_path) ~= "string" then
+    logger.error("workspace folder path must be a string")
+    return false
+  end
+
+  if vim.fn.isdirectory(folder_path) ~= 1 then
+    logger.error("invalid workspace folder: " .. folder_path)
+    return false
+  end
+
+  -- Normalize path
+  folder_path = vim.fn.fnamemodify(folder_path, ":p")
+
+  --- @type workspace_folder
+  local workspace_folder = {
+    uri = vim.uri_from_fname(folder_path),
+    name = folder_path,
+  }
+
+  local workspace_folders = config.get("workspace_folders") --[[@as table<string>]]
+  if not workspace_folders then
+    workspace_folders = {}
+  end
+
+  for _, existing_folder in ipairs(workspace_folders) do
+    if existing_folder == folder_path then
+      return
+    end
+  end
+
+  table.insert(workspace_folders, { folder_path })
+  config.set("workspace_folders", workspace_folders)
+
+  local client = M.get()
+  if client and client.initialized then
+    client.notify("workspace/didChangeWorkspaceFolders", {
+      event = {
+        added = { workspace_folder },
+        removed = {},
+      },
+    })
+    logger.notify("added workspace folder: " .. folder_path)
+  else
+    logger.notify("workspace folder will be added on next session: " .. folder_path)
+  end
+
+  return true
 end
 
 return M

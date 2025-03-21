@@ -3,6 +3,7 @@ local c = require("copilot.client")
 local config = require("copilot.config")
 local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
+local logger = require("copilot.logger")
 
 local mod = {}
 
@@ -79,14 +80,14 @@ local function is_panel_uri(bufname)
 end
 
 function panel:lock()
-  vim.api.nvim_buf_set_option(self.bufnr, "modifiable", false)
-  vim.api.nvim_buf_set_option(self.bufnr, "readonly", true)
+  vim.api.nvim_set_option_value("modifiable", false, { buf = self.bufnr })
+  vim.api.nvim_set_option_value("readonly", true, { buf = self.bufnr })
   return self
 end
 
 function panel:unlock()
-  vim.api.nvim_buf_set_option(self.bufnr, "modifiable", true)
-  vim.api.nvim_buf_set_option(self.bufnr, "readonly", false)
+  vim.api.nvim_set_option_value("modifiable", true, { buf = self.bufnr })
+  vim.api.nvim_set_option_value("readonly", false, { buf = self.bufnr })
   return self
 end
 
@@ -301,14 +302,14 @@ function panel:ensure_bufnr()
       swapfile = false,
       undolevels = 0,
     }) do
-      vim.api.nvim_buf_set_option(self.bufnr, name, value)
+      vim.api.nvim_set_option_value(name, value, { buf = self.bufnr })
     end
 
     set_keymap(self.bufnr)
   end
 
   vim.api.nvim_buf_set_name(self.bufnr, self.panel_uri)
-  vim.api.nvim_buf_set_option(self.bufnr, "filetype", self.filetype)
+  vim.api.nvim_set_option_value("filetype", self.filetype, { buf = self.bufnr })
 end
 
 function panel:ensure_winid()
@@ -331,11 +332,13 @@ function panel:ensure_winid()
     right = { cmd_prefix = "vertical botright ", winsize_fn = get_width },
     bottom = { cmd_prefix = "botright ", winsize_fn = get_height },
     left = { cmd_prefix = "vertical topleft ", winsize_fn = get_width },
+    horizontal = { cmd_prefix = "horizontal ", winsize_fn = get_height },
+    vertical = { cmd_prefix = "vertical ", winsize_fn = get_width },
   }
 
   local split_info = split_map[position]
   if not split_info then
-    print("Error: " .. position .. " is not a valid position")
+    logger.error(string.format("%s is not a valid position", position))
     return
   end
 
@@ -360,7 +363,7 @@ function panel:ensure_winid()
     relativenumber = false,
     signcolumn = "no",
   }) do
-    vim.api.nvim_win_set_option(self.winid, name, value)
+    vim.api.nvim_set_option_value(name, value, { win = self.winid })
   end
 
   vim.api.nvim_create_augroup(self.augroup, { clear = true })
@@ -444,7 +447,7 @@ function panel:refresh()
       elseif result.status == "Error" then
         self.state.status = "error"
         self.state.error = result.message
-        print(self.state.error)
+        logger.error(self.state.error)
       end
 
       self:unlock():refresh_header():lock()
@@ -469,6 +472,9 @@ function panel:refresh()
     params.position.character = params.doc.position.character
   end
 
+  -- on_solutions_done can be invoked before the api.get_panel_completions callback
+  self.state.status = "loading"
+
   local _, id = api.get_panel_completions(
     self.client,
     params,
@@ -477,17 +483,16 @@ function panel:refresh()
       if err then
         self.state.status = "error"
         self.state.error = err
-        print(self.state.error)
+        logger.error(self.state.error)
         return
       end
 
-      self.state.status = "loading"
       self.state.expected_count = result.solutionCountTarget
       panel:unlock():refresh_header():lock()
     end
   )
 
-  self.state.req_id = id
+  self.state.req_id = id.solutionCountTarget
 end
 
 function panel:init()
@@ -501,10 +506,7 @@ function panel:init()
 
   if not c.buf_is_attached(0) then
     local should_attach, no_attach_reason = util.should_attach()
-    vim.notify(
-      string.format("[Copilot] %s", should_attach and ("Disabled manually for " .. vim.bo.filetype) or no_attach_reason),
-      vim.log.levels.ERROR
-    )
+    logger.error(string.format("%s", should_attach and "Disabled manually for " .. vim.bo.filetype or no_attach_reason))
     return
   end
 
@@ -539,12 +541,12 @@ function mod.refresh()
 end
 
 ---@param layout {position: string, ratio: number}
----position: (optional) 'bottom' | 'top' | 'left' | 'right'
+---position: (optional) 'bottom' | 'top' | 'left' | 'right' | 'horizontal' | 'vertical'
 ---ratio: (optional) between 0 and 1
 function mod.open(layout)
   local client = c.get()
   if not client then
-    print("Error, copilot not running")
+    logger.error("copilot is not running")
     return
   end
 

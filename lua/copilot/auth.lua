@@ -1,5 +1,6 @@
 local api = require("copilot.api")
 local c = require("copilot.client")
+local logger = require("copilot.logger")
 
 local M = {}
 
@@ -46,7 +47,7 @@ function M.setup(client)
       height = height,
       width = width,
     })
-    vim.api.nvim_win_set_option(winid, "winhighlight", "Normal:Normal")
+    vim.api.nvim_set_option_value("winhighlight", "Normal:Normal", { win = winid })
 
     return function()
       vim.api.nvim_win_close(winid, true)
@@ -145,14 +146,8 @@ local function find_config_path()
     if vim.fn.isdirectory(config) > 0 then
       return config
     else
-      print("Error: could not find config path")
+      logger.error("could not find config path")
     end
-  end
-end
-
-local function json_body(response)
-  if response.headers["content-type"] == "application/json" then
-    return vim.json.decode(response.body)
   end
 end
 
@@ -160,16 +155,9 @@ local function oauth_user(token)
   return vim.fn.system('curl -s --header "Authorization: Bearer ' .. token .. '" https://api.github.com/user')
 end
 
-local function oauth_save(oauth_token)
-  local user_data = oauth_user(oauth_token)
-  local github = { oauth_token = oauth_token, user = user_data.login }
-  return github
-end
-
 M.get_cred = function()
-  local userdata = vim.json.decode(
-    vim.api.nvim_eval("readfile('" .. find_config_path() .. "/github-copilot/hosts.json')")[1]
-  )
+  local userdata =
+    vim.json.decode(vim.api.nvim_eval("readfile('" .. find_config_path() .. "/github-copilot/hosts.json')")[1])
   local token = userdata["github.com"].oauth_token
   local user = oauth_user(token)
   return { user = user, token = token }
