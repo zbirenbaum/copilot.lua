@@ -1,6 +1,7 @@
 local api = require("copilot.api")
 local config = require("copilot.config")
 local util = require("copilot.util")
+local logger = require("copilot.logger")
 
 local is_disabled = false
 
@@ -9,6 +10,7 @@ local M = {
   id = nil,
   --- @class copilot_capabilities:lsp.ClientCapabilities
   --- @field copilot table<'openURL', boolean>
+  --- @field workspace table<'workspaceFolders', boolean>
   capabilities = nil,
   config = nil,
   node_version = nil,
@@ -21,7 +23,8 @@ local M = {
 local function store_client_id(id)
   if M.id and M.id ~= id then
     if vim.lsp.get_client_by_id(M.id) then
-      error("unexpectedly started multiple copilot servers")
+      logger.error("unexpectedly started multiple copilot servers")
+      return
     end
   end
 
@@ -92,7 +95,7 @@ end
 ---@param force? boolean
 function M.buf_attach(force)
   if is_disabled then
-    print("[Copilot] Offline")
+    logger.warn("copilot is disabled")
     return
   end
 
@@ -101,7 +104,7 @@ function M.buf_attach(force)
   end
 
   if not M.config then
-    vim.notify("[Copilot] Cannot attach: configuration not initialized", vim.log.levels.ERROR)
+    logger.error("cannot attach: configuration not initialized")
     return
   end
 
@@ -110,14 +113,14 @@ function M.buf_attach(force)
 
   local ok, client_id_or_err = pcall(lsp_start, M.config)
   if not ok then
-    vim.notify(string.format("[Copilot] Failed to start LSP client: %s", client_id_or_err), vim.log.levels.ERROR)
+    logger.error(string.format("failed to start LSP client: %s", client_id_or_err))
     return
   end
 
   if client_id_or_err then
     store_client_id(client_id_or_err)
   else
-    vim.notify("[Copilot] LSP client failed to start (no client ID returned)", vim.log.levels.ERROR)
+    logger.error("LSP client failed to start (no client ID returned)")
   end
 end
 
@@ -138,7 +141,7 @@ end
 ---@param callback fun(client:table):nil
 function M.use_client(callback)
   if is_disabled then
-    print("[Copilot] Offline")
+    logger.warn("copilot is offline")
     return
   end
 
@@ -146,13 +149,14 @@ function M.use_client(callback)
 
   if not client then
     if not M.config then
-      error("copilot.setup is not called yet")
+      logger.error("copilot.setup is not called yet")
+      return
     end
 
     local client_id, err = vim.lsp.start_client(M.config)
 
     if not client_id then
-      error(string.format("[Copilot] Error starting LSP Client: %s", err))
+      logger.error(string.format("error starting LSP client: %s", err))
       return
     end
 
@@ -169,7 +173,7 @@ function M.use_client(callback)
   local timer, err, _ = vim.loop.new_timer()
 
   if not timer then
-    error(string.format("[Copilot] Error creating timer: %s", err))
+    logger.error(string.format("error creating timer: %s", err))
     return
   end
 
@@ -191,7 +195,7 @@ local function prepare_client_config(overrides)
 
   if vim.fn.executable(node) ~= 1 then
     local err = string.format("copilot_node_command(%s) is not executable", node)
-    vim.notify("[Copilot] " .. err, vim.log.levels.ERROR)
+    logger.error(err)
     M.startup_error = err
     return
   end
@@ -199,7 +203,7 @@ local function prepare_client_config(overrides)
   local agent_path = vim.api.nvim_get_runtime_file("copilot/dist/language-server.js", false)[1]
   if not agent_path or vim.fn.filereadable(agent_path) == 0 then
     local err = string.format("Could not find language-server.js (bad install?) : %s", tostring(agent_path))
-    vim.notify("[Copilot] " .. err, vim.log.levels.ERROR)
+    logger.error(err)
     M.startup_error = err
     return
   end
@@ -272,11 +276,14 @@ local function prepare_client_config(overrides)
         set_editor_info_params.authProvider = provider_url and {
           url = provider_url,
         } or nil
+
+        logger.debug("data for setEditorInfo LSP call", set_editor_info_params)
         api.set_editor_info(client, set_editor_info_params, function(err)
           if err then
-            vim.notify(string.format("[copilot] setEditorInfo failure: %s", err), vim.log.levels.ERROR)
+            logger.error(string.format("setEditorInfo failure: %s", err))
           end
         end)
+        logger.trace("setEditorInfo has been called")
         M.initialized = true
       end)
     end,
@@ -299,6 +306,7 @@ local function prepare_client_config(overrides)
       copilotIntegrationId = "vscode-chat",
     },
     workspace_folders = workspace_folders,
+    trace = config.get("trace") or "off",
   }, overrides)
 end
 
@@ -339,12 +347,12 @@ end
 
 function M.add_workspace_folder(folder_path)
   if type(folder_path) ~= "string" then
-    vim.notify("[Copilot] Workspace folder path must be a string", vim.log.levels.ERROR)
+    logger.error("workspace folder path must be a string")
     return false
   end
 
   if vim.fn.isdirectory(folder_path) ~= 1 then
-    vim.notify("[Copilot] Invalid workspace folder: " .. folder_path, vim.log.levels.ERROR)
+    logger.error("invalid workspace folder: " .. folder_path)
     return false
   end
 
@@ -379,9 +387,9 @@ function M.add_workspace_folder(folder_path)
         removed = {},
       },
     })
-    vim.notify("[Copilot] Added workspace folder: " .. folder_path, vim.log.levels.INFO)
+    logger.notify("added workspace folder: " .. folder_path)
   else
-    vim.notify("[Copilot] Workspace folder added for next session: " .. folder_path, vim.log.levels.INFO)
+    logger.notify("workspace folder will be added on next session: " .. folder_path)
   end
 
   return true

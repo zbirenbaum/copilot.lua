@@ -1,5 +1,6 @@
 local api = require("copilot.api")
 local c = require("copilot.client")
+local logger = require("copilot.logger")
 
 local M = {}
 
@@ -145,7 +146,7 @@ local function find_config_path()
     if vim.fn.isdirectory(config) > 0 then
       return config
     else
-      print("Error: could not find config path")
+      logger.error("could not find config path")
     end
   end
 end

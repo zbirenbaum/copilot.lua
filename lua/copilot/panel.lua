@@ -3,6 +3,7 @@ local c = require("copilot.client")
 local config = require("copilot.config")
 local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
+local logger = require("copilot.logger")
 
 local mod = {}
 
@@ -337,7 +338,7 @@ function panel:ensure_winid()
 
   local split_info = split_map[position]
   if not split_info then
-    print("Error: " .. position .. " is not a valid position")
+    logger.error(string.format("%s is not a valid position", position))
     return
   end
 
@@ -446,7 +447,7 @@ function panel:refresh()
       elseif result.status == "Error" then
         self.state.status = "error"
         self.state.error = result.message
-        print(self.state.error)
+        logger.error(self.state.error)
       end
 
       self:unlock():refresh_header():lock()
@@ -482,7 +483,7 @@ function panel:refresh()
       if err then
         self.state.status = "error"
         self.state.error = err
-        print(self.state.error)
+        logger.error(self.state.error)
         return
       end
 
@@ -505,10 +506,7 @@ function panel:init()
 
   if not c.buf_is_attached(0) then
     local should_attach, no_attach_reason = util.should_attach()
-    vim.notify(
-      string.format("[Copilot] %s", should_attach and ("Disabled manually for " .. vim.bo.filetype) or no_attach_reason),
-      vim.log.levels.ERROR
-    )
+    logger.error(string.format("%s", should_attach and "Disabled manually for " .. vim.bo.filetype or no_attach_reason))
     return
   end
 
@@ -548,7 +546,7 @@ end
 function mod.open(layout)
   local client = c.get()
   if not client then
-    print("Error, copilot not running")
+    logger.error("copilot is not running")
     return
   end
 

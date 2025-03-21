@@ -1,3 +1,5 @@
+local logger = require("copilot.logger")
+
 ---@class copilot_config
 local default_config = {
   ---@class copilot_config_panel
@@ -33,6 +35,17 @@ local default_config = {
       dismiss = "<C-]>",
     },
   },
+  ---@class copilot_config_logging
+  logger = {
+    log_to_file = false,
+    file = vim.fn.stdpath("log") .. "/copilot-lua.log",
+    file_log_level = vim.log.levels.WARN,
+    print_log = true,
+    print_log_level = vim.log.levels.WARN,
+    ---@type string<'off'|'messages'|'verbose'>
+    trace_lsp = "off",
+    trace_lsp_progress = false,
+  },
   ---@deprecated
   ft_disable = nil,
   ---@type table<string, boolean>
@@ -52,12 +65,13 @@ local default_config = {
 }
 
 local mod = {
+  ---@type copilot_config
   config = nil,
 }
 
 function mod.setup(opts)
   if mod.config then
-    vim.notify("[Copilot] config is already set", vim.log.levels.WARN)
+    logger.warn("config is already set")
     return mod.config
   end
 
@@ -80,7 +94,8 @@ end
 ---@param key? string
 function mod.get(key)
   if not mod.config then
-    error("[Copilot] not initialized")
+    logger.error("not initialized")
+    return
   end
 
   if key then
@@ -94,7 +109,8 @@ end
 ---@param value any
 function mod.set(key, value)
   if not mod.config then
-    error("[Copilot] not initialized")
+    logger.error("not initialized")
+    return
   end
 
   mod.config[key] = value
