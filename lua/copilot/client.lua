@@ -272,6 +272,8 @@ local function prepare_client_config(overrides)
     end
   end
 
+  local editor_info = util.get_editor_info()
+
   -- LSP config, not to be confused with config.lua
   return vim.tbl_deep_extend("force", {
     cmd = {
@@ -326,6 +328,9 @@ local function prepare_client_config(overrides)
     handlers = handlers,
     init_options = {
       copilotIntegrationId = "vscode-chat",
+      -- Fix LSP warning: editorInfo and editorPluginInfo will soon be required in initializationOptions
+      editorInfo = editor_info.editorInfo,
+      editorPluginInfo = editor_info.editorPluginInfo,
     },
     workspace_folders = workspace_folders,
     trace = config.get("trace") or "off",
