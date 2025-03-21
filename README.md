@@ -128,7 +128,7 @@ require("copilot.panel").refresh()
 
 When `auto_trigger` is `true`, copilot starts suggesting as soon as you enter insert mode.
 
-When `auto_trigger` is `false`, use the `next` or `prev` keymap to trigger copilot suggestion.
+When `auto_trigger` is `false`, use the `next`, `prev` or `accept` keymap to trigger copilot suggestion.
 
 To toggle auto trigger for the current buffer, use `require("copilot.suggestion").toggle_auto_trigger()`.
 
@@ -148,6 +148,7 @@ cmp.event:on("menu_closed", function()
   vim.b.copilot_suggestion_hidden = false
 end)
 ```
+
 </details>
 
 <details>
@@ -169,8 +170,8 @@ vim.api.nvim_create_autocmd("User", {
 })
 
 ```
-</details>
 
+</details>
 
 The `copilot.suggestion` module exposes the following functions:
 
