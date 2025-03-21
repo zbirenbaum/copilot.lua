@@ -134,7 +134,10 @@ To toggle auto trigger for the current buffer, use `require("copilot.suggestion"
 
 Copilot suggestion is automatically hidden when `popupmenu-completion` is open. In case you use a custom
 menu for completion, you can set the `copilot_suggestion_hidden` buffer variable to `true` to have the
-same behavior. For example, with `nvim-cmp`:
+same behavior.
+
+<details>
+<summary>Example using nvim-cmp</summary>
 
 ```lua
 cmp.event:on("menu_opened", function()
@@ -145,6 +148,29 @@ cmp.event:on("menu_closed", function()
   vim.b.copilot_suggestion_hidden = false
 end)
 ```
+</details>
+
+<details>
+<summary>Example using blink.cmp</summary>
+
+```lua
+vim.api.nvim_create_autocmd("User", {
+  pattern = "BlinkCmpMenuOpen",
+  callback = function()
+    vim.b.copilot_suggestion_hidden = true
+  end,
+})
+
+vim.api.nvim_create_autocmd("User", {
+  pattern = "BlinkCmpMenuClose",
+  callback = function()
+    vim.b.copilot_suggestion_hidden = false
+  end,
+})
+
+```
+</details>
+
 
 The `copilot.suggestion` module exposes the following functions:
 
