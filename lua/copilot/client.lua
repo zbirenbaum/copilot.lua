@@ -1,7 +1,8 @@
 local api = require("copilot.api")
 local config = require("copilot.config")
-local util = require("copilot.util")
+local util = require("copilot.utils.util")
 local logger = require("copilot.logger")
+local lsp_binary_util = require("copilot.utils.lsp_binary")
 
 local is_disabled = false
 
@@ -182,13 +183,12 @@ local function get_handlers()
 end
 
 local function prepare_client_config(overrides)
-  local agent_path = vim.api.nvim_get_runtime_file("copilot/native/" .. util.get_os_specific_binary(), false)[1]
-  if not agent_path or vim.fn.filereadable(agent_path) == 0 then
-    local err = string.format("Could not find copilot-language-server (bad install?) : %s", tostring(agent_path))
-    logger.error(err)
-    M.startup_error = err
+  if lsp_binary_util.initialization_failed then
+    M.startup_error = "initializatino of copilot-language-server failed"
     return
   end
+
+  local server_path = lsp_binary_util.get_copilot_server_info().absolute_filepath
 
   M.startup_error = nil
 
@@ -230,7 +230,7 @@ local function prepare_client_config(overrides)
   -- LSP config, not to be confused with config.lua
   return vim.tbl_deep_extend("force", {
     cmd = {
-      agent_path,
+      server_path,
       "--stdio",
     },
     root_dir = root_dir,
@@ -260,6 +260,7 @@ local function prepare_client_config(overrides)
           end
         end)
         logger.trace("setEditorInfo has been called")
+
         M.initialized = true
       end)
     end,
@@ -312,6 +313,7 @@ function M.setup()
   })
 
   vim.schedule(function()
+    lsp_binary_util.ensure_client_is_downloaded()
     M.buf_attach()
   end)
 end

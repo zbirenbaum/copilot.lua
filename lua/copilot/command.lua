@@ -1,6 +1,6 @@
 local a = require("copilot.api")
 local c = require("copilot.client")
-local u = require("copilot.util")
+local u = require("copilot.utils.util")
 
 local mod = {}
 
@@ -17,11 +17,12 @@ function mod.version()
   local client = c.get()
 
   coroutine.wrap(function()
+    local copilot_server_info = u.get_copilot_server_info()
     if client then
       local _, data = a.get_version(client)
-      lines[#lines + 1] = "copilot/native/" .. u.get_os_specific_binary() .. " " .. data.version
+      lines[#lines + 1] = copilot_server_info.path .. "/" .. copilot_server_info().filename .. " " .. data.version
     else
-      lines[#lines + 1] = "copilot/native/" .. u.get_os_specific_binary() .. " " .. "not running"
+      lines[#lines + 1] = copilot_server_info.path .. "/" .. copilot_server_info().filename .. " " .. "not running"
     end
 
     local chunks = {}
