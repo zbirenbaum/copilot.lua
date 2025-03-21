@@ -37,14 +37,13 @@ local default_config = {
   },
   ---@class copilot_config_logging
   logger = {
-    log_to_file = false,
     file = vim.fn.stdpath("log") .. "/copilot-lua.log",
-    file_log_level = vim.log.levels.WARN,
-    print_log = true,
+    file_log_level = vim.log.levels.OFF,
     print_log_level = vim.log.levels.WARN,
     ---@type string<'off'|'messages'|'verbose'>
     trace_lsp = "off",
     trace_lsp_progress = false,
+    log_lsp_messages = false,
   },
   ---@deprecated
   ft_disable = nil,
@@ -57,9 +56,9 @@ local default_config = {
   server_opts_overrides = {},
   ---@type string|nil
   copilot_model = nil,
-  ---@type function
-  get_root_dir = function()
-    vim.fs.dirname(vim.fs.find(".git", { path = ".", upward = true })[1])
+  ---@type function|string
+  root_dir = function()
+    return vim.fs.dirname(vim.fs.find(".git", { upward = true })[1])
   end,
 }
 
@@ -113,6 +112,28 @@ function mod.set(key, value)
   end
 
   mod.config[key] = value
+end
+
+function mod.get_root_dir()
+  if not mod.config then
+    error("[Copilot] not initialized")
+  end
+
+  local config_root_dir = mod.config.root_dir
+  local root_dir --[[@as string]]
+
+  if type(config_root_dir) == "function" then
+    root_dir = config_root_dir()
+  else
+    root_dir = config_root_dir
+  end
+
+  if not root_dir or root_dir == "" then
+    root_dir = "."
+  end
+
+  root_dir = vim.fn.fnamemodify(root_dir, ":p:h")
+  return root_dir
 end
 
 return mod

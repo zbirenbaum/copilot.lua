@@ -2,10 +2,8 @@ local uv = vim.uv
 
 ---@class logger
 local mod = {
-  log_to_file = false,
   log_file = vim.fn.stdpath("log") .. "/copilot-lua.log",
-  file_log_level = vim.log.levels.WARN,
-  print_log = true,
+  file_log_level = vim.log.levels.OFF,
   print_log_level = vim.log.levels.WARN,
 }
 
@@ -75,11 +73,11 @@ end
 ---@param data any
 ---@param force_print boolean
 function mod.log(log_level, msg, data, force_print)
-  if mod.log_to_file and (mod.file_log_level <= log_level) then
+  if mod.file_log_level <= log_level then
     write_log(log_level, mod.log_file, msg, data)
   end
 
-  if force_print or (mod.print_log and (mod.print_log_level <= log_level)) then
+  if force_print or (mod.print_log_level <= log_level) then
     notify_log(log_level, msg, data)
   end
 end
@@ -125,50 +123,44 @@ function mod.setup(conf)
   mod.log_file = conf.file
   mod.file_log_level = conf.file_log_level
   mod.print_log_level = conf.print_log_level
-  mod.log_to_file = conf.log_to_file
-  mod.print_log = conf.print_log
+end
 
-  if conf.trace_lsp ~= "off" then
-    vim.lsp.handlers["$/logTrace"] = function(_, result, _)
-      if not result then
-        return
-      end
-
-      mod.trace(string.format("LSP trace - %s", result.message), result.verbose)
-    end
+function mod.handle_lsp_trace(_, result, _)
+  if not result then
+    return
   end
 
-  if conf.trace_lsp_progress then
-    vim.lsp.handlers["$/progress"] = function(_, result, _)
-      if not result then
-        return
-      end
+  mod.trace(string.format("LSP trace - %s", result.message), result.verbose)
+end
 
-      mod.trace(string.format("LSP progress - token %s", result.token), result.value)
-    end
+function mod.handle_lsp_progress(_, result, _)
+  if not result then
+    return
   end
 
-  vim.lsp.handlers["window/logMessage"] = function(_, result, _)
-    if not result then
-      return
-    end
+  mod.trace(string.format("LSP progress - token %s", result.token), result.value)
+end
 
-    local message = string.format("LSP message: %s", result.message)
-    local message_type = result.type --[[@as integer]]
+function mod.handle_log_lsp_messages(_, result, _)
+  if not result then
+    return
+  end
 
-    if message_type == 1 then
-      mod.error(message)
-    elseif message_type == 2 then
-      mod.warn(message)
-    elseif message_type == 3 then
-      mod.info(message)
-    elseif message_type == 4 then
-      mod.info(message)
-    elseif message_type == 5 then
-      mod.debug(message)
-    else
-      mod.trace(message)
-    end
+  local message = string.format("LSP message: %s", result.message)
+  local message_type = result.type --[[@as integer]]
+
+  if message_type == 1 then
+    mod.error(message)
+  elseif message_type == 2 then
+    mod.warn(message)
+  elseif message_type == 3 then
+    mod.info(message)
+  elseif message_type == 4 then
+    mod.info(message)
+  elseif message_type == 5 then
+    mod.debug(message)
+  else
+    mod.trace(message)
   end
 end
 
