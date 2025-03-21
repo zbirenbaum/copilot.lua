@@ -2,7 +2,7 @@ local M = { setup_done = false }
 local config = require("copilot.config")
 local highlight = require("copilot.highlight")
 
-local create_cmds = function ()
+local create_cmds = function()
   vim.api.nvim_create_user_command("CopilotDetach", function()
     if require("copilot.client").buf_is_attached(0) then
       vim.deprecate("':CopilotDetach'", "':Copilot detach'", "in future", "copilot.lua")
@@ -15,7 +15,7 @@ local create_cmds = function ()
     vim.cmd("Copilot disable")
   end, {})
 
-  vim.api.nvim_create_user_command("CopilotPanel", function ()
+  vim.api.nvim_create_user_command("CopilotPanel", function()
     vim.deprecate("':CopilotPanel'", "':Copilot panel'", "in future", "copilot.lua")
     vim.cmd("Copilot panel")
   end, {})
