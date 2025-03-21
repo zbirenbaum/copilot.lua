@@ -41,6 +41,8 @@ local default_config = {
   auth_provider_url = nil,
   copilot_node_command = "node",
   server_opts_overrides = {},
+  ---@type string|nil
+  copilot_model = nil,
 }
 
 local mod = {
