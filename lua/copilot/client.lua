@@ -16,6 +16,7 @@ local M = {
   node_version = nil,
   node_version_error = nil,
   startup_error = nil,
+  initialized = false,
 }
 
 ---@param id integer
@@ -214,6 +215,9 @@ local function prepare_client_config(overrides)
   capabilities.copilot = {
     openURL = true,
   }
+  capabilities.workspace = {
+    workspaceFolders = true,
+  }
 
   local handlers = {
     PanelSolution = api.handlers.PanelSolution,
@@ -283,6 +287,7 @@ local function prepare_client_config(overrides)
           end
         end)
         logger.trace("setEditorInfo has been called")
+        M.initialized = true
       end)
     end,
     on_exit = function(code, _, client_id)
