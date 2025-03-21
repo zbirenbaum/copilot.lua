@@ -222,29 +222,6 @@ local function prepare_client_config(overrides)
     PanelSolutionsDone = api.handlers.PanelSolutionsDone,
     statusNotification = api.handlers.statusNotification,
     ["copilot/openURL"] = api.handlers["copilot/openURL"],
-    -- set up "window/logMessage" handler here instead of in `logger.lua`, since some other lsp servers don't support this method, such as jsonlsp
-    ["window/logMessage"] = function(_, result, _)
-      if not result then
-        return
-      end
-
-      local message = string.format("LSP message: %s", result.message)
-      local message_type = result.type --[[@as integer]]
-
-      if message_type == 1 then
-        logger.error(message)
-      elseif message_type == 2 then
-        logger.warn(message)
-      elseif message_type == 3 then
-        logger.info(message)
-      elseif message_type == 4 then
-        logger.info(message)
-      elseif message_type == 5 then
-        logger.debug(message)
-      else
-        logger.trace(message)
-      end
-    end,
   }
 
   local root_dir = config.get_root_dir()
