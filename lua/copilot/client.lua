@@ -105,6 +105,9 @@ function M.buf_attach(force)
     return
   end
 
+  -- In case it has changed, we update it
+  M.config.root_dir = config.get_root_dir()
+
   local ok, client_id_or_err = pcall(lsp_start, M.config)
   if not ok then
     vim.notify(string.format("[Copilot] Failed to start LSP client: %s", client_id_or_err), vim.log.levels.ERROR)
@@ -218,11 +221,7 @@ local function prepare_client_config(overrides)
     ["copilot/openURL"] = api.handlers["copilot/openURL"],
   }
 
-  local root_dir = vim.loop.cwd()
-  if not root_dir then
-    root_dir = vim.fn.getcwd()
-  end
-
+  local root_dir = config.get_root_dir()
   local workspace_folders = {
     --- @type workspace_folder
     {
@@ -247,6 +246,7 @@ local function prepare_client_config(overrides)
     end
   end
 
+  -- LSP config, not to be confused with config.lua
   return vim.tbl_deep_extend("force", {
     cmd = {
       node,
