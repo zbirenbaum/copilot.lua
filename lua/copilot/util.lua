@@ -1,5 +1,4 @@
 local config = require("copilot.config")
-
 local unpack = unpack or table.unpack
 
 local M = {}
@@ -97,7 +96,8 @@ end
 ---@return boolean should_attach
 ---@return string? no_attach_reason
 function M.should_attach()
-  local ft_disabled, ft_disabled_reason = is_ft_disabled(vim.bo.filetype, config.get("filetypes"))
+  local ft = config.get("filetypes") --[[@as table<string, boolean>]]
+  local ft_disabled, ft_disabled_reason = is_ft_disabled(vim.bo.filetype, ft)
 
   if ft_disabled then
     return not ft_disabled, ft_disabled_reason
@@ -195,15 +195,15 @@ end
 
 ---@return copilot_editor_configuration
 function M.get_editor_configuration()
-  local conf = config.get()
+  local conf = config.get() --[[@as copilot_config]]
 
-  local filetypes = vim.deepcopy(conf.filetypes)
+  local filetypes = vim.deepcopy(conf.filetypes) --[[@as table<string, boolean>]]
 
   if filetypes["*"] == nil then
     filetypes = vim.tbl_deep_extend("keep", filetypes, internal_filetypes)
   end
 
-  local copilot_model = conf.copilot_model ~= "" and conf.copilot_model or ""
+  local copilot_model = conf and conf.copilot_model ~= "" and conf.copilot_model or ""
 
   ---@type string[]
   local disabled_filetypes = vim.tbl_filter(function(ft)
@@ -303,11 +303,11 @@ end
 ---@param str string
 ---@return integer
 function M.strutf16len(str)
-  return vim.fn.strchars(vim.fn.substitute(str, [==[\\%#=2[^\u0001-\uffff]]==], "  ", "g"))
-end
-
-if vim.fn.exists("*strutf16len") == 1 then
-  M.strutf16len = vim.fn.strutf16len
+  if vim.fn.exists("*strutf16len") == 1 then
+    return vim.fn.strutf16len(str)
+  else
+    return vim.fn.strchars(vim.fn.substitute(str, [==[\\%#=2[^\u0001-\uffff]]==], "  ", "g"))
+  end
 end
 
 return M
