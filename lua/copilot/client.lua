@@ -169,7 +169,7 @@ function M.use_client(callback)
     return
   end
 
-  local timer, err, _ = vim.loop.new_timer()
+  local timer, err, _ = vim.uv.new_timer()
 
   if not timer then
     logger.error(string.format("error creating timer: %s", err))
@@ -249,6 +249,8 @@ local function prepare_client_config(overrides)
     end
   end
 
+  local editor_info = util.get_editor_info()
+
   -- LSP config, not to be confused with config.lua
   return vim.tbl_deep_extend("force", {
     cmd = {
@@ -303,6 +305,11 @@ local function prepare_client_config(overrides)
     handlers = handlers,
     init_options = {
       copilotIntegrationId = "vscode-chat",
+      -- Fix LSP warning: editorInfo and editorPluginInfo will soon be required in initializationOptions
+      -- We are sending these twice for the time being as it will become required here and we get a warning if not set.
+      -- However if not passed in setEditorInfo, that one returns an error.
+      editorInfo = editor_info.editorInfo,
+      editorPluginInfo = editor_info.editorPluginInfo,
     },
     workspace_folders = workspace_folders,
     trace = config.get("trace") or "off",
