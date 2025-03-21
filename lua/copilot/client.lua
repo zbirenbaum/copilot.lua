@@ -329,6 +329,8 @@ local function prepare_client_config(overrides)
     init_options = {
       copilotIntegrationId = "vscode-chat",
       -- Fix LSP warning: editorInfo and editorPluginInfo will soon be required in initializationOptions
+      -- We are sending these twice for the time being as it will become required here and we get a warning if not set.
+      -- However if not passed in setEditorInfo, that one returns an error.
       editorInfo = editor_info.editorInfo,
       editorPluginInfo = editor_info.editorPluginInfo,
     },
