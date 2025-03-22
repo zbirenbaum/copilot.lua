@@ -492,7 +492,7 @@ function panel:refresh()
     end
   )
 
-  self.state.req_id = id.solutionCountTarget
+  self.state.req_id = id
 end
 
 function panel:init()
