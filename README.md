@@ -89,7 +89,7 @@ require('copilot').setup({
   },
   logger = {
     file = vim.fn.stdpath("log") .. "/copilot-lua.log",
-    file_log_level = vim.log.levels.WARN,
+    file_log_level = vim.log.levels.OFF,
     print_log_level = vim.log.levels.WARN,
     trace_lsp = "off", -- "off" | "messages" | "verbose"
     trace_lsp_progress = false,
@@ -119,6 +119,7 @@ require("copilot.panel").accept()
 require("copilot.panel").jump_next()
 require("copilot.panel").jump_prev()
 require("copilot.panel").open({position, ratio})
+require("copilot.panel").toggle()
 require("copilot.panel").refresh()
 ```
 
@@ -222,6 +223,7 @@ require("copilot").setup {
 
 Logs will be written to the `file` for anything of `file_log_level` or higher.
 Logs will be printed to NeoVim (using `notify`) for anything of `print_log_level` or higher.
+To turn either off, simply set its level to `vim.log.levels.OFF`.
 File logging is done asynchronously to minimize performance impacts, however there is still some overhead.
 
 Log levels used are the ones defined in `vim.log`:
