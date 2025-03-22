@@ -534,6 +534,14 @@ function mod.jump_next()
   panel:jump(1)
 end
 
+function mod.toggle()
+  if panel.winid and vim.api.nvim_win_is_valid(panel.winid) then
+    panel:close()
+  else
+    mod.open({})
+  end
+end
+
 function mod.refresh()
   vim.api.nvim_buf_call(vim.uri_to_bufnr(panel_uri_to_doc_uri(panel.panel_uri)), function()
     panel:refresh()
