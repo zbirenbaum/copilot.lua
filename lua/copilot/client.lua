@@ -1,7 +1,8 @@
 local api = require("copilot.api")
 local config = require("copilot.config")
-local util = require("copilot.util")
+local util = require("copilot.utils.util")
 local logger = require("copilot.logger")
+local lsp_binary_util = require("copilot.utils.lsp_binary")
 
 local is_disabled = false
 
@@ -13,8 +14,6 @@ local M = {
   --- @field workspace table<'workspaceFolders', boolean>
   capabilities = nil,
   config = nil,
-  node_version = nil,
-  node_version_error = nil,
   startup_error = nil,
   initialized = false,
 }
@@ -48,43 +47,6 @@ if not lsp_start then
     vim.lsp.buf_attach_client(bufnr, client_id)
     return client_id
   end
-end
-
----@return string node_version
----@return nil|string node_version_error
-function M.get_node_version()
-  if not M.node_version then
-    local node = config.get("copilot_node_command")
-
-    local cmd = { node, "--version" }
-    local cmd_output_table = vim.fn.executable(node) == 1 and vim.fn.systemlist(cmd, nil, 0) or { "" }
-    local cmd_output = cmd_output_table[#cmd_output_table]
-    local cmd_exit_code = vim.v.shell_error
-
-    local node_version = string.match(cmd_output, "^v(%S+)") or ""
-    local node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or 0
-    local node_version_minor = tonumber(string.match(node_version, "^%d+%.(%d+)%.")) or 0
-
-    if node_version_major == 0 then
-      M.node_version_error = table.concat({
-        "Could not determine Node.js version",
-        "-----------",
-        "(exit code) " .. tostring(cmd_exit_code),
-        "   (output) " .. cmd_output,
-        "-----------",
-      }, "\n")
-    elseif
-      node_version_major < 16
-      or (node_version_major == 16 and node_version_minor < 14)
-      or (node_version_major == 17 and node_version_minor < 3)
-    then
-      M.node_version_error = string.format("Node.js version 18.x or newer required but found %s", node_version)
-    end
-
-    M.node_version = node_version or ""
-  end
-
-  return M.node_version, M.node_version_error
 end
 
 function M.buf_is_attached(bufnr)
@@ -221,22 +183,12 @@ local function get_handlers()
 end
 
 local function prepare_client_config(overrides)
-  local node = config.get("copilot_node_command")
-
-  if vim.fn.executable(node) ~= 1 then
-    local err = string.format("copilot_node_command(%s) is not executable", node)
-    logger.error(err)
-    M.startup_error = err
+  if lsp_binary_util.initialization_failed then
+    M.startup_error = "initializatino of copilot-language-server failed"
     return
   end
 
-  local agent_path = vim.api.nvim_get_runtime_file("copilot/dist/language-server.js", false)[1]
-  if not agent_path or vim.fn.filereadable(agent_path) == 0 then
-    local err = string.format("Could not find language-server.js (bad install?) : %s", tostring(agent_path))
-    logger.error(err)
-    M.startup_error = err
-    return
-  end
+  local server_path = lsp_binary_util.get_copilot_server_info().absolute_filepath
 
   M.startup_error = nil
 
@@ -278,8 +230,7 @@ local function prepare_client_config(overrides)
   -- LSP config, not to be confused with config.lua
   return vim.tbl_deep_extend("force", {
     cmd = {
-      node,
-      agent_path,
+      server_path,
       "--stdio",
     },
     root_dir = root_dir,
@@ -309,6 +260,7 @@ local function prepare_client_config(overrides)
           end
         end)
         logger.trace("setEditorInfo has been called")
+
         M.initialized = true
       end)
     end,
@@ -361,6 +313,7 @@ function M.setup()
   })
 
   vim.schedule(function()
+    lsp_binary_util.ensure_client_is_downloaded()
     M.buf_attach()
   end)
 end

@@ -88,10 +88,8 @@ require('copilot').setup({
     ["."] = false,
   },
   logger = {
-    log_to_file = false,
     file = vim.fn.stdpath("log") .. "/copilot-lua.log",
     file_log_level = vim.log.levels.WARN,
-    print_log = true,
     print_log_level = vim.log.levels.WARN,
     trace_lsp = "off", -- "off" | "messages" | "verbose"
     trace_lsp_progress = false,
@@ -254,13 +252,29 @@ Careful turning on all logging features as the log files may get very large over
 
 ### copilot_node_command
 
-Use this field to provide the path to a specific node version such as one installed by nvm. Node.js version must be 18.x or newer.
+When `log_to_file` is true, logs will be written to the `file` for anything of `file_log_level` or higher.
+When `print_log` is true, logs will be printed to NeoVim (using `notify`) for anything of `print_log_level` or higher.
+File logging is done asynchronously to minimize performance impacts, however there is still some overhead.
 
-Example:
+Log levels used are the ones defined in `vim.log`:
 
 ```lua
-copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v18.18.2/bin/node", -- Node.js version must be > 18.x
+vim.log = {
+  levels = {
+    TRACE = 0,
+    DEBUG = 1,
+    INFO = 2,
+    WARN = 3,
+    ERROR = 4,
+    OFF = 5,
+  },
+}
 ```
+
+`trace_lsp` can either be `off`, `messages` which will output the LSP messages, or `verbose` which adds additonal information to the message.
+When `trace_lsp_progress` is true, LSP progress messages will also be logged.
+
+Careful turning on all logging features as the log files may get very large over time, and are not pruned by the application.
 
 ### server_opts_overrides
 
