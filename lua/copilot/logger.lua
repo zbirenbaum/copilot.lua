@@ -5,6 +5,7 @@ local mod = {
   log_file = vim.fn.stdpath("log") .. "/copilot-lua.log",
   file_log_level = vim.log.levels.OFF,
   print_log_level = vim.log.levels.WARN,
+  logger_id = 0,
 }
 
 local log_level_names = {
@@ -24,14 +25,22 @@ end
 
 ---@param log_level integer --vim.log.levels
 ---@param msg string
----@param data any
+---@param ... any
 ---@return string log_msg
-local function format_log(log_level, msg, data)
+local function format_log(log_level, msg, ...)
   local log_level_name = log_level_names[log_level]
-  local log_msg = string.format("%s [%s]: %s", get_timestamp_with_ms(), log_level_name, msg)
+  mod.logger_id = mod.logger_id + 1
 
-  if data then
-    log_msg = string.format("%s\n%s", log_msg, vim.inspect(data))
+  if mod.logger_id > 1000000 then
+    mod.logger_id = 1
+  end
+
+  -- we add an id as this process is asynchronous and the logs end up in a different order
+  local log_msg = string.format("%s [%d] [%s]: %s", get_timestamp_with_ms(), mod.logger_id, log_level_name, msg)
+
+  local args = { ... }
+  for _, v in ipairs(args) do
+    log_msg = string.format("%s\n%s", log_msg, vim.inspect(v))
   end
 
   return log_msg
@@ -39,18 +48,18 @@ end
 
 ---@param log_level integer -- one of the vim.log.levels
 ---@param msg string
----@param data any
-local function notify_log(log_level, msg, data)
-  local log_msg = format_log(log_level, msg, data)
+---@param ... any
+local function notify_log(log_level, msg, ...)
+  local log_msg = format_log(log_level, msg, ...)
   vim.notify(log_msg, log_level)
 end
 
 ---@param log_level integer -- one of the vim.log.levels
 ---@param log_file string
 ---@param msg string
----@param data any
-local function write_log(log_level, log_file, msg, data)
-  local log_msg = format_log(log_level, msg, data) .. "\n"
+---@param ... any
+local function write_log(log_level, log_file, msg, ...)
+  local log_msg = format_log(log_level, msg, ...) .. "\n"
 
   uv.fs_open(log_file, "a", tonumber("644", 8), function(err, fd)
     if err then
@@ -70,52 +79,59 @@ end
 
 ---@param log_level integer -- one of the vim.log.levels
 ---@param msg string
----@param data any
+---@param ... any
+function mod.log(log_level, msg, ...)
+  mod.log_force(log_level, msg, false, ...)
+end
+
+---@param log_level integer -- one of the vim.log.levels
+---@param msg string
+---@param ... any
 ---@param force_print boolean
-function mod.log(log_level, msg, data, force_print)
+function mod.log_force(log_level, msg, force_print, ...)
   if mod.file_log_level <= log_level then
-    write_log(log_level, mod.log_file, msg, data)
+    write_log(log_level, mod.log_file, msg, ...)
   end
 
   if force_print or (mod.print_log_level <= log_level) then
-    notify_log(log_level, msg, data)
+    notify_log(log_level, msg, ...)
   end
 end
 
 ---@param msg string
----@param data any
-function mod.debug(msg, data)
-  mod.log(vim.log.levels.DEBUG, msg, data, false)
+---@param ... any
+function mod.debug(msg, ...)
+  mod.log(vim.log.levels.DEBUG, msg, ...)
 end
 
 ---@param msg string
----@param data any
-function mod.trace(msg, data)
-  mod.log(vim.log.levels.TRACE, msg, data, false)
+---@param ... any
+function mod.trace(msg, ...)
+  mod.log(vim.log.levels.TRACE, msg, ...)
 end
 
 ---@param msg string
----@param data any
-function mod.error(msg, data)
-  mod.log(vim.log.levels.ERROR, msg, data, false)
+---@param ... any
+function mod.error(msg, ...)
+  mod.log(vim.log.levels.ERROR, msg, ...)
 end
 
 ---@param msg string
----@param data any
-function mod.warn(msg, data)
-  mod.log(vim.log.levels.WARN, msg, data, false)
+---@param ... any
+function mod.warn(msg, ...)
+  mod.log(vim.log.levels.WARN, msg, ...)
 end
 
 ---@param msg string
----@param data any
-function mod.info(msg, data)
-  mod.log(vim.log.levels.INFO, msg, data, false)
+---@param ... any
+function mod.info(msg, ...)
+  mod.log(vim.log.levels.INFO, msg, ...)
 end
 
 ---@param msg string
----@param data any
-function mod.notify(msg, data)
-  mod.log(vim.log.levels.INFO, msg, data, true)
+---@param ... any
+function mod.notify(msg, ...)
+  mod.log_force(vim.log.levels.INFO, msg, true, ...)
 end
 
 ---@param conf copilot_config_logging

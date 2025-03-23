@@ -1,3 +1,4 @@
+local logger = require("copilot.logger")
 local mod = {}
 
 ---@param callback? fun(err: any|nil, data: table, ctx: table): nil
@@ -5,6 +6,7 @@ local mod = {}
 ---@return table data
 ---@return table ctx
 function mod.request(client, method, params, callback)
+  logger.trace("api request:", method, params)
   -- hack to convert empty table to json object,
   -- empty table is convert to json array by default.
   params._ = true
@@ -25,6 +27,7 @@ end
 
 ---@return boolean sent
 function mod.notify(client, method, params)
+  logger.trace("api notify:", method, params)
   return client.notify(method, params)
 end
 
@@ -48,6 +51,13 @@ end
 ---@param params copilot_notify_change_configuration_params
 function mod.notify_change_configuration(client, params)
   return mod.notify(client, "notifyChangeConfiguration", params)
+end
+
+---@alias copilot_nofify_set_trace_params { value: 'off'|'messages'|'verbose' }
+
+---@param params copilot_nofify_set_trace_params
+function mod.notify_set_trace(client, params)
+  return mod.notify(client, "$/setTrace", params)
 end
 
 ---@alias copilot_check_status_params { options?: { localChecksOnly?: boolean } }
