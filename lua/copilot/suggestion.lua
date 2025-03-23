@@ -428,6 +428,11 @@ local function schedule(ctx)
   end
   logger.trace("suggestion schedule", ctx)
 
+  if copilot._copilot_timer then
+    cancel_inflight_requests(ctx)
+    stop_timer()
+  end
+
   update_preview(ctx)
   local bufnr = vim.api.nvim_get_current_buf()
   copilot._copilot_timer = vim.fn.timer_start(copilot.debounce, function(timer)
