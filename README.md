@@ -252,32 +252,6 @@ When `log_lsp_messages` is true, LSP log messages (`window/logMessage`) events w
 
 Careful turning on all logging features as the log files may get very large over time, and are not pruned by the application.
 
-### copilot_node_command
-
-When `log_to_file` is true, logs will be written to the `file` for anything of `file_log_level` or higher.
-When `print_log` is true, logs will be printed to NeoVim (using `notify`) for anything of `print_log_level` or higher.
-File logging is done asynchronously to minimize performance impacts, however there is still some overhead.
-
-Log levels used are the ones defined in `vim.log`:
-
-```lua
-vim.log = {
-  levels = {
-    TRACE = 0,
-    DEBUG = 1,
-    INFO = 2,
-    WARN = 3,
-    ERROR = 4,
-    OFF = 5,
-  },
-}
-```
-
-`trace_lsp` can either be `off`, `messages` which will output the LSP messages, or `verbose` which adds additonal information to the message.
-When `trace_lsp_progress` is true, LSP progress messages will also be logged.
-
-Careful turning on all logging features as the log files may get very large over time, and are not pruned by the application.
-
 ### server_opts_overrides
 
 Override copilot lsp client settings. The `settings` field is where you can set the values of the options defined in [SettingsOpts.md](./SettingsOpts.md).
