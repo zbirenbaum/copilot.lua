@@ -61,6 +61,9 @@ local default_config = {
   root_dir = function()
     return vim.fs.dirname(vim.fs.find(".git", { upward = true })[1])
   end,
+  ---@alias copilot_should_attach fun(bufnr: integer, bufname: string): boolean
+  ---@type copilot_should_attach|nil
+  should_attach = nil,
 }
 
 local mod = {
