@@ -309,6 +309,12 @@ local function prepare_client_config(overrides)
           end
         end)
         logger.trace("setEditorInfo has been called")
+
+        local logger_conf = config.get("logger") --[[@as copilot_config_logging]]
+        local trace_params = { value = logger_conf.trace_lsp } --[[@as copilot_nofify_set_trace_params]]
+        logger.trace("data for setTrace LSP call", trace_params)
+        api.notify_set_trace(client, trace_params)
+
         M.initialized = true
       end)
     end,

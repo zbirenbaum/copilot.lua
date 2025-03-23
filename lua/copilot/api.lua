@@ -53,6 +53,13 @@ function mod.notify_change_configuration(client, params)
   return mod.notify(client, "notifyChangeConfiguration", params)
 end
 
+---@alias copilot_nofify_set_trace_params { value: 'off'|'messages'|'verbose' }
+
+---@param params copilot_nofify_set_trace_params
+function mod.notify_set_trace(client, params)
+  return mod.notify(client, "$/setTrace", params)
+end
+
 ---@alias copilot_check_status_params { options?: { localChecksOnly?: boolean } }
 ---@alias copilot_check_status_data { user?: string, status: 'OK'|'NotAuthorized'|'NoTelemetryConsent' }
 
