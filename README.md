@@ -101,6 +101,7 @@ require('copilot').setup({
   root_dir = function()
     return vim.fs.dirname(vim.fs.find(".git", { upward = true })[1])
   end,
+  should_attach = nil, -- type is fun(bufnr: integer, bufname: string): boolean
   server_opts_overrides = {},
 })
 ```
@@ -126,7 +127,6 @@ require("copilot.panel").refresh()
 ### suggestion
 
 When `auto_trigger` is `true`, copilot starts suggesting as soon as you enter insert mode.
-
 When `auto_trigger` is `false`, use the `next`, `prev` or `accept` keymap to trigger copilot suggestion.
 
 To toggle auto trigger for the current buffer, use `require("copilot.suggestion").toggle_auto_trigger()`.
@@ -304,6 +304,26 @@ They can also be added runtime, using the command `:Copilot workspace add [folde
 
 This allows changing the function that gets the root folder, the default looks for a parent folder that contains the folder `.git`.
 If none is found, it will use the current working directory.
+
+### should_attach
+
+This function is called to determine if copilot should attach to the buffer or not.
+It is useful if you would like to go beyond the filetypes and have more control over when copilot should attach.
+Since this happens before attaching to the buffer, it is good to prevent Copilot from reading sensitive files.
+
+An example of this would be:
+
+```lua
+require("copilot").setup {
+  should_attach = function(_, bufname)
+    if string.match(bufname, "env") then
+      return false
+    end
+
+    return true
+  end
+}
+```
 
 ## Commands
 
