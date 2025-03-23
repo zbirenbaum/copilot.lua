@@ -1,3 +1,4 @@
+local logger = require("copilot.logger")
 local mod = {}
 
 ---@param callback? fun(err: any|nil, data: table, ctx: table): nil
@@ -5,6 +6,7 @@ local mod = {}
 ---@return table data
 ---@return table ctx
 function mod.request(client, method, params, callback)
+  logger.trace("api request:", method, params)
   -- hack to convert empty table to json object,
   -- empty table is convert to json array by default.
   params._ = true
@@ -25,6 +27,7 @@ end
 
 ---@return boolean sent
 function mod.notify(client, method, params)
+  logger.trace("api notify:", method, params)
   return client.notify(method, params)
 end
 
