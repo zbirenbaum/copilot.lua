@@ -13,7 +13,6 @@ local links = {
 function mod.setup()
   -- Some environments will load themes after plugins (like ChadNv) so we do it as late as possible
   vim.schedule(function()
-    vim.print("Setting up copilot highlight groups")
     for from_group, to_group in pairs(links) do
       local ok, existing = pcall(vim.api.nvim_get_hl, 0, { name = from_group })
       if not ok or vim.tbl_isempty(existing) then
