@@ -2,7 +2,7 @@ local api = require("copilot.api")
 local c = require("copilot.client")
 local config = require("copilot.config")
 local hl_group = require("copilot.highlight").group
-local util = require("copilot.utils.util")
+local util = require("copilot.util")
 local logger = require("copilot.logger")
 
 local _, has_nvim_0_10_x = pcall(function()

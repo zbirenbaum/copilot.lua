@@ -1,8 +1,8 @@
 local api = require("copilot.api")
 local config = require("copilot.config")
-local util = require("copilot.utils.util")
+local util = require("copilot.util")
 local logger = require("copilot.logger")
-local lsp_binary_util = require("copilot.utils.lsp_binary")
+local lsp_binary_util = require("copilot.lsp_binary")
 
 local is_disabled = false
 

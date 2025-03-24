@@ -1,4 +1,4 @@
-local util = require("copilot.utils.util")
+local util = require("copilot.util")
 local logger = require("copilot.logger")
 
 local M = {

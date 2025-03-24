@@ -1,6 +1,6 @@
 local a = require("copilot.api")
 local c = require("copilot.client")
-local u = require("copilot.utils.util")
+local u = require("copilot.util")
 
 local mod = {}
 

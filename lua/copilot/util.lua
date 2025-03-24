@@ -188,7 +188,7 @@ function M.get_doc_params(overrides)
   return params
 end
 
--- use `require("copilot.utils.util").get_doc_params()`
+-- use `require("copilot.util").get_doc_params()`
 ---@deprecated
 M.get_completion_params = function(opts)
   return M.get_doc_params(opts)
