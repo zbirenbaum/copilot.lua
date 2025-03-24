@@ -22,7 +22,22 @@ use { "zbirenbaum/copilot.lua" }
 
 ### Authentication
 
+You can authenticate using one of the following methods:
+
+#### Permanent sign-in (Recommended)
+
 Once copilot is running, run `:Copilot auth` to start the authentication process.
+
+#### Token
+
+Get a token from the github cli using:
+
+```sh
+gh auth token
+```
+
+Set either the environment variable `GITHUB_COPILOT_TOKEN` or `GH_COPILOT_TOKEN` to that token.
+Note that if you have the variable set, even empty, the LSP will attempt to use it to log in.
 
 ## Setup and Configuration
 
