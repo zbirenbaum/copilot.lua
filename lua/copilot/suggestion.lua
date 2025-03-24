@@ -268,6 +268,7 @@ local function update_preview(ctx)
     id = copilot.extmark_id,
     virt_text_win_col = vim.fn.virtcol(".") - 1,
     virt_text = { { displayLines[1], hl_group.CopilotSuggestion } },
+    virt_text_pos = "inline",
   }
 
   if #displayLines > 1 then
