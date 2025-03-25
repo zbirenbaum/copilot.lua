@@ -168,7 +168,7 @@ local function get_handlers()
     PanelSolution = api.handlers.PanelSolution,
     PanelSolutionsDone = api.handlers.PanelSolutionsDone,
     statusNotification = api.handlers.statusNotification,
-    ["copilot/openURL"] = api.handlers["copilot/openURL"],
+    ["window/showDocument"] = util.show_document,
   }
 
   -- optional handlers
@@ -205,9 +205,8 @@ local function prepare_client_config(overrides)
   M.startup_error = nil
 
   local capabilities = vim.lsp.protocol.make_client_capabilities() --[[@as copilot_capabilities]]
-  capabilities.copilot = {
-    openURL = true,
-  }
+  capabilities.window.showDocument.support = true
+
   capabilities.workspace = {
     workspaceFolders = true,
   }
@@ -275,7 +274,6 @@ local function prepare_client_config(overrides)
 
         local logger_conf = config.get("logger") --[[@as copilot_config_logging]]
         local trace_params = { value = logger_conf.trace_lsp } --[[@as copilot_nofify_set_trace_params]]
-        logger.trace("data for setTrace LSP call", trace_params)
         api.notify_set_trace(client, trace_params)
 
         M.initialized = true
