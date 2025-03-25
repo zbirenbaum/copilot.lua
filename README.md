@@ -116,7 +116,19 @@ require('copilot').setup({
   root_dir = function()
     return vim.fs.dirname(vim.fs.find(".git", { upward = true })[1])
   end,
-  should_attach = nil, -- type is fun(bufnr: integer, bufname: string): boolean
+  should_attach = function(_, _)
+    if not vim.bo.buflisted then
+      logger.debug("not attaching, buffer is not 'buflisted'")
+      return false
+    end
+
+    if vim.bo.buftype ~= "" then
+      logger.debug("not attaching, buffer 'buftype' is " .. vim.bo.buftype)
+      return false
+    end
+
+    return true
+  end,
   server_opts_overrides = {},
 })
 ```
@@ -324,6 +336,7 @@ If none is found, it will use the current working directory.
 
 This function is called to determine if copilot should attach to the buffer or not.
 It is useful if you would like to go beyond the filetypes and have more control over when copilot should attach.
+You can also use it to attach to buflisted buffers by simply omiting that portion from the function.
 Since this happens before attaching to the buffer, it is good to prevent Copilot from reading sensitive files.
 
 An example of this would be:
