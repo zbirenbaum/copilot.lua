@@ -291,7 +291,7 @@ local function prepare_client_config(overrides)
 
   local settings = { ---@type copilot_settings
     telemetry = { ---@type github_settings_telemetry
-      telemetryLevel = "off",
+      telemetryLevel = "all",
     },
   }
 
