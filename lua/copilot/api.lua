@@ -33,24 +33,20 @@ end
 
 ---@alias copilot_editor_info { name: string, version: string }
 ---@alias copilot_editor_plugin_info { name: string, version: string }
----@alias copilot_auth_provider { url: string }
----@alias copilot_network_proxy { host: string, port: integer, username?: string, password?: string, rejectUnauthorized?: boolean }
----@alias copilot_set_editor_info_params { editorInfo: copilot_editor_info, editorPluginInfo: copilot_editor_plugin_info, editorConfiguration: copilot_editor_configuration, networkProxy?: copilot_network_proxy, authProvider?: copilot_auth_provider }
 
----@param params copilot_set_editor_info_params
----@return any|nil err
----@return nil data
----@return table ctx
-function mod.set_editor_info(client, params, callback)
-  return mod.request(client, "setEditorInfo", params, callback)
-end
+---@alias copilot_settings_http { proxy: string, proxyStrictSSL: boolean, proxyKerberosServicePrincipal?: string }
+---@alias github_settings_telemetry { telemetryLevel: string }
+---@alias copilot_settings_github-enterprise { uri: string }
+---@alias copilot_settings { http?: copilot_settings_http, telemetry: github_settings_telemetry, github-enterprise?: copilot_settings_github-enterprise }
 
----@alias copilot_editor_configuration { enableAutoCompletions: boolean, disabledLanguages: string[] }
----@alias copilot_notify_change_configuration_params { settings: copilot_editor_configuration  }
+---@alias copilot_workspace_selected_completion_model { selectedCompletionModel: string }
+---@alias copilot_workspace_copilot { copilot: copilot_workspace_copilot }
+---@alias copilot_workspace_configuration { enableAutoCompletions: boolean, disabledLanguages: string[], github: copilot_workspace_configuration }
+---@alias copilot_workspace_configurations { settings: copilot_workspace_configuration }
 
----@param params copilot_notify_change_configuration_params
+---@param params copilot_workspace_configurations
 function mod.notify_change_configuration(client, params)
-  return mod.notify(client, "notifyChangeConfiguration", params)
+  return mod.notify(client, "workspace/didChangeConfiguration", params)
 end
 
 ---@alias copilot_nofify_set_trace_params { value: 'off'|'messages'|'verbose' }
