@@ -2,6 +2,7 @@ local api = require("copilot.api")
 local config = require("copilot.config")
 local util = require("copilot.util")
 local logger = require("copilot.logger")
+local lsp_binary_util = require("copilot.lsp_binary")
 
 local is_disabled = false
 
@@ -13,11 +14,9 @@ local M = {
   --- @field workspace table<'workspaceFolders', boolean>
   capabilities = nil,
   config = nil,
-  node_version = nil,
-  node_version_error = nil,
   startup_error = nil,
   initialized = false,
-  ---@type copilot_should_attach|nil
+  ---@type copilot_should_attach
   should_attach = nil,
 }
 
@@ -52,65 +51,22 @@ if not lsp_start then
   end
 end
 
----@return string node_version
----@return nil|string node_version_error
-function M.get_node_version()
-  if not M.node_version then
-    local node = config.get("copilot_node_command")
-
-    local cmd = { node, "--version" }
-    local cmd_output_table = vim.fn.executable(node) == 1 and vim.fn.systemlist(cmd, nil, 0) or { "" }
-    local cmd_output = cmd_output_table[#cmd_output_table]
-    local cmd_exit_code = vim.v.shell_error
-
-    local node_version = string.match(cmd_output, "^v(%S+)") or ""
-    local node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or 0
-    local node_version_minor = tonumber(string.match(node_version, "^%d+%.(%d+)%.")) or 0
-
-    if node_version_major == 0 then
-      M.node_version_error = table.concat({
-        "Could not determine Node.js version",
-        "-----------",
-        "(exit code) " .. tostring(cmd_exit_code),
-        "   (output) " .. cmd_output,
-        "-----------",
-      }, "\n")
-    elseif
-      node_version_major < 16
-      or (node_version_major == 16 and node_version_minor < 14)
-      or (node_version_major == 17 and node_version_minor < 3)
-    then
-      M.node_version_error = string.format("Node.js version 18.x or newer required but found %s", node_version)
-    end
-
-    M.node_version = node_version or ""
-  end
-
-  return M.node_version, M.node_version_error
-end
-
 function M.buf_is_attached(bufnr)
   return M.id and vim.lsp.buf_is_attached(bufnr or 0, M.id)
 end
 
 ---@param force? boolean
 function M.buf_attach(force)
-  if M.should_attach then
-    local bufnr = vim.api.nvim_get_current_buf()
-    local bufname = vim.api.nvim_buf_get_name(bufnr)
-
-    if not M.should_attach(bufnr, bufname) then
-      logger.debug("copilot is disabled by should_attach")
-      return
-    end
-  end
-
   if is_disabled then
     logger.warn("copilot is disabled")
     return
   end
 
-  if not force and not util.should_attach() then
+  local bufnr = vim.api.nvim_get_current_buf()
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+
+  if not (force or (M.should_attach(bufnr, bufname) and util.should_attach())) then
+    logger.debug("not attaching to buffer based on force and should_attach criteria")
     return
   end
 
@@ -206,7 +162,7 @@ local function get_handlers()
     PanelSolution = api.handlers.PanelSolution,
     PanelSolutionsDone = api.handlers.PanelSolutionsDone,
     statusNotification = api.handlers.statusNotification,
-    ["copilot/openURL"] = api.handlers["copilot/openURL"],
+    ["window/showDocument"] = util.show_document,
   }
 
   -- optional handlers
@@ -233,29 +189,18 @@ local function get_handlers()
 end
 
 local function prepare_client_config(overrides)
-  local node = config.get("copilot_node_command")
-
-  if vim.fn.executable(node) ~= 1 then
-    local err = string.format("copilot_node_command(%s) is not executable", node)
-    logger.error(err)
-    M.startup_error = err
+  if lsp_binary_util.initialization_failed then
+    M.startup_error = "initializatino of copilot-language-server failed"
     return
   end
 
-  local agent_path = vim.api.nvim_get_runtime_file("copilot/dist/language-server.js", false)[1]
-  if not agent_path or vim.fn.filereadable(agent_path) == 0 then
-    local err = string.format("Could not find language-server.js (bad install?) : %s", tostring(agent_path))
-    logger.error(err)
-    M.startup_error = err
-    return
-  end
+  local server_path = lsp_binary_util.get_copilot_server_info().absolute_filepath
 
   M.startup_error = nil
 
   local capabilities = vim.lsp.protocol.make_client_capabilities() --[[@as copilot_capabilities]]
-  capabilities.copilot = {
-    openURL = true,
-  }
+  capabilities.window.showDocument.support = true
+
   capabilities.workspace = {
     workspaceFolders = true,
   }
@@ -286,12 +231,37 @@ local function prepare_client_config(overrides)
   end
 
   local editor_info = util.get_editor_info()
+  local provider_url = config.get("auth_provider_url") --[[@as string|nil]]
+  local proxy_uri = vim.g.copilot_proxy
+
+  local settings = { ---@type copilot_settings
+    telemetry = { ---@type github_settings_telemetry
+      telemetryLevel = "all",
+    },
+  }
+
+  if proxy_uri then
+    vim.tbl_extend("force", settings, {
+      http = { ---@type copilot_settings_http
+        proxy = proxy_uri,
+        proxyStrictSSL = vim.g.copilot_proxy_strict_ssl or false,
+        proxyKerberosServicePrincipal = nil,
+      },
+    })
+  end
+
+  if provider_url then
+    vim.tbl_extend("force", settings, {
+      ["github-enterprise"] = { ---@type copilot_settings_github-enterprise
+        uri = provider_url,
+      },
+    })
+  end
 
   -- LSP config, not to be confused with config.lua
   return vim.tbl_deep_extend("force", {
     cmd = {
-      node,
-      agent_path,
+      server_path,
       "--stdio",
     },
     root_dir = root_dir,
@@ -306,27 +276,16 @@ local function prepare_client_config(overrides)
       end
 
       vim.schedule(function()
-        local set_editor_info_params = util.get_editor_info() --[[@as copilot_set_editor_info_params]]
-        set_editor_info_params.editorConfiguration = util.get_editor_configuration()
-        set_editor_info_params.networkProxy = util.get_network_proxy()
-        local provider_url = config.get("auth_provider_url")
-        set_editor_info_params.authProvider = provider_url and {
-          url = provider_url,
-        } or nil
+        local configurations = util.get_workspace_configurations()
+        api.notify_change_configuration(client, configurations)
+        logger.trace("workspace configuration", configurations)
 
-        logger.debug("data for setEditorInfo LSP call", set_editor_info_params)
-        api.set_editor_info(client, set_editor_info_params, function(err)
-          if err then
-            logger.error(string.format("setEditorInfo failure: %s", err))
-          end
-        end)
-        logger.trace("setEditorInfo has been called")
-
+        -- to activate tracing if we want it
         local logger_conf = config.get("logger") --[[@as copilot_config_logging]]
         local trace_params = { value = logger_conf.trace_lsp } --[[@as copilot_nofify_set_trace_params]]
-        logger.trace("data for setTrace LSP call", trace_params)
         api.notify_set_trace(client, trace_params)
 
+        -- prevent requests to copilot prior to being initialized
         M.initialized = true
       end)
     end,
@@ -346,13 +305,11 @@ local function prepare_client_config(overrides)
     end,
     handlers = get_handlers(),
     init_options = {
-      copilotIntegrationId = "vscode-chat",
-      -- Fix LSP warning: editorInfo and editorPluginInfo will soon be required in initializationOptions
-      -- We are sending these twice for the time being as it will become required here and we get a warning if not set.
-      -- However if not passed in setEditorInfo, that one returns an error.
+      copilotIntegrationId = "vscode-chat", -- can be safely removed with copilot v1.291
       editorInfo = editor_info.editorInfo,
       editorPluginInfo = editor_info.editorPluginInfo,
     },
+    settings = settings,
     workspace_folders = workspace_folders,
     trace = config.get("trace") or "off",
   }, overrides)
@@ -380,7 +337,9 @@ function M.setup()
   })
 
   vim.schedule(function()
-    M.buf_attach()
+    if lsp_binary_util.ensure_client_is_downloaded() then
+      M.buf_attach()
+    end
   end)
 end
 
