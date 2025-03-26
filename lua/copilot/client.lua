@@ -103,10 +103,6 @@ function M.buf_attach(force)
   local bufnr = vim.api.nvim_get_current_buf()
   local bufname = vim.api.nvim_buf_get_name(bufnr)
 
-  -- if force or (M.should_attach and M.should_attach(bufnr, bufname)) then
-  -- do stuff
-  -- end
-
   if not (force or (M.should_attach(bufnr, bufname) and util.should_attach())) then
     logger.debug("not attaching to buffer based on force and should_attach criteria")
     return
