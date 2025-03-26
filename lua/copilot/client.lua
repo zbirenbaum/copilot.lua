@@ -77,6 +77,7 @@ function M.buf_detach()
   end
 end
 
+---@return nil|vim.lsp.Client
 function M.get()
   return vim.lsp.get_client_by_id(M.id)
 end
@@ -170,7 +171,7 @@ end
 
 local function prepare_client_config(overrides)
   if lsp_binary_util.initialization_failed then
-    M.startup_error = "initializatino of copilot-language-server failed"
+    M.startup_error = "initialization of copilot-language-server failed"
     return
   end
 
@@ -297,7 +298,7 @@ end
 
 function M.setup()
   M.config = prepare_client_config(config.get("server_opts_overrides"))
-  M.should_attach = config.get("should_attach") --[[@as copilot_should_attach|nil]]
+  M.should_attach = config.get("should_attach") --[[@as copilot_should_attach]]
 
   if not M.config then
     is_disabled = true
