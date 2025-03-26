@@ -59,7 +59,7 @@ local function download_file(url, local_server_zip_filepath, local_server_zip_pa
   logger.notify("current version of copilot-language-server is not downloaded, downloading")
 
   if vim.fn.executable("curl") ~= 1 then
-    vim.api.nvim_err_writeln("Error: curl is not available")
+    logger.error("curl is not available, please install it to download copilot-language-server")
     M.initialization_failed = true
     return false
   end
@@ -165,7 +165,7 @@ function M.ensure_client_is_downloaded()
 
   local copilot_version = util.get_editor_info().editorPluginInfo.version
   local plugin_path = vim.fs.normalize(util.get_plugin_path())
-  local copilot_server_info = M.get_copilot_server_info(copilot_version, plugin_path)
+  local copilot_server_info = M.get_copilot_server_info()
   local download_filename =
     string.format("copilot-language-server-%s-%s.zip", copilot_server_info.path, copilot_version)
   local url = string.format(
@@ -199,7 +199,7 @@ function M.ensure_client_is_downloaded()
   end
 
   delete_all_except(copilot_server_info.absolute_path, copilot_server_info.filename)
-  logger.notify("copilot-language-server downloaded")
+  logger.notify(string.format("copilot-language-server v%s downloaded", copilot_version))
   return true
 end
 
