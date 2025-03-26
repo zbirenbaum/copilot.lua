@@ -467,7 +467,7 @@ function panel:refresh()
     vim.cmd("stopinsert")
   else
     -- assume cursor at end of line
-    local _, utf16_index = vim.str_utfindex(self.state.line)
+    local _, utf16_index = vim.str_utfindex(self.state.line, "utf-16")
     params.doc.position.character = utf16_index
     params.position.character = params.doc.position.character
   end

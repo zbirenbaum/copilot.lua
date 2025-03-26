@@ -58,7 +58,7 @@ function M.buf_attach(force)
   -- In case it has changed, we update it
   M.config.root_dir = config.get_root_dir()
 
-  local ok, client_id_or_err = pcall(lsp_start, M.config)
+  local ok, client_id_or_err = pcall(vim.lsp.start, M.config)
   if not ok then
     logger.error(string.format("failed to start LSP client: %s", client_id_or_err))
     return
@@ -101,7 +101,7 @@ function M.use_client(callback)
       return
     end
 
-    local client_id, err = vim.lsp.start_client(M.config)
+    local client_id, err = vim.lsp.start(M.config)
 
     if not client_id then
       logger.error(string.format("error starting LSP client: %s", err))
@@ -370,7 +370,7 @@ function M.add_workspace_folder(folder_path)
 
   local client = M.get()
   if client and client.initialized then
-    client.notify("workspace/didChangeWorkspaceFolders", {
+    api.notify(client, "workspace/didChangeWorkspaceFolders", {
       event = {
         added = { workspace_folder },
         removed = {},
