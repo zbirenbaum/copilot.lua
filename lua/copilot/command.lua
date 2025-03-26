@@ -1,20 +1,8 @@
 local a = require("copilot.api")
 local c = require("copilot.client")
-local config = require("copilot.config")
 local u = require("copilot.util")
 
 local mod = {}
-
-local function node_version_warning(node_version)
-  if string.match(node_version, "^16%.") then
-    local line = "Warning: Node.js 16 is approaching end of life and support will be dropped in a future release."
-    if config.get("copilot_node_command") ~= "node" then
-      line = line
-        .. " 'copilot_node_command' is set to a non-default value. Consider removing it from your configuration."
-    end
-    return { line, "MoreMsg" }
-  end
-end
 
 function mod.version()
   local info = u.get_editor_info()
@@ -29,19 +17,13 @@ function mod.version()
   local client = c.get()
 
   coroutine.wrap(function()
+    local copilot_server_info = u.get_copilot_server_info()
     if client then
       local _, data = a.get_version(client)
-      lines[#lines + 1] = "copilot/dist/language-server.js" .. " " .. data.version
+      lines[#lines + 1] = copilot_server_info.path .. "/" .. copilot_server_info().filename .. " " .. data.version
     else
-      lines[#lines + 1] = "copilot/dist/language-server.js" .. " " .. "not running"
+      lines[#lines + 1] = copilot_server_info.path .. "/" .. copilot_server_info().filename .. " " .. "not running"
     end
-
-    local node_version, node_version_error = c.get_node_version()
-    lines[#lines + 1] = "Node.js" .. " " .. (#node_version == 0 and "(unknown)" or node_version)
-    if node_version_error then
-      lines[#lines + 1] = { node_version_error, "WarningMsg" }
-    end
-    lines[#lines + 1] = node_version_warning(node_version)
 
     local chunks = {}
     for _, line in ipairs(lines) do
@@ -65,33 +47,24 @@ function mod.status()
     lines[#lines + 1] = { "\n", "NONE" }
   end
 
-  local function flush_lines(last_line, is_off)
+  local function flush_lines(last_line)
     add_line(last_line)
 
     if c.startup_error then
       add_line({ c.startup_error, "WarningMsg" })
     end
 
-    local node_version, node_version_error = c.get_node_version()
-    if node_version_error then
-      add_line({ node_version_error, "WarningMsg" })
-    end
-
-    if not is_off then
-      add_line(node_version_warning(node_version))
-    end
-
     vim.api.nvim_echo(lines, true, {})
   end
 
   if c.is_disabled() then
-    flush_lines("Offline", true)
+    flush_lines("Offline")
     return
   end
 
   local client = c.get()
   if not client then
-    flush_lines("Not Started", true)
+    flush_lines("Not Started")
     return
   end
 

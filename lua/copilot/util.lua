@@ -19,8 +19,8 @@ function M.get_editor_info()
     },
     editorPluginInfo = {
       name = "copilot.lua",
-      -- reflects version of github/copilot.vim
-      version = "1.43.0",
+      -- reflects version of github/copilot-language-server-release
+      version = "1.292.0",
     },
   }
   return info
@@ -301,6 +301,34 @@ function M.strutf16len(str)
   else
     return vim.fn.strchars(vim.fn.substitute(str, [==[\\%#=2[^\u0001-\uffff]]==], "  ", "g"))
   end
+end
+
+---@return copilot_window_show_document_result
+---@param result copilot_window_show_document
+function M.show_document(_, result)
+  logger.trace("window/showDocument:", result)
+  local success, _ = pcall(vim.ui.open, result.uri)
+  if not success then
+    if vim.ui.open ~= nil then
+      vim.api.nvim_echo({
+        { "window/showDocument" },
+        { vim.inspect({ _, result }) },
+        { "\n", "NONE" },
+      }, true, {})
+      error("Unsupported OS: vim.ui.open exists but failed to execute.")
+    else
+      vim.api.nvim_echo({
+        { "window/showDocument" },
+        { vim.inspect({ _, result }) },
+        { "\n", "NONE" },
+      }, true, {})
+      error("Unsupported Version: vim.ui.open requires Neovim >= 0.10")
+    end
+  end
+
+  return {
+    success = success,
+  }
 end
 
 return M
