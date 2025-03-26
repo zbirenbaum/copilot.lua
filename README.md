@@ -11,6 +11,11 @@ As lua is far more efficient and makes things easier to integrate with modern pl
 
 </details>
 
+## Requirements
+
+- Curl
+- NeoVim 0.10.0 or higher
+
 ## Install
 
 Install the plugin with your preferred plugin manager.
