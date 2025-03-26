@@ -61,8 +61,20 @@ local default_config = {
     return vim.fs.dirname(vim.fs.find(".git", { upward = true })[1])
   end,
   ---@alias copilot_should_attach fun(bufnr: integer, bufname: string): boolean
-  ---@type copilot_should_attach|nil
-  should_attach = nil,
+  ---@type copilot_should_attach
+  should_attach = function(_, _)
+    if not vim.bo.buflisted then
+      logger.debug("not attaching, bugger is not 'buflisted'")
+      return false
+    end
+
+    if vim.bo.buftype ~= "" then
+      logger.debug("not attaching, buffer 'buftype' is " .. vim.bo.buftype)
+      return false
+    end
+
+    return true
+  end,
 }
 
 local mod = {

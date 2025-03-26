@@ -16,7 +16,7 @@ local M = {
   config = nil,
   startup_error = nil,
   initialized = false,
-  ---@type copilot_should_attach|nil
+  ---@type copilot_should_attach
   should_attach = nil,
 }
 
@@ -57,22 +57,15 @@ end
 
 ---@param force? boolean
 function M.buf_attach(force)
-  if M.should_attach then
-    local bufnr = vim.api.nvim_get_current_buf()
-    local bufname = vim.api.nvim_buf_get_name(bufnr)
-
-    if not M.should_attach(bufnr, bufname) then
-      logger.debug("copilot is disabled by should_attach")
-      return
-    end
-  end
-
   if is_disabled then
     logger.warn("copilot is disabled")
     return
   end
 
-  if not force and not util.should_attach() then
+  local bufnr = vim.api.nvim_get_current_buf()
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+
+  if not force and not M.should_attach(bufnr, bufname) and not util.should_attach() then
     return
   end
 

@@ -3,6 +3,7 @@ local config = require("copilot.config")
 local highlight = require("copilot.highlight")
 local logger = require("copilot.logger")
 local client = require("copilot.client")
+local auth = require("copilot.auth")
 
 local create_cmds = function()
   vim.api.nvim_create_user_command("CopilotDetach", function()
@@ -46,6 +47,12 @@ M.setup = function(opts)
   logger.debug("active plugin config:", config)
   -- logged here to ensure the logger is setup
   logger.debug("active LSP config (may change runtime):", client.config)
+
+  local token_env_set = (os.getenv("GITHUB_COPILOT_TOKEN") ~= nil) or (os.getenv("GH_COPILOT_TOKEN") ~= nil)
+
+  if token_env_set then
+    auth.signin()
+  end
 
   M.setup_done = true
 end

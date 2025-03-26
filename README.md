@@ -22,7 +22,22 @@ use { "zbirenbaum/copilot.lua" }
 
 ### Authentication
 
+You can authenticate using one of the following methods:
+
+#### Permanent sign-in (Recommended)
+
 Once copilot is running, run `:Copilot auth` to start the authentication process.
+
+#### Token
+
+Get a token from the github cli using:
+
+```sh
+gh auth token
+```
+
+Set either the environment variable `GITHUB_COPILOT_TOKEN` or `GH_COPILOT_TOKEN` to that token.
+Note that if you have the variable set, even empty, the LSP will attempt to use it to log in.
 
 ## Setup and Configuration
 
@@ -101,7 +116,19 @@ require('copilot').setup({
   root_dir = function()
     return vim.fs.dirname(vim.fs.find(".git", { upward = true })[1])
   end,
-  should_attach = nil, -- type is fun(bufnr: integer, bufname: string): boolean
+  should_attach = function(_, _)
+    if not vim.bo.buflisted then
+      logger.debug("not attaching, buffer is not 'buflisted'")
+      return false
+    end
+
+    if vim.bo.buftype ~= "" then
+      logger.debug("not attaching, buffer 'buftype' is " .. vim.bo.buftype)
+      return false
+    end
+
+    return true
+  end,
   server_opts_overrides = {},
 })
 ```
@@ -299,6 +326,7 @@ If none is found, it will use the current working directory.
 
 This function is called to determine if copilot should attach to the buffer or not.
 It is useful if you would like to go beyond the filetypes and have more control over when copilot should attach.
+You can also use it to attach to buflisted buffers by simply omiting that portion from the function.
 Since this happens before attaching to the buffer, it is good to prevent Copilot from reading sensitive files.
 
 An example of this would be:
