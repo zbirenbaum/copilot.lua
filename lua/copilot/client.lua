@@ -231,32 +231,6 @@ local function prepare_client_config(overrides)
   end
 
   local editor_info = util.get_editor_info()
-  local provider_url = config.get("auth_provider_url") --[[@as string|nil]]
-  local proxy_uri = vim.g.copilot_proxy
-
-  local settings = { ---@type copilot_settings
-    telemetry = { ---@type github_settings_telemetry
-      telemetryLevel = "all",
-    },
-  }
-
-  if proxy_uri then
-    vim.tbl_extend("force", settings, {
-      http = { ---@type copilot_settings_http
-        proxy = proxy_uri,
-        proxyStrictSSL = vim.g.copilot_proxy_strict_ssl or false,
-        proxyKerberosServicePrincipal = nil,
-      },
-    })
-  end
-
-  if provider_url then
-    vim.tbl_extend("force", settings, {
-      ["github-enterprise"] = { ---@type copilot_settings_github-enterprise
-        uri = provider_url,
-      },
-    })
-  end
 
   -- LSP config, not to be confused with config.lua
   return vim.tbl_deep_extend("force", {
@@ -276,16 +250,26 @@ local function prepare_client_config(overrides)
       end
 
       vim.schedule(function()
-        local configurations = util.get_workspace_configurations()
-        api.notify_change_configuration(client, configurations)
-        logger.trace("workspace configuration", configurations)
+        local set_editor_info_params = util.get_editor_info() --[[@as copilot_set_editor_info_params]]
+        set_editor_info_params.editorConfiguration = util.get_editor_configuration()
+        set_editor_info_params.networkProxy = util.get_network_proxy()
+        local provider_url = config.get("auth_provider_url")
+        set_editor_info_params.authProvider = provider_url and {
+          url = provider_url,
+        } or nil
 
-        -- to activate tracing if we want it
+        logger.debug("data for setEditorInfo LSP call", set_editor_info_params)
+        api.set_editor_info(client, set_editor_info_params, function(err)
+          if err then
+            logger.error(string.format("setEditorInfo failure: %s", err))
+          end
+        end)
+        logger.trace("setEditorInfo has been called")
+
         local logger_conf = config.get("logger") --[[@as copilot_config_logging]]
         local trace_params = { value = logger_conf.trace_lsp } --[[@as copilot_nofify_set_trace_params]]
         api.notify_set_trace(client, trace_params)
 
-        -- prevent requests to copilot prior to being initialized
         M.initialized = true
       end)
     end,
@@ -305,11 +289,13 @@ local function prepare_client_config(overrides)
     end,
     handlers = get_handlers(),
     init_options = {
-      copilotIntegrationId = "vscode-chat", -- can be safely removed with copilot v1.291
+      copilotIntegrationId = "vscode-chat",
+      -- Fix LSP warning: editorInfo and editorPluginInfo will soon be required in initializationOptions
+      -- We are sending these twice for the time being as it will become required here and we get a warning if not set.
+      -- However if not passed in setEditorInfo, that one returns an error.
       editorInfo = editor_info.editorInfo,
       editorPluginInfo = editor_info.editorPluginInfo,
     },
-    settings = settings,
     workspace_folders = workspace_folders,
     trace = config.get("trace") or "off",
   }, overrides)
