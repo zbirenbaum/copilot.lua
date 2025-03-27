@@ -43,42 +43,40 @@ end
 ---@param local_server_zip_filepath string
 ---@return boolean
 local function download_file_with_wget(url, local_server_zip_filepath)
-  return false
-  -- if vim.fn.executable("wget") == 0 then
-  --   return false
-  -- end
-  --
-  -- local wget_cmd = string.format('wget -O "%s" "%s"', local_server_zip_filepath:gsub("\\", "\\\\"), url)
-  -- logger.trace("Downloading copilot-language-server with command: " .. wget_cmd)
-  -- local result = vim.fn.system(wget_cmd)
-  --
-  -- if vim.v.shell_error ~= 0 then
-  --   logger.error("error downloading file with wget: " .. result)
-  --   return false
-  -- end
-  --
-  -- return true
+  if vim.fn.executable("wget") == 0 then
+    return false
+  end
+
+  local wget_cmd = string.format('wget -O "%s" "%s"', local_server_zip_filepath:gsub("\\", "\\\\"), url)
+  logger.trace("Downloading copilot-language-server with command: " .. wget_cmd)
+  local result = vim.fn.system(wget_cmd)
+
+  if vim.v.shell_error ~= 0 then
+    logger.error("error downloading file with wget: " .. result)
+    return false
+  end
+
+  return true
 end
 
 ---@param url string
 ---@param local_server_zip_filepath string
 ---@return boolean
 local function download_file_with_curl(url, local_server_zip_filepath)
-  return false
-  -- if vim.fn.executable("curl") == 0 then
-  --   return false
-  -- end
-  --
-  -- local cmd = string.format('curl -s -L -o "%s" "%s"', local_server_zip_filepath:gsub("\\", "\\\\"), url)
-  -- logger.trace("downloading copilot-language-server with command: " .. cmd)
-  -- local result = vim.fn.system(cmd)
-  --
-  -- if vim.v.shell_error ~= 0 then
-  --   logger.error("error downloading file: " .. result)
-  --   return false
-  -- end
-  --
-  -- return true
+  if vim.fn.executable("curl") == 0 then
+    return false
+  end
+
+  local cmd = string.format('curl -s -L -o "%s" "%s"', local_server_zip_filepath:gsub("\\", "\\\\"), url)
+  logger.trace("downloading copilot-language-server with command: " .. cmd)
+  local result = vim.fn.system(cmd)
+
+  if vim.v.shell_error ~= 0 then
+    logger.error("error downloading file: " .. result)
+    return false
+  end
+
+  return true
 end
 
 ---@param url string
