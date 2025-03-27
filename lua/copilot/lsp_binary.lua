@@ -14,21 +14,9 @@ local M = {
 }
 
 local function ensure_directory_exists(path)
-  local dir_path = path
-  local cmd
-
-  if dir_path and vim.fn.isdirectory(dir_path) == 0 then
-    if vim.fn.has("win32") > 0 then
-      cmd = 'cmd /c "mkdir "' .. dir_path:gsub("\\", "\\\\"):gsub("/", "\\\\")
-    else
-      cmd = "mkdir " .. vim.fn.shellescape(dir_path)
-    end
-
-    logger.trace("Creating directory with command: " .. cmd)
-    vim.fn.system(cmd)
-
-    if vim.v.shell_error ~= 0 then
-      logger.error("Failed to create directory: " .. dir_path)
+  if path and vim.fn.isdirectory(path) == 0 then
+    if vim.fn.mkdir(path) == 0 then
+      logger.error("failed to create directory: " .. path)
       return false
     end
   end
