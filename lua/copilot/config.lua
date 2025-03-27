@@ -75,6 +75,8 @@ local default_config = {
 
     return true
   end,
+  ---@type string|nil
+  lsp_binary = nil,
 }
 
 local mod = {
