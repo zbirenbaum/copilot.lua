@@ -2,7 +2,7 @@ local api = require("copilot.api")
 local config = require("copilot.config")
 local util = require("copilot.util")
 local logger = require("copilot.logger")
-local lsp_binary = require("copilot.lsp_binary")
+local lsp_binary_util = require("copilot.lsp_binary")
 
 local is_disabled = false
 
@@ -57,11 +57,6 @@ end
 
 ---@param force? boolean
 function M.buf_attach(force)
-  if lsp_binary.initialization_failed then
-    M.startup_error = "initialization of copilot-language-server failed"
-    return
-  end
-
   if is_disabled then
     logger.warn("copilot is disabled")
     return
@@ -194,12 +189,12 @@ local function get_handlers()
 end
 
 local function prepare_client_config(overrides)
-  if lsp_binary.initialization_failed then
+  if lsp_binary_util.initialization_failed then
     M.startup_error = "initializatino of copilot-language-server failed"
     return
   end
 
-  local server_path = lsp_binary.get_copilot_server_info().absolute_filepath
+  local server_path = lsp_binary_util.get_copilot_server_info().absolute_filepath
 
   M.startup_error = nil
 
@@ -342,7 +337,7 @@ function M.setup()
   })
 
   vim.schedule(function()
-    if lsp_binary.ensure_client_is_downloaded() then
+    if lsp_binary_util.ensure_client_is_downloaded() then
       M.buf_attach()
     end
   end)
