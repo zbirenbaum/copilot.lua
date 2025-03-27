@@ -128,6 +128,7 @@ local function extract_file(copilot_server_info, local_server_zip_filepath)
     )
   end
 
+  logger.trace("Extracting copilot-language-server with command: " .. unzip_cmd)
   vim.fn.system(unzip_cmd)
 
   if vim.v.shell_error ~= 0 then
