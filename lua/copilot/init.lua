@@ -4,7 +4,6 @@ local highlight = require("copilot.highlight")
 local logger = require("copilot.logger")
 local client = require("copilot.client")
 local auth = require("copilot.auth")
-local lsp_binary = require("copilot.lsp_binary")
 
 local create_cmds = function()
   vim.api.nvim_create_user_command("CopilotDetach", function()
@@ -42,7 +41,6 @@ M.setup = function(opts)
     create_cmds()
   end
 
-  lsp_binary.setup(conf.lsp_binary)
   require("copilot.command").enable()
   logger.setup(conf.logger)
 

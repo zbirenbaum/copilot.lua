@@ -129,7 +129,6 @@ require('copilot').setup({
 
     return true
   end,
-  lsp_binary = nil,
   server_opts_overrides = {},
 })
 ```
@@ -280,6 +279,16 @@ When `log_lsp_messages` is true, LSP log messages (`window/logMessage`) events w
 
 Careful turning on all logging features as the log files may get very large over time, and are not pruned by the application.
 
+### copilot_node_command
+
+Use this field to provide the path to a specific node version such as one installed by nvm. Node.js version must be 18.x or newer.
+
+Example:
+
+```lua
+copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v18.18.2/bin/node", -- Node.js version must be > 18.x
+```
+
 ### server_opts_overrides
 
 Override copilot lsp client settings. The `settings` field is where you can set the values of the options defined in [SettingsOpts.md](./SettingsOpts.md).
@@ -341,18 +350,6 @@ require("copilot").setup {
 
     return true
   end
-}
-```
-
-### lsp_binary
-
-This allows you to specify the path to the copilot lsp binary.
-This will disable the download of the binary and use the one specified.
-example:
-
-```lua
-require("copilot").setup {
-  lsp_binary = "/home/user/.local/bin/copilot-language-server",
 }
 ```
 
