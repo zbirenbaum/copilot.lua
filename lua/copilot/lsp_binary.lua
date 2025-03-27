@@ -153,10 +153,12 @@ local function extract_file(copilot_server_info, local_server_zip_filepath)
   end
 
   vim.fn.delete(local_server_zip_filepath)
-  vim.fn.rename(
-    vim.fs.joinpath(copilot_server_info.absolute_path, copilot_server_info.extracted_filename),
-    copilot_server_info.absolute_filepath
-  )
+  if copilot_server_info.path ~= "js" then
+    vim.fn.rename(
+      vim.fs.joinpath(copilot_server_info.absolute_path, copilot_server_info.extracted_filename),
+      copilot_server_info.absolute_filepath
+    )
+  end
 
   return true
 end
@@ -197,7 +199,7 @@ function M.ensure_client_is_downloaded()
   local plugin_path = vim.fs.normalize(util.get_plugin_path())
   local copilot_server_info = M.get_copilot_server_info()
   local download_filename =
-    string.format("copilot-language-server-%s-%s.zip", copilot_server_info.path, copilot_version)
+      string.format("copilot-language-server-%s-%s.zip", copilot_server_info.path, copilot_version)
   local url = string.format(
     "https://github.com/github/copilot-language-server-release/releases/download/%s/%s",
     copilot_version,
@@ -205,7 +207,7 @@ function M.ensure_client_is_downloaded()
   )
   local local_server_zip_path = vim.fs.joinpath(plugin_path, "copilot/", copilot_server_info.path)
   local local_server_zip_filepath =
-    vim.fs.joinpath(plugin_path, "copilot/", copilot_server_info.path, download_filename)
+      vim.fs.joinpath(plugin_path, "copilot/", copilot_server_info.path, download_filename)
 
   logger.trace("copilot_server_info: ", copilot_server_info)
 
@@ -223,12 +225,15 @@ function M.ensure_client_is_downloaded()
     return false
   end
 
-  if not set_permissions(copilot_server_info.absolute_filepath) then
-    logger.error("could not set permissions for copilot-language-server")
-    return false
+  if copilot_server_info.path ~= "js" then
+    if not set_permissions(copilot_server_info.absolute_filepath) then
+      logger.error("could not set permissions for copilot-language-server")
+      return false
+    end
+    delete_all_except(copilot_server_info.absolute_path, copilot_server_info.filename)
   end
 
-  delete_all_except(copilot_server_info.absolute_path, copilot_server_info.filename)
+
   logger.notify("copilot-language-server downloaded")
   return true
 end
@@ -250,6 +255,22 @@ local function is_arm()
   return os_name == "aarch64" or string.sub(os_name, 1, 3) == "arm"
 end
 
+---@return boolean
+local function is_musl()
+  local fh, err = assert(io.popen("ldd --version 2>&1", "r"))
+  if err then
+    return false -- we assume glibc
+  end
+
+  local ldd_output
+  if fh then
+    ldd_output = fh:read()
+    fh:close()
+  end
+
+  return string.sub(ldd_output, 1, 4) == "musl"
+end
+
 ---@return copilot_server_info
 function M.get_copilot_server_info()
   if M.copilot_server_info then
@@ -265,8 +286,11 @@ function M.get_copilot_server_info()
   if os == "Linux" then
     if is_arm() then
       path = "linux-arm64"
-    else
+    elseif not is_musl() then
       path = "linux-x64"
+    else
+      -- Fallback to plain nodejs project
+      path = "js"
     end
   elseif os == "Darwin" then
     if is_arm() then
@@ -282,6 +306,11 @@ function M.get_copilot_server_info()
 
   if path == "" then
     logger.error("could not determine OS, please report this issue with the output of `uname -a`")
+  end
+
+  if path == "js" then
+    filename = "language-server.js"
+    extracted_filename = ""
   end
 
   M.copilot_server_info = {
