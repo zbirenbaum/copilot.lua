@@ -265,27 +265,4 @@ function M.get_copilot_server_info()
   return M.copilot_server_info
 end
 
-function M.setup(filepath)
-  if not filepath then
-    return M
-  end
-
-  if not vim.fn.filereadable(filepath) then
-    logger.error("copilot-language-server not found at " .. filepath)
-    return M
-  end
-
-  M.copilot_server_info = {
-    path = "",
-    filename = "",
-    absolute_path = "",
-    absolute_filepath = vim.fs.normalize(filepath),
-    extracted_filename = "",
-  }
-
-  logger.debug("using custom copilot-language-server binary:", M.copilot_server_info.absolute_filepath)
-
-  M.initialized = true
-end
-
 return M

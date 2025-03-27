@@ -129,7 +129,6 @@ require('copilot').setup({
 
     return true
   end,
-  lsp_binary = nil,
   server_opts_overrides = {},
 })
 ```
@@ -341,18 +340,6 @@ require("copilot").setup {
 
     return true
   end
-}
-```
-
-### lsp_binary
-
-This allows you to specify the path to the copilot lsp binary.
-This will disable the download of the binary and use the one specified.
-example:
-
-```lua
-require("copilot").setup {
-  lsp_binary = "/home/user/.local/bin/copilot-language-server",
 }
 ```
 
