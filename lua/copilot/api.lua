@@ -230,13 +230,33 @@ function mod.unregister_status_notification_handler(handler)
   status.callback[handler] = nil
 end
 
----@alias copilot_window_show_document { uri: string, external?: boolean, takeFocus?: boolean, selection?: boolean }
----@alias copilot_window_show_document_result { success: boolean }
+---@alias copilot_open_url_data { target: string }
 
 mod.handlers = {
   PanelSolution = panel.handlers.PanelSolution,
   PanelSolutionsDone = panel.handlers.PanelSolutionsDone,
   statusNotification = status.handlers.statusNotification,
+  ---@param result copilot_open_url_data
+  ["copilot/openURL"] = function(_, result)
+    local success, _ = pcall(vim.ui.open, result.target)
+    if not success then
+      if vim.ui.open ~= nil then
+        vim.api.nvim_echo({
+          { "copilot/openURL" },
+          { vim.inspect({ _, result }) },
+          { "\n", "NONE" },
+        }, true, {})
+        error("Unsupported OS: vim.ui.open exists but failed to execute.")
+      else
+        vim.api.nvim_echo({
+          { "copilot/openURL" },
+          { vim.inspect({ _, result }) },
+          { "\n", "NONE" },
+        }, true, {})
+        error("Unsupported Version: vim.ui.open requires Neovim > 0.10")
+      end
+    end
+  end,
 }
 
 mod.panel = panel

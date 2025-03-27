@@ -51,6 +51,7 @@ local default_config = {
   filetypes = {},
   ---@type string|nil
   auth_provider_url = nil,
+  copilot_node_command = "node",
   ---@type string[]
   workspace_folders = {},
   server_opts_overrides = {},
