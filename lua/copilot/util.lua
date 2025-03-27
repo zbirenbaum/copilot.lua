@@ -1,6 +1,5 @@
 local config = require("copilot.config")
 local logger = require("copilot.logger")
-local unpack = unpack or table.unpack
 
 local M = {}
 
@@ -19,8 +18,8 @@ function M.get_editor_info()
     },
     editorPluginInfo = {
       name = "copilot.lua",
-      -- reflects version of github/copilot.vim
-      version = "1.43.0",
+      -- reflects version of github/copilot-language-server-release
+      version = "1.292.0",
     },
   }
   return info
@@ -186,8 +185,8 @@ M.get_completion_params = function(opts)
   return M.get_doc_params(opts)
 end
 
----@return copilot_editor_configuration
-function M.get_editor_configuration()
+---@return copilot_workspace_configurations
+function M.get_workspace_configurations()
   local conf = config.get() --[[@as copilot_config]]
 
   local filetypes = vim.deepcopy(conf.filetypes) --[[@as table<string, boolean>]]
@@ -205,77 +204,17 @@ function M.get_editor_configuration()
   table.sort(disabled_filetypes)
 
   return {
-    github = {
-      copilot = {
-        selectedCompletionModel = copilot_model,
+    settings = {
+      github = {
+        copilot = {
+          selectedCompletionModel = copilot_model,
+        },
       },
+      enableAutoCompletions = not not (conf.panel.enabled or conf.suggestion.enabled),
+      disabledLanguages = vim.tbl_map(function(ft)
+        return { languageId = ft }
+      end, disabled_filetypes),
     },
-    enableAutoCompletions = not not (conf.panel.enabled or conf.suggestion.enabled),
-    disabledLanguages = vim.tbl_map(function(ft)
-      return { languageId = ft }
-    end, disabled_filetypes),
-  }
-end
-
----@param str string
-local function url_decode(str)
-  return vim.fn.substitute(str, [[%\(\x\x\)]], [[\=iconv(nr2char("0x".submatch(1)), "utf-8", "latin1")]], "g")
-end
-
----@return copilot_network_proxy|nil
-function M.get_network_proxy()
-  local proxy_uri = vim.g.copilot_proxy
-
-  if type(proxy_uri) ~= "string" then
-    return
-  end
-
-  proxy_uri = string.gsub(proxy_uri, "^[^:]+://", "")
-
-  ---@type string|nil, string|nil
-  local user_pass, host_port = unpack(vim.split(proxy_uri, "@", { plain = true, trimempty = true }))
-
-  if not host_port then
-    host_port = user_pass --[[@as string]]
-    user_pass = nil
-  end
-
-  local query_string
-  host_port, query_string = unpack(vim.split(host_port, "?", { plain = true, trimempty = true }))
-
-  local rejectUnauthorized = vim.g.copilot_proxy_strict_ssl
-
-  if query_string then
-    local query_params = vim.split(query_string, "&", { plain = true, trimempty = true })
-    for _, query_param in ipairs(query_params) do
-      local strict_ssl = string.match(query_param, "strict_?ssl=(.*)")
-
-      if string.find(strict_ssl, "^[1t]") then
-        rejectUnauthorized = true
-        break
-      end
-
-      if string.find(strict_ssl, "^[0f]") then
-        rejectUnauthorized = false
-        break
-      end
-    end
-  end
-
-  local host, port = unpack(vim.split(host_port, ":", { plain = true, trimempty = true }))
-  local username, password
-
-  if user_pass then
-    username, password = unpack(vim.split(user_pass, ":", { plain = true, trimempty = true }))
-    username, password = username and url_decode(username), password and url_decode(password)
-  end
-
-  return {
-    host = host,
-    port = tonumber(port or 80),
-    username = username,
-    password = password,
-    rejectUnauthorized = rejectUnauthorized,
   }
 end
 
@@ -301,6 +240,34 @@ function M.strutf16len(str)
   else
     return vim.fn.strchars(vim.fn.substitute(str, [==[\\%#=2[^\u0001-\uffff]]==], "  ", "g"))
   end
+end
+
+---@return copilot_window_show_document_result
+---@param result copilot_window_show_document
+function M.show_document(_, result)
+  logger.trace("window/showDocument:", result)
+  local success, _ = pcall(vim.ui.open, result.uri)
+  if not success then
+    if vim.ui.open ~= nil then
+      vim.api.nvim_echo({
+        { "window/showDocument" },
+        { vim.inspect({ _, result }) },
+        { "\n", "NONE" },
+      }, true, {})
+      error("Unsupported OS: vim.ui.open exists but failed to execute.")
+    else
+      vim.api.nvim_echo({
+        { "window/showDocument" },
+        { vim.inspect({ _, result }) },
+        { "\n", "NONE" },
+      }, true, {})
+      error("Unsupported Version: vim.ui.open requires Neovim >= 0.10")
+    end
+  end
+
+  return {
+    success = success,
+  }
 end
 
 return M
