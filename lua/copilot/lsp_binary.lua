@@ -21,7 +21,7 @@ local function ensure_directory_exists(path)
     if vim.fn.has("win32") > 0 then
       cmd = 'cmd /c "mkdir "' .. dir_path:gsub("\\", "\\\\"):gsub("/", "\\\\")
     else
-      cmd = "mkdir " .. vim.fn.shellescape(dir_path)
+      cmd = "mkdir -p " .. vim.fn.shellescape(dir_path)
     end
 
     logger.trace("Creating directory with command: " .. cmd)
