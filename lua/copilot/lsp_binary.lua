@@ -74,26 +74,13 @@ local function download_file(url, local_server_zip_filepath, local_server_zip_pa
     end
   end
 
-  local cookie_file = vim.fs.joinpath(local_server_zip_path, "cookies.txt")
-  local cmd = string.format(
-    'curl -s -L -c "%s" -b "%s" -o "%s" "%s"',
-    cookie_file:gsub("\\", "\\\\"),
-    cookie_file:gsub("\\", "\\\\"),
-    local_server_zip_filepath:gsub("\\", "\\\\"),
-    url
-  )
-
+  local cmd = string.format('curl -s -L -o "%s" "%s"', local_server_zip_filepath:gsub("\\", "\\\\"), url)
   logger.trace("Downloading copilot-language-server with command: " .. cmd)
   local result = vim.fn.system(cmd)
 
   if vim.v.shell_error ~= 0 then
     logger.error("Error downloading file: " .. result)
     return false
-  end
-
-  -- Clean up cookie file
-  if vim.fn.filereadable(cookie_file) == 1 then
-    vim.fn.delete(cookie_file)
   end
 
   logger.debug("copilot-language-server downloaded to " .. local_server_zip_filepath)
