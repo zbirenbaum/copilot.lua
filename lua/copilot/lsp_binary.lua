@@ -199,7 +199,7 @@ function M.ensure_client_is_downloaded()
   local plugin_path = vim.fs.normalize(util.get_plugin_path())
   local copilot_server_info = M.get_copilot_server_info()
   local download_filename =
-      string.format("copilot-language-server-%s-%s.zip", copilot_server_info.path, copilot_version)
+    string.format("copilot-language-server-%s-%s.zip", copilot_server_info.path, copilot_version)
   local url = string.format(
     "https://github.com/github/copilot-language-server-release/releases/download/%s/%s",
     copilot_version,
@@ -207,7 +207,7 @@ function M.ensure_client_is_downloaded()
   )
   local local_server_zip_path = vim.fs.joinpath(plugin_path, "copilot/", copilot_server_info.path)
   local local_server_zip_filepath =
-      vim.fs.joinpath(plugin_path, "copilot/", copilot_server_info.path, download_filename)
+    vim.fs.joinpath(plugin_path, "copilot/", copilot_server_info.path, download_filename)
 
   logger.trace("copilot_server_info: ", copilot_server_info)
 
@@ -232,7 +232,6 @@ function M.ensure_client_is_downloaded()
     end
     delete_all_except(copilot_server_info.absolute_path, copilot_server_info.filename)
   end
-
 
   logger.notify("copilot-language-server downloaded")
   return true
