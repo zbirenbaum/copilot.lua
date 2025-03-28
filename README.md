@@ -44,7 +44,7 @@ Note that if you have the variable set, even empty, the LSP will attempt to use 
 You have to run the `require("copilot").setup(options)` function in order to start Copilot.
 If no options are provided, the defaults are used.
 
-Because the copilot server takes some time to start up, it is recommend that you lazy load copilot.
+Because the copilot server takes some time to start up, it is recommended that you lazy load copilot.
 For example:
 
 ```lua
@@ -296,7 +296,7 @@ copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v20
 ### server_opts_overrides
 
 Override copilot lsp client settings. The `settings` field is where you can set the values of the options defined in [SettingsOpts.md](./SettingsOpts.md).
-These options are specific to the copilot lsp and can be used to customize its behavior. Ensure that the name field is not overriden as is is used for
+These options are specific to the copilot lsp and can be used to customize its behavior. Ensure that the name field is not overridden as is is used for
 efficiency reasons in numerous checks to verify copilot is actually running. See `:h vim.lsp.start_client` for list of options.
 
 Example:
@@ -340,7 +340,7 @@ If none is found, it will use the current working directory.
 
 This function is called to determine if copilot should attach to the buffer or not.
 It is useful if you would like to go beyond the filetypes and have more control over when copilot should attach.
-You can also use it to attach to buflisted buffers by simply omiting that portion from the function.
+You can also use it to attach to buflisted buffers by simply omitting that portion from the function.
 Since this happens before attaching to the buffer, it is good to prevent Copilot from reading sensitive files.
 
 An example of this would be:
