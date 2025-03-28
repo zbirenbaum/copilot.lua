@@ -362,4 +362,6 @@ require("copilot").setup {
 The `copilot.api` module can be used to build integrations on top of `copilot.lua`.
 
 - [zbirenbaum/copilot-cmp](https://github.com/zbirenbaum/copilot-cmp): Integration with [`nvim-cmp`](https://github.com/hrsh7th/nvim-cmp).
+- [giuxtaposition/blink-cmp-copilot](https://github.com/giuxtaposition/blink-cmp-copilot): Integration with [`blink.cmp`](https://github.com/Saghen/blink.cmp).
+- [fang2hou/blink-copilot](https://github.com/fang2hou/blink-copilot): Integration with [`blink.cmp`](https://github.com/Saghen/blink.cmp), with some differences.
 - [AndreM222/copilot-lualine](https://github.com/AndreM222/copilot-lualine): Integration with [`lualine.nvim`](https://github.com/nvim-lualine/lualine.nvim).
