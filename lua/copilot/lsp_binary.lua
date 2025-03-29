@@ -321,6 +321,12 @@ function M.get_copilot_server_info()
   return M.copilot_server_info
 end
 
+---@return string
+function M.get_server_path()
+  return M.get_copilot_server_info().absolute_filepath
+end
+
+---@param filepath string|nil
 function M.setup(filepath)
   if not filepath then
     return M

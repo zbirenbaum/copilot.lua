@@ -3,6 +3,7 @@ local config = require("copilot.config")
 local util = require("copilot.util")
 local logger = require("copilot.logger")
 local lsp_binary = require("copilot.lsp_binary")
+local lsp_nodesj = require("copilot.lsp_nodejs")
 
 local is_disabled = false
 
@@ -18,6 +19,14 @@ local M = {
   initialized = false,
   ---@type copilot_should_attach
   should_attach = nil,
+  ---@type string<'nodejs', 'binary'>
+  ---@class copilot_config_server
+  server = {
+    ---@type string<'nodejs', 'binary'>
+    type = "nodejs",
+    ---@type string|nil
+    custom_server_filepath = nil,
+  },
 }
 
 ---@param id integer
@@ -195,13 +204,24 @@ end
 
 local function prepare_client_config(overrides)
   if lsp_binary.initialization_failed then
-    M.startup_error = "initializatino of copilot-language-server failed"
+    M.startup_error = "initialization of copilot-language-server failed"
     return
   end
 
-  local server_path = lsp_binary.get_copilot_server_info().absolute_filepath
-
   M.startup_error = nil
+
+  local server_path = nil
+  local node_cmd = ""
+  if M.server.type == "nodejs" then
+    node_cmd = lsp_nodesj.node_command
+    server_path = lsp_nodesj.get_server_path()
+  elseif M.server.type == "binary" then
+    server_path = lsp_binary.get_server_path()
+  end
+
+  if M.server.custom_server_filepath and vim.fn.filereadable(M.server.custom_server_filepath) then
+    server_path = M.server.custom_server_filepath
+  end
 
   local capabilities = vim.lsp.protocol.make_client_capabilities() --[[@as copilot_capabilities]]
   capabilities.window.showDocument.support = true
@@ -266,6 +286,7 @@ local function prepare_client_config(overrides)
   -- LSP config, not to be confused with config.lua
   return vim.tbl_deep_extend("force", {
     cmd = {
+      node_cmd,
       server_path,
       "--stdio",
     },
@@ -310,7 +331,6 @@ local function prepare_client_config(overrides)
     end,
     handlers = get_handlers(),
     init_options = {
-      copilotIntegrationId = "vscode-chat", -- can be safely removed with copilot v1.291
       editorInfo = editor_info.editorInfo,
       editorPluginInfo = editor_info.editorPluginInfo,
     },
@@ -321,8 +341,15 @@ local function prepare_client_config(overrides)
 end
 
 function M.setup()
-  M.config = prepare_client_config(config.get("server_opts_overrides"))
   M.should_attach = config.get("should_attach") --[[@as copilot_should_attach|nil]]
+  local server_config = config.get("server") --[[@as copilot_config_server]]
+  local node_command = config.get("copilot_node_command") --[[@as string|nil]]
+  M.server = vim.tbl_deep_extend("force", M.server, server_config)
+  if M.server.type == "nodejs" then
+    lsp_nodesj.setup(node_command, M.server.custom_server_filepath)
+  end
+
+  M.config = prepare_client_config(config.get("server_opts_overrides"))
 
   if not M.config then
     is_disabled = true
