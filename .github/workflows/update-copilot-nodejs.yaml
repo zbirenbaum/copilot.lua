@@ -1,15 +1,15 @@
-name: Update copilot LSP
+name: Update Copilot LSP
 
 on:
   schedule:
     - cron: "0 0 * * *"
   push:
-    branches: [beta]
+    branches: [master]
 
 jobs:
   update_copilot_lsp:
     runs-on: ubuntu-latest
-    name: Update copilot LSP
+    name: Update Copilot LSP
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -34,6 +34,6 @@ jobs:
           author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           base: beta
           branch: create-pull-request/update-copilot-lsp
-          commit-message: "feat: update to latest copilot LSP"
+          commit-message: "feat: update to latest Copilot LSP"
           reviewers: MunifTanjim,zbirenbaum,AntoineGS
-          title: "Update copilot LSP"
+          title: "Update Copilot LSP"
