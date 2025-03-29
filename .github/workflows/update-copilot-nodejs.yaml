@@ -1,0 +1,39 @@
+name: Update Copilot LSP
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  push:
+    branches: [master]
+
+jobs:
+  update_copilot_lsp:
+    runs-on: ubuntu-latest
+    name: Update Copilot LSP
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Create directory
+        run: |
+          mkdir -p copilot/js
+
+      - name: Download latest LSP
+        run: |
+          curl -s https://api.github.com/repos/github/copilot-language-server-release/releases/latest | grep "browser_download_url.*copilot-language-server-js-.*zip" | cut -d : -f 2,3 | tr -d \" | wget -vi -
+
+      - name: Unzip LSP
+        run: |
+          unzip -o copilot-language-server-js-*.zip -d copilot/js
+          rm copilot-language-server-js-*.zip
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          add-paths: "copilot/js/*"
+          author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+          base: master
+          branch: create-pull-request/update-copilot-lsp
+          commit-message: "feat: update to latest Copilot LSP"
+          reviewers: MunifTanjim,zbirenbaum,AntoineGS
+          title: "Update Copilot LSP"

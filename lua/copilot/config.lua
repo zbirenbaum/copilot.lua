@@ -51,7 +51,6 @@ local default_config = {
   filetypes = {},
   ---@type string|nil
   auth_provider_url = nil,
-  copilot_node_command = "node",
   ---@type string[]
   workspace_folders = {},
   server_opts_overrides = {},
@@ -76,6 +75,14 @@ local default_config = {
 
     return true
   end,
+  copilot_node_command = "node",
+  ---@class copilot_config_server
+  server = {
+    ---@type string<'nodejs', 'binary'>
+    type = "nodejs",
+    ---@type string|nil
+    custom_server_filepath = nil,
+  },
 }
 
 local mod = {
