@@ -372,9 +372,7 @@ function M.setup()
   })
 
   vim.schedule(function()
-    if lsp_binary.ensure_client_is_downloaded() then
-      M.buf_attach()
-    end
+    M.buf_attach()
   end)
 end
 
