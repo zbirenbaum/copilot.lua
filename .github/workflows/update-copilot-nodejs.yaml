@@ -32,7 +32,7 @@ jobs:
         with:
           add-paths: "copilot/js/*"
           author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
-          base: beta
+          base: master
           branch: create-pull-request/update-copilot-lsp
           commit-message: "feat: update to latest Copilot LSP"
           reviewers: MunifTanjim,zbirenbaum,AntoineGS
