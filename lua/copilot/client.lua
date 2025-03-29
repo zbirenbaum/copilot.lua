@@ -230,6 +230,11 @@ local function prepare_client_config(overrides)
     }
   end
 
+  if not cmd then
+    logger.error("copilot server type not supported")
+    return
+  end
+
   local capabilities = vim.lsp.protocol.make_client_capabilities() --[[@as copilot_capabilities]]
   capabilities.window.showDocument.support = true
 
@@ -348,8 +353,15 @@ function M.setup()
   local server_config = config.get("server") --[[@as copilot_config_server]]
   local node_command = config.get("copilot_node_command") --[[@as string|nil]]
   M.server = vim.tbl_deep_extend("force", M.server, server_config)
+
+  if M.server.custom_server_filepath then
+    M.server.custom_server_filepath = vim.fs.normalize(M.server.custom_server_filepath)
+  end
+
   if M.server.type == "nodejs" then
     lsp_nodesj.setup(node_command, M.server.custom_server_filepath)
+  elseif M.server.type == "binary" then
+    lsp_binary.setup(M.server.custom_server_filepath)
   end
 
   M.config = prepare_client_config(config.get("server_opts_overrides"))

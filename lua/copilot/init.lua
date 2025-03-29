@@ -42,7 +42,6 @@ M.setup = function(opts)
     create_cmds()
   end
 
-  lsp_binary.setup(conf.lsp_binary)
   require("copilot.command").enable()
   logger.setup(conf.logger)
 
