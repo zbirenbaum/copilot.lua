@@ -211,16 +211,23 @@ local function prepare_client_config(overrides)
   M.startup_error = nil
 
   local server_path = nil
-  local node_cmd = ""
-  if M.server.type == "nodejs" then
-    node_cmd = lsp_nodesj.node_command
-    server_path = lsp_nodesj.get_server_path()
-  elseif M.server.type == "binary" then
-    server_path = lsp_binary.get_server_path()
-  end
+  local cmd = nil
 
   if M.server.custom_server_filepath and vim.fn.filereadable(M.server.custom_server_filepath) then
     server_path = M.server.custom_server_filepath
+  end
+
+  if M.server.type == "nodejs" then
+    cmd = {
+      lsp_nodesj.node_command,
+      server_path or lsp_nodesj.get_server_path(),
+      "--stdio",
+    }
+  elseif M.server.type == "binary" then
+    cmd = {
+      server_path or lsp_binary.get_server_path(),
+      "--stdio",
+    }
   end
 
   local capabilities = vim.lsp.protocol.make_client_capabilities() --[[@as copilot_capabilities]]
@@ -285,11 +292,7 @@ local function prepare_client_config(overrides)
 
   -- LSP config, not to be confused with config.lua
   return vim.tbl_deep_extend("force", {
-    cmd = {
-      node_cmd,
-      server_path,
-      "--stdio",
-    },
+    cmd = cmd,
     root_dir = root_dir,
     name = "copilot",
     capabilities = capabilities,
