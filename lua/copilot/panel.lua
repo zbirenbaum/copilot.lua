@@ -12,6 +12,7 @@ local marker_prefix = "[copilot] "
 local panel_uri_prefix = "copilot://"
 
 local panel = {
+  ---@type vim.lsp.Client
   client = nil,
   setup_done = false,
 
@@ -27,6 +28,7 @@ local panel = {
   filetype = nil,
 
   state = {
+    ---@type integer|nil
     req_id = nil,
     line = nil,
     status = nil,
@@ -414,7 +416,7 @@ function panel:refresh()
   end
 
   if self.state.req_id then
-    self.client.cancel_request(self.state.req_id)
+    self.client:cancel_request(self.state.req_id)
     self.state.req_id = nil
   end
 
@@ -430,7 +432,6 @@ function panel:refresh()
       end
 
       self.state.received_count = type(self.state.received_count) == "number" and self.state.received_count + 1 or 1
-
       self:unlock():refresh_header():add_entry(result):lock()
     end,
     ---@param result copilot_panel_solutions_done_data
@@ -466,8 +467,14 @@ function panel:refresh()
   if not auto_refreshing and self.state.was_insert then
     vim.cmd("stopinsert")
   else
+    local utf16_index
     -- assume cursor at end of line
-    local _, utf16_index = vim.str_utfindex(self.state.line, "utf-16")
+    if vim.has("nvim-0.11") then
+      utf16_index = vim.str_utfindex(self.state.line, "utf-16")
+    else
+      ---@diagnostic disable-next-line: missing-parameter
+      _, utf16_index = vim.str_utfindex(self.state.line)
+    end
     params.doc.position.character = utf16_index
     params.position.character = params.doc.position.character
   end
@@ -475,22 +482,17 @@ function panel:refresh()
   -- on_solutions_done can be invoked before the api.get_panel_completions callback
   self.state.status = "loading"
 
-  local _, id = api.get_panel_completions(
-    self.client,
-    params,
-    ---@param result copilot_get_panel_completions_data
-    function(err, result)
-      if err then
-        self.state.status = "error"
-        self.state.error = err
-        logger.error(self.state.error)
-        return
-      end
-
-      self.state.expected_count = result.solutionCountTarget
-      panel:unlock():refresh_header():lock()
+  local _, id = api.get_panel_completions(self.client, params, function(err, result)
+    if err then
+      self.state.status = "error"
+      self.state.error = err
+      logger.error(self.state.error)
+      return
     end
-  )
+
+    self.state.expected_count = result.solutionCountTarget
+    panel:unlock():refresh_header():lock()
+  end)
 
   self.state.req_id = id
 end

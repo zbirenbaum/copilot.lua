@@ -3,7 +3,7 @@ local mod = {}
 
 ---@param callback? fun(err: any|nil, data: table, ctx: table): nil
 ---@return any|nil err
----@return table data
+---@return any data
 ---@return table ctx
 function mod.request(client, method, params, callback)
   logger.trace("api request:", method, params)
@@ -139,14 +139,13 @@ function mod.get_completions_cycling(client, params, callback)
   return mod.request(client, "getCompletionsCycling", params, callback)
 end
 
----@alias copilot_get_panel_completions_data { solutionCountTarget: integer }
 ---@alias copilot_panel_solution_data { panelId: string, completionText: string, displayText: string, range: { ['end']: { character: integer, line: integer }, start: { character: integer, line: integer } }, score: number, solutionId: string }
 ---@alias copilot_panel_on_solution_handler fun(result: copilot_panel_solution_data): nil
 ---@alias copilot_panel_solutions_done_data { panelId: string, status: 'OK'|'Error', message?: string }
 ---@alias copilot_panel_on_solutions_done_handler fun(result: copilot_panel_solutions_done_data): nil
 
 ---@return any|nil err
----@return copilot_get_panel_completions_data data
+---@return integer data
 ---@return table ctx
 function mod.get_panel_completions(client, params, callback)
   return mod.request(client, "getPanelCompletions", params, callback)
