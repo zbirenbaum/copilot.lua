@@ -110,7 +110,7 @@ require('copilot').setup({
     trace_lsp_progress = false,
     log_lsp_messages = false,
   },
-  copilot_node_command = 'node', -- Node.js version must be > 18.x
+  copilot_node_command = 'node', -- Node.js version must be > 20
   workspace_folders = {},
   copilot_model = "",  -- Current LSP default is gpt-35-turbo, supports gpt-4o-copilot
   root_dir = function()
@@ -129,7 +129,10 @@ require('copilot').setup({
 
     return true
   end,
-  lsp_binary = nil,
+  server = {
+    type = "nodejs", -- "nodejs" | "binary"
+    custom_server_filepath = nil,
+  },
   server_opts_overrides = {},
 })
 ```
@@ -280,6 +283,16 @@ When `log_lsp_messages` is true, LSP log messages (`window/logMessage`) events w
 
 Careful turning on all logging features as the log files may get very large over time, and are not pruned by the application.
 
+### copilot_node_command
+
+Use this field to provide the path to a specific node version such as one installed by nvm. Node.js version must be 20 or newer.
+
+Example:
+
+```lua
+copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v20.0.1/bin/node", -- Node.js version must be > 20
+```
+
 ### server_opts_overrides
 
 Override copilot lsp client settings. The `settings` field is where you can set the values of the options defined in [SettingsOpts.md](./SettingsOpts.md).
@@ -344,15 +357,22 @@ require("copilot").setup {
 }
 ```
 
-### lsp_binary
+### server
 
-This allows you to specify the path to the copilot lsp binary.
-This will disable the download of the binary and use the one specified.
+> [!CAUTION] > `"binary"` mode is still very much experimental, please report any issues you encounter.
+
+`type` can be either `"nodejs"` or `"binary"`. The binary version will be downloaded if used.
+
+`custom_server_filepath` is used to specify the path of either the path (filename included) of the `js` file if using `"nodejs"` or the path to the binary if using `"binary"`.
+When using `"binary"`, the download process will be disabled and the binary will be used directly.
 example:
 
 ```lua
 require("copilot").setup {
-  lsp_binary = "/home/user/.local/bin/copilot-language-server",
+  server = {
+    type = "nodejs",
+    custom_server_filepath = "/home/user/copilot-lsp/language-server.js",,
+  },
 }
 ```
 
