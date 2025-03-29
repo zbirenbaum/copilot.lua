@@ -374,13 +374,9 @@ function M.setup()
     end),
   })
 
-  if not M.server.custom_server_filepath then
-    vim.schedule(function()
-      if lsp_binary.ensure_client_is_downloaded() then
-        M.buf_attach()
-      end
-    end)
-  end
+  vim.schedule(function()
+    M.buf_attach()
+  end)
 end
 
 function M.teardown()
