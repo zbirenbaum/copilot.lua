@@ -14,21 +14,9 @@ local M = {
 }
 
 local function ensure_directory_exists(path)
-  local dir_path = path
-  local cmd
-
-  if dir_path and vim.fn.isdirectory(dir_path) == 0 then
-    if vim.fn.has("win32") > 0 then
-      cmd = 'cmd /c "mkdir "' .. dir_path:gsub("\\", "\\\\"):gsub("/", "\\\\")
-    else
-      cmd = "mkdir -p " .. vim.fn.shellescape(dir_path)
-    end
-
-    logger.trace("Creating directory with command: " .. cmd)
-    vim.fn.system(cmd)
-
-    if vim.v.shell_error ~= 0 then
-      logger.error("Failed to create directory: " .. dir_path)
+  if path and vim.fn.isdirectory(path) == 0 then
+    if vim.fn.mkdir(path) == 0 then
+      logger.error("failed to create directory: " .. path)
       return false
     end
   end
@@ -53,13 +41,53 @@ end
 
 ---@param url string
 ---@param local_server_zip_filepath string
+---@return boolean
+local function download_file_with_wget(url, local_server_zip_filepath)
+  if vim.fn.executable("wget") == 0 then
+    return false
+  end
+
+  local wget_cmd = string.format('wget -O "%s" "%s"', local_server_zip_filepath:gsub("\\", "\\\\"), url)
+  logger.trace("Downloading copilot-language-server with command: " .. wget_cmd)
+  local result = vim.fn.system(wget_cmd)
+
+  if vim.v.shell_error ~= 0 then
+    logger.error("error downloading file with wget: " .. result)
+    return false
+  end
+
+  return true
+end
+
+---@param url string
+---@param local_server_zip_filepath string
+---@return boolean
+local function download_file_with_curl(url, local_server_zip_filepath)
+  if vim.fn.executable("curl") == 0 then
+    return false
+  end
+
+  local cmd = string.format('curl -s -L -o "%s" "%s"', local_server_zip_filepath:gsub("\\", "\\\\"), url)
+  logger.trace("downloading copilot-language-server with command: " .. cmd)
+  local result = vim.fn.system(cmd)
+
+  if vim.v.shell_error ~= 0 then
+    logger.error("error downloading file: " .. result)
+    return false
+  end
+
+  return true
+end
+
+---@param url string
+---@param local_server_zip_filepath string
 ---@param local_server_zip_path string
 ---@return boolean
 local function download_file(url, local_server_zip_filepath, local_server_zip_path)
   logger.notify("current version of copilot-language-server is not downloaded, downloading")
 
-  if vim.fn.executable("curl") ~= 1 then
-    logger.error("curl is not available, please install it to download copilot-language-server")
+  if (vim.fn.executable("curl") ~= 1) and (vim.fn.executable("wget") == 1) then
+    logger.error("neither curl nor wget is available, please make sure one of them is installed")
     M.initialization_failed = true
     return false
   end
@@ -74,13 +102,12 @@ local function download_file(url, local_server_zip_filepath, local_server_zip_pa
     end
   end
 
-  local cmd = string.format('curl -s -L -o "%s" "%s"', local_server_zip_filepath:gsub("\\", "\\\\"), url)
-  logger.trace("Downloading copilot-language-server with command: " .. cmd)
-  local result = vim.fn.system(cmd)
-
-  if vim.v.shell_error ~= 0 then
-    logger.error("Error downloading file: " .. result)
-    return false
+  if not download_file_with_curl(url, local_server_zip_filepath) then
+    if not download_file_with_wget(url, local_server_zip_filepath) then
+      logger.error("could not download the copilot sever")
+      M.initialization_failed = true
+      return false
+    end
   end
 
   logger.debug("copilot-language-server downloaded to " .. local_server_zip_filepath)
@@ -115,6 +142,7 @@ local function extract_file(copilot_server_info, local_server_zip_filepath)
     )
   end
 
+  logger.trace("Extracting copilot-language-server with command: " .. unzip_cmd)
   vim.fn.system(unzip_cmd)
 
   if vim.v.shell_error ~= 0 then
@@ -123,10 +151,12 @@ local function extract_file(copilot_server_info, local_server_zip_filepath)
   end
 
   vim.fn.delete(local_server_zip_filepath)
-  vim.fn.rename(
-    vim.fs.joinpath(copilot_server_info.absolute_path, copilot_server_info.extracted_filename),
-    copilot_server_info.absolute_filepath
-  )
+  if copilot_server_info.path ~= "js" then
+    vim.fn.rename(
+      vim.fs.joinpath(copilot_server_info.absolute_path, copilot_server_info.extracted_filename),
+      copilot_server_info.absolute_filepath
+    )
+  end
 
   return true
 end
@@ -193,13 +223,15 @@ function M.ensure_client_is_downloaded()
     return false
   end
 
-  if not set_permissions(copilot_server_info.absolute_filepath) then
-    logger.error("could not set permissions for copilot-language-server")
-    return false
+  if copilot_server_info.path ~= "js" then
+    if not set_permissions(copilot_server_info.absolute_filepath) then
+      logger.error("could not set permissions for copilot-language-server")
+      return false
+    end
+    delete_all_except(copilot_server_info.absolute_path, copilot_server_info.filename)
   end
 
-  delete_all_except(copilot_server_info.absolute_path, copilot_server_info.filename)
-  logger.notify(string.format("copilot-language-server v%s downloaded", copilot_version))
+  logger.notify("copilot-language-server downloaded")
   return true
 end
 
@@ -220,6 +252,22 @@ local function is_arm()
   return os_name == "aarch64" or string.sub(os_name, 1, 3) == "arm"
 end
 
+---@return boolean
+local function is_musl()
+  local fh, err = assert(io.popen("ldd --version 2>&1", "r"))
+  if err then
+    return false -- we assume glibc
+  end
+
+  local ldd_output
+  if fh then
+    ldd_output = fh:read()
+    fh:close()
+  end
+
+  return string.sub(ldd_output, 1, 4) == "musl"
+end
+
 ---@return copilot_server_info
 function M.get_copilot_server_info()
   if M.copilot_server_info then
@@ -235,8 +283,11 @@ function M.get_copilot_server_info()
   if os == "Linux" then
     if is_arm() then
       path = "linux-arm64"
-    else
+    elseif not is_musl() then
       path = "linux-x64"
+    else
+      -- Fallback to plain nodejs project
+      path = "js"
     end
   elseif os == "Darwin" then
     if is_arm() then
@@ -254,6 +305,11 @@ function M.get_copilot_server_info()
     logger.error("could not determine OS, please report this issue with the output of `uname -a`")
   end
 
+  if path == "js" then
+    filename = "language-server.js"
+    extracted_filename = ""
+  end
+
   M.copilot_server_info = {
     path = path,
     filename = filename,
@@ -263,6 +319,34 @@ function M.get_copilot_server_info()
   }
 
   return M.copilot_server_info
+end
+
+---@return string
+function M.get_server_path()
+  return M.get_copilot_server_info().absolute_filepath
+end
+
+---@param custom_server_path? string
+function M.setup(custom_server_path)
+  if custom_server_path then
+    if not vim.fn.filereadable(custom_server_path) then
+      logger.error("copilot-language-server not found at " .. custom_server_path)
+      return M
+    end
+
+    logger.debug("using custom copilot-language-server binary:", custom_server_path)
+    M.copilot_server_info = {
+      path = "",
+      filename = "",
+      absolute_path = "",
+      absolute_filepath = custom_server_path or "",
+      extracted_filename = "",
+    }
+
+    M.initialized = true
+  end
+
+  M.ensure_client_is_downloaded()
 end
 
 return M

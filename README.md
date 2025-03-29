@@ -49,7 +49,7 @@ Note that if you have the variable set, even empty, the LSP will attempt to use 
 You have to run the `require("copilot").setup(options)` function in order to start Copilot.
 If no options are provided, the defaults are used.
 
-Because the copilot server takes some time to start up, it is recommend that you lazy load copilot.
+Because the copilot server takes some time to start up, it is recommended that you lazy load copilot.
 For example:
 
 ```lua
@@ -115,7 +115,7 @@ require('copilot').setup({
     trace_lsp_progress = false,
     log_lsp_messages = false,
   },
-  copilot_node_command = 'node', -- Node.js version must be > 18.x
+  copilot_node_command = 'node', -- Node.js version must be > 20
   workspace_folders = {},
   copilot_model = "",  -- Current LSP default is gpt-35-turbo, supports gpt-4o-copilot
   root_dir = function()
@@ -134,6 +134,10 @@ require('copilot').setup({
 
     return true
   end,
+  server = {
+    type = "nodejs", -- "nodejs" | "binary"
+    custom_server_filepath = nil,
+  },
   server_opts_overrides = {},
 })
 ```
@@ -284,10 +288,20 @@ When `log_lsp_messages` is true, LSP log messages (`window/logMessage`) events w
 
 Careful turning on all logging features as the log files may get very large over time, and are not pruned by the application.
 
+### copilot_node_command
+
+Use this field to provide the path to a specific node version such as one installed by nvm. Node.js version must be 20 or newer.
+
+Example:
+
+```lua
+copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v20.0.1/bin/node", -- Node.js version must be > 20
+```
+
 ### server_opts_overrides
 
 Override copilot lsp client settings. The `settings` field is where you can set the values of the options defined in [SettingsOpts.md](./SettingsOpts.md).
-These options are specific to the copilot lsp and can be used to customize its behavior. Ensure that the name field is not overriden as is is used for
+These options are specific to the copilot lsp and can be used to customize its behavior. Ensure that the name field is not overridden as is is used for
 efficiency reasons in numerous checks to verify copilot is actually running. See `:h vim.lsp.start_client` for list of options.
 
 Example:
@@ -331,7 +345,7 @@ If none is found, it will use the current working directory.
 
 This function is called to determine if copilot should attach to the buffer or not.
 It is useful if you would like to go beyond the filetypes and have more control over when copilot should attach.
-You can also use it to attach to buflisted buffers by simply omiting that portion from the function.
+You can also use it to attach to buflisted buffers by simply omitting that portion from the function.
 Since this happens before attaching to the buffer, it is good to prevent Copilot from reading sensitive files.
 
 An example of this would be:
@@ -348,6 +362,25 @@ require("copilot").setup {
 }
 ```
 
+### server
+
+> [!CAUTION] > `"binary"` mode is still very much experimental, please report any issues you encounter.
+
+`type` can be either `"nodejs"` or `"binary"`. The binary version will be downloaded if used.
+
+`custom_server_filepath` is used to specify the path of either the path (filename included) of the `js` file if using `"nodejs"` or the path to the binary if using `"binary"`.
+When using `"binary"`, the download process will be disabled and the binary will be used directly.
+example:
+
+```lua
+require("copilot").setup {
+  server = {
+    type = "nodejs",
+    custom_server_filepath = "/home/user/copilot-lsp/language-server.js",,
+  },
+}
+```
+
 ## Commands
 
 `copilot.lua` defines the `:Copilot` command that can perform various actions. It has completion support, so try it out.
@@ -357,4 +390,6 @@ require("copilot").setup {
 The `copilot.api` module can be used to build integrations on top of `copilot.lua`.
 
 - [zbirenbaum/copilot-cmp](https://github.com/zbirenbaum/copilot-cmp): Integration with [`nvim-cmp`](https://github.com/hrsh7th/nvim-cmp).
+- [giuxtaposition/blink-cmp-copilot](https://github.com/giuxtaposition/blink-cmp-copilot): Integration with [`blink.cmp`](https://github.com/Saghen/blink.cmp).
+- [fang2hou/blink-copilot](https://github.com/fang2hou/blink-copilot): Integration with [`blink.cmp`](https://github.com/Saghen/blink.cmp), with some differences.
 - [AndreM222/copilot-lualine](https://github.com/AndreM222/copilot-lualine): Integration with [`lualine.nvim`](https://github.com/nvim-lualine/lualine.nvim).
