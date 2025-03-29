@@ -434,7 +434,7 @@ function M.add_workspace_folder(folder_path)
 
   local client = M.get()
   if client and client.initialized then
-    client.notify("workspace/didChangeWorkspaceFolders", {
+    client:notify("workspace/didChangeWorkspaceFolders", {
       event = {
         added = { workspace_folder },
         removed = {},
