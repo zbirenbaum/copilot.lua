@@ -213,8 +213,11 @@ local function prepare_client_config(overrides)
   local server_path = nil
   local cmd = nil
 
-  if M.server.custom_server_filepath and vim.fn.filereadable(M.server.custom_server_filepath) then
-    server_path = M.server.custom_server_filepath
+  if M.server.custom_server_filepath then
+    M.server.custom_server_filepath = vim.fs.normalize(M.server.custom_server_filepath)
+    if vim.fn.filereadable(M.server.custom_server_filepath) then
+      server_path = M.server.custom_server_filepath
+    end
   end
 
   if M.server.type == "nodejs" then
@@ -371,11 +374,13 @@ function M.setup()
     end),
   })
 
-  vim.schedule(function()
-    if lsp_binary.ensure_client_is_downloaded() then
-      M.buf_attach()
-    end
-  end)
+  if not M.server.custom_server_filepath then
+    vim.schedule(function()
+      if lsp_binary.ensure_client_is_downloaded() then
+        M.buf_attach()
+      end
+    end)
+  end
 end
 
 function M.teardown()
