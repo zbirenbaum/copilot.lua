@@ -469,7 +469,7 @@ function panel:refresh()
   else
     local utf16_index
     -- assume cursor at end of line
-    if vim.has("nvim-0.11") then
+    if vim.fn.has("nvim-0.11") == 1 then
       utf16_index = vim.str_utfindex(self.state.line, "utf-16")
     else
       ---@diagnostic disable-next-line: missing-parameter
