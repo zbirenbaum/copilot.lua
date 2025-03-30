@@ -161,7 +161,7 @@ local function get_handlers()
   }
 
   -- optional handlers
-  local logger_conf = config.get("logger") --[[@as copilot_config_logging]]
+  local logger_conf = config.config.logger
   if logger_conf.trace_lsp ~= "off" then
     handlers = vim.tbl_extend("force", handlers, {
       ["$/logTrace"] = logger.handle_lsp_trace,
@@ -233,7 +233,7 @@ local function prepare_client_config(overrides)
     },
   }
 
-  local config_workspace_folders = config.get("workspace_folders") --[[@as table<string>]]
+  local config_workspace_folders = config.config.workspace_folders
 
   for _, config_workspace_folder in ipairs(config_workspace_folders) do
     if config_workspace_folder ~= "" then
@@ -249,7 +249,7 @@ local function prepare_client_config(overrides)
   end
 
   local editor_info = util.get_editor_info()
-  local provider_url = config.get("auth_provider_url") --[[@as string|nil]]
+  local provider_url = config.config.auth_provider_url
   local proxy_uri = vim.g.copilot_proxy
 
   local settings = { ---@type copilot_settings
@@ -296,7 +296,7 @@ local function prepare_client_config(overrides)
         logger.trace("workspace configuration", configurations)
 
         -- to activate tracing if we want it
-        local logger_conf = config.get("logger") --[[@as copilot_config_logging]]
+        local logger_conf = config.config.logger
         local trace_params = { value = logger_conf.trace_lsp } --[[@as copilot_nofify_set_trace_params]]
         api.notify_set_trace(client, trace_params)
 
@@ -325,14 +325,13 @@ local function prepare_client_config(overrides)
     },
     settings = settings,
     workspace_folders = workspace_folders,
-    trace = config.get("trace") or "off",
   }, overrides)
 end
 
 function M.setup()
-  M.should_attach = config.get("should_attach") --[[@as copilot_should_attach|nil]]
-  local server_config = config.get("server") --[[@as copilot_config_server]]
-  local node_command = config.get("copilot_node_command") --[[@as string|nil]]
+  M.should_attach = config.config.should_attach
+  local server_config = config.config.server
+  local node_command = config.config.copilot_node_command
   M.server = vim.tbl_deep_extend("force", M.server, server_config)
 
   if M.server.custom_server_filepath then
@@ -345,7 +344,7 @@ function M.setup()
     lsp_binary.setup(M.server.custom_server_filepath)
   end
 
-  M.config = prepare_client_config(config.get("server_opts_overrides"))
+  M.config = prepare_client_config(config.config.server_opts_overrides)
 
   if not M.config then
     is_disabled = true
@@ -399,7 +398,7 @@ function M.add_workspace_folder(folder_path)
     name = folder_path,
   }
 
-  local workspace_folders = config.get("workspace_folders") --[[@as table<string>]]
+  local workspace_folders = config.config.workspace_folders
   if not workspace_folders then
     workspace_folders = {}
   end

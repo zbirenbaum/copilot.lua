@@ -94,45 +94,8 @@ function mod.setup(opts)
     return mod.config
   end
 
-  local config = vim.tbl_deep_extend("force", default_config, opts or {})
-
-  --- for backward compatibility
-  if config.ft_disable then
-    for _, disabled_ft in ipairs(config.ft_disable) do
-      config.filetypes[disabled_ft] = false
-    end
-
-    config.ft_disable = nil
-  end
-
-  mod.config = config
-
+  mod.config = vim.tbl_deep_extend("force", default_config, opts or {})
   return mod.config
-end
-
----@param key? string
-function mod.get(key)
-  if not mod.config then
-    logger.error("not initialized")
-    return
-  end
-
-  if key then
-    return mod.config[key]
-  end
-
-  return mod.config
-end
-
----@param key string
----@param value any
-function mod.set(key, value)
-  if not mod.config then
-    logger.error("not initialized")
-    return
-  end
-
-  mod.config[key] = value
 end
 
 function mod.get_root_dir()

@@ -90,7 +90,7 @@ end
 ---@return boolean should_attach
 ---@return string? no_attach_reason
 function M.should_attach()
-  local ft = config.get("filetypes") --[[@as table<string, boolean>]]
+  local ft = config.config.filetypes
   local ft_disabled, ft_disabled_reason = is_ft_disabled(vim.bo.filetype, ft)
 
   if ft_disabled then
@@ -169,8 +169,7 @@ end
 
 ---@return copilot_workspace_configurations
 function M.get_workspace_configurations()
-  local conf = config.get() --[[@as copilot_config]]
-
+  local conf = config.config
   local filetypes = vim.deepcopy(conf.filetypes) --[[@as table<string, boolean>]]
 
   if filetypes["*"] == nil then
