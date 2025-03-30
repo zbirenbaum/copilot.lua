@@ -700,7 +700,7 @@ local function create_autocmds()
 end
 
 function mod.setup()
-  local opts = config.get("suggestion") --[[@as copilot_config_suggestion]]
+  local opts = config.config.suggestion
   if not opts.enabled then
     return
   end
@@ -721,7 +721,7 @@ function mod.setup()
 end
 
 function mod.teardown()
-  local opts = config.get("suggestion") --[[@as copilot_config_suggestion]]
+  local opts = config.config.suggestion
   if not opts.enabled then
     return
   end
