@@ -567,7 +567,7 @@ function mod.open(layout)
 end
 
 function mod.setup()
-  local opts = config.config.panel
+  local opts = config.panel
   if not opts.enabled then
     return
   end
@@ -592,7 +592,7 @@ function mod.setup()
 end
 
 function mod.teardown()
-  local opts = config.config.panel
+  local opts = config.panel
   if not opts.enabled then
     return
   end

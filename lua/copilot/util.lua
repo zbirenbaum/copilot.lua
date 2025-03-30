@@ -90,7 +90,7 @@ end
 ---@return boolean should_attach
 ---@return string? no_attach_reason
 function M.should_attach()
-  local ft = config.config.filetypes
+  local ft = config.filetypes
   local ft_disabled, ft_disabled_reason = is_ft_disabled(vim.bo.filetype, ft)
 
   if ft_disabled then
@@ -169,14 +169,13 @@ end
 
 ---@return copilot_workspace_configurations
 function M.get_workspace_configurations()
-  local conf = config.config
-  local filetypes = vim.deepcopy(conf.filetypes) --[[@as table<string, boolean>]]
+  local filetypes = vim.deepcopy(config.filetypes) --[[@as table<string, boolean>]]
 
   if filetypes["*"] == nil then
     filetypes = vim.tbl_deep_extend("keep", filetypes, internal_filetypes)
   end
 
-  local copilot_model = conf and conf.copilot_model ~= "" and conf.copilot_model or ""
+  local copilot_model = config and config.copilot_model ~= "" and config.copilot_model or ""
 
   ---@type string[]
   local disabled_filetypes = vim.tbl_filter(function(ft)
@@ -191,7 +190,7 @@ function M.get_workspace_configurations()
           selectedCompletionModel = copilot_model,
         },
       },
-      enableAutoCompletions = not not (conf.panel.enabled or conf.suggestion.enabled),
+      enableAutoCompletions = not not (config.panel.enabled or config.suggestion.enabled),
       disabledLanguages = vim.tbl_map(function(ft)
         return { languageId = ft }
       end, disabled_filetypes),
