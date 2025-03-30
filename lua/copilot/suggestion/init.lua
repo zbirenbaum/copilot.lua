@@ -702,7 +702,7 @@ local function create_autocmds()
 end
 
 function mod.setup()
-  local opts = config.config.suggestion
+  local opts = config.suggestion
   if not opts.enabled then
     return
   end
@@ -723,7 +723,7 @@ function mod.setup()
 end
 
 function mod.teardown()
-  local opts = config.config.suggestion
+  local opts = config.suggestion
   if not opts.enabled then
     return
   end

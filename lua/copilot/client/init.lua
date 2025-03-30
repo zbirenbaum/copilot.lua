@@ -2,8 +2,8 @@ local api = require("copilot.api")
 local config = require("copilot.config")
 local util = require("copilot.util")
 local logger = require("copilot.logger")
-local lsp_binary = require("copilot.lsp_binary")
-local lsp_nodesj = require("copilot.lsp_nodejs")
+local lsp = require("copilot.lsp")
+local utils = require("copilot.client.utils")
 
 local is_disabled = false
 
@@ -11,22 +11,11 @@ local M = {
   augroup = "copilot.client",
   id = nil,
   --- @class copilot_capabilities:lsp.ClientCapabilities
-  --- @field copilot table<'openURL', boolean>
   --- @field workspace table<'workspaceFolders', boolean>
   capabilities = nil,
   config = nil,
   startup_error = nil,
   initialized = false,
-  ---@type copilot_should_attach
-  should_attach = nil,
-  ---@type string<'nodejs', 'binary'>
-  ---@class copilot_config_server
-  server = {
-    ---@type string<'nodejs', 'binary'>
-    type = "nodejs",
-    ---@type string|nil
-    custom_server_filepath = nil,
-  },
 }
 
 ---@param id integer
@@ -46,7 +35,7 @@ end
 
 ---@param force? boolean
 function M.buf_attach(force)
-  if lsp_binary.initialization_failed then
+  if lsp.binary.initialization_failed then
     M.startup_error = "initialization of copilot-language-server failed"
     return
   end
@@ -59,7 +48,7 @@ function M.buf_attach(force)
   local bufnr = vim.api.nvim_get_current_buf()
   local bufname = vim.api.nvim_buf_get_name(bufnr)
 
-  if not (force or (M.should_attach(bufnr, bufname) and util.should_attach())) then
+  if not (force or (config.should_attach(bufnr, bufname) and util.should_attach())) then
     logger.debug("not attaching to buffer based on force and should_attach criteria")
     return
   end
@@ -70,7 +59,7 @@ function M.buf_attach(force)
   end
 
   -- In case it has changed, we update it
-  M.config.root_dir = config.get_root_dir()
+  M.config.root_dir = utils.get_root_dir(config.root_dir)
 
   local ok, client_id_or_err = pcall(vim.lsp.start, M.config)
   if not ok then
@@ -161,7 +150,7 @@ local function get_handlers()
   }
 
   -- optional handlers
-  local logger_conf = config.config.logger
+  local logger_conf = config.logger
   if logger_conf.trace_lsp ~= "off" then
     handlers = vim.tbl_extend("force", handlers, {
       ["$/logTrace"] = logger.handle_lsp_trace,
@@ -184,7 +173,7 @@ local function get_handlers()
 end
 
 local function prepare_client_config(overrides)
-  if lsp_binary.initialization_failed then
+  if lsp.binary.initialization_failed then
     M.startup_error = "initialization of copilot-language-server failed"
     return
   end
@@ -194,19 +183,19 @@ local function prepare_client_config(overrides)
   local server_path = nil
   local cmd = nil
 
-  if M.server.custom_server_filepath and vim.fn.filereadable(M.server.custom_server_filepath) then
-    server_path = M.server.custom_server_filepath
+  if config.server.custom_server_filepath and vim.fn.filereadable(config.server.custom_server_filepath) then
+    server_path = config.server.custom_server_filepath
   end
 
-  if M.server.type == "nodejs" then
+  if config.server.type == "nodejs" then
     cmd = {
-      lsp_nodesj.node_command,
-      server_path or lsp_nodesj.get_server_path(),
+      lsp.nodejs.node_command,
+      server_path or lsp.nodejs.get_server_path(),
       "--stdio",
     }
-  elseif M.server.type == "binary" then
+  elseif config.server.type == "binary" then
     cmd = {
-      server_path or lsp_binary.get_server_path(),
+      server_path or lsp.binary.get_server_path(),
       "--stdio",
     }
   end
@@ -223,7 +212,7 @@ local function prepare_client_config(overrides)
     workspaceFolders = true,
   }
 
-  local root_dir = config.get_root_dir()
+  local root_dir = utils.get_root_dir(config.root_dir)
   local workspace_folders = {
     --- @type workspace_folder
     {
@@ -233,7 +222,7 @@ local function prepare_client_config(overrides)
     },
   }
 
-  local config_workspace_folders = config.config.workspace_folders
+  local config_workspace_folders = config.workspace_folders
 
   for _, config_workspace_folder in ipairs(config_workspace_folders) do
     if config_workspace_folder ~= "" then
@@ -249,7 +238,7 @@ local function prepare_client_config(overrides)
   end
 
   local editor_info = util.get_editor_info()
-  local provider_url = config.config.auth_provider_url
+  local provider_url = config.auth_provider_url
   local proxy_uri = vim.g.copilot_proxy
 
   local settings = { ---@type copilot_settings
@@ -296,7 +285,7 @@ local function prepare_client_config(overrides)
         logger.trace("workspace configuration", configurations)
 
         -- to activate tracing if we want it
-        local logger_conf = config.config.logger
+        local logger_conf = config.logger
         local trace_params = { value = logger_conf.trace_lsp } --[[@as copilot_nofify_set_trace_params]]
         api.notify_set_trace(client, trace_params)
 
@@ -329,22 +318,16 @@ local function prepare_client_config(overrides)
 end
 
 function M.setup()
-  M.should_attach = config.config.should_attach
-  local server_config = config.config.server
-  local node_command = config.config.copilot_node_command
-  M.server = vim.tbl_deep_extend("force", M.server, server_config)
+  local node_command = config.copilot_node_command
 
-  if M.server.custom_server_filepath then
-    M.server.custom_server_filepath = vim.fs.normalize(M.server.custom_server_filepath)
+  --TODO: merge the two types into an indirection
+  if config.server.type == "nodejs" then
+    lsp.nodejs.setup(node_command, config.server.custom_server_filepath)
+  elseif config.server.type == "binary" then
+    lsp.binary.setup(config.server.custom_server_filepath)
   end
 
-  if M.server.type == "nodejs" then
-    lsp_nodesj.setup(node_command, M.server.custom_server_filepath)
-  elseif M.server.type == "binary" then
-    lsp_binary.setup(M.server.custom_server_filepath)
-  end
-
-  M.config = prepare_client_config(config.config.server_opts_overrides)
+  M.config = prepare_client_config(config.server_opts_overrides)
 
   if not M.config then
     is_disabled = true
@@ -376,56 +359,6 @@ function M.teardown()
   if M.id then
     vim.lsp.stop_client(M.id)
   end
-end
-
-function M.add_workspace_folder(folder_path)
-  if type(folder_path) ~= "string" then
-    logger.error("workspace folder path must be a string")
-    return false
-  end
-
-  if vim.fn.isdirectory(folder_path) ~= 1 then
-    logger.error("invalid workspace folder: " .. folder_path)
-    return false
-  end
-
-  -- Normalize path
-  folder_path = vim.fn.fnamemodify(folder_path, ":p")
-
-  --- @type workspace_folder
-  local workspace_folder = {
-    uri = vim.uri_from_fname(folder_path),
-    name = folder_path,
-  }
-
-  local workspace_folders = config.config.workspace_folders
-  if not workspace_folders then
-    workspace_folders = {}
-  end
-
-  for _, existing_folder in ipairs(workspace_folders) do
-    if existing_folder == folder_path then
-      return
-    end
-  end
-
-  table.insert(workspace_folders, { folder_path })
-  config.set("workspace_folders", workspace_folders)
-
-  local client = M.get()
-  if client and client.initialized then
-    api.notify(client, "workspace/didChangeWorkspaceFolders", {
-      event = {
-        added = { workspace_folder },
-        removed = {},
-      },
-    })
-    logger.notify("added workspace folder: " .. folder_path)
-  else
-    logger.notify("workspace folder will be added on next session: " .. folder_path)
-  end
-
-  return true
 end
 
 return M
