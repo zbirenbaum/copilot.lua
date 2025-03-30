@@ -40,26 +40,6 @@ local function store_client_id(id)
   M.id = id
 end
 
-local lsp_start = vim.lsp.start
-if not lsp_start then
-  local function reuse_client(client, conf)
-    return client.config.root_dir == conf.root_dir and client.name == conf.name
-  end
-
-  -- shim for neovim < 0.8.2
-  lsp_start = function(lsp_config)
-    local bufnr = vim.api.nvim_get_current_buf()
-    local client = M.get()
-    if client and reuse_client(client, lsp_config) then
-      vim.lsp.buf_attach_client(bufnr, client.id)
-      return client.id
-    end
-    local client_id = vim.lsp.start_client(lsp_config) --[[@as number]]
-    vim.lsp.buf_attach_client(bufnr, client_id)
-    return client_id
-  end
-end
-
 function M.buf_is_attached(bufnr)
   return M.id and vim.lsp.buf_is_attached(bufnr or 0, M.id)
 end
@@ -92,7 +72,7 @@ function M.buf_attach(force)
   -- In case it has changed, we update it
   M.config.root_dir = config.get_root_dir()
 
-  local ok, client_id_or_err = pcall(lsp_start, M.config)
+  local ok, client_id_or_err = pcall(vim.lsp.start, M.config)
   if not ok then
     logger.error(string.format("failed to start LSP client: %s", client_id_or_err))
     return
@@ -111,6 +91,7 @@ function M.buf_detach()
   end
 end
 
+---@return nil|vim.lsp.Client
 function M.get()
   return vim.lsp.get_client_by_id(M.id)
 end
@@ -134,7 +115,7 @@ function M.use_client(callback)
       return
     end
 
-    local client_id, err = vim.lsp.start_client(M.config)
+    local client_id, err = vim.lsp.start(M.config)
 
     if not client_id then
       logger.error(string.format("error starting LSP client: %s", err))
@@ -434,7 +415,7 @@ function M.add_workspace_folder(folder_path)
 
   local client = M.get()
   if client and client.initialized then
-    client:notify("workspace/didChangeWorkspaceFolders", {
+    api.notify(client, "workspace/didChangeWorkspaceFolders", {
       event = {
         added = { workspace_folder },
         removed = {},
