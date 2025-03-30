@@ -28,7 +28,12 @@ end
 ---@return boolean sent
 function mod.notify(client, method, params)
   logger.trace("api notify:", method, params)
-  return client:notify(method, params)
+
+  if vim.fn.has("nvim-0.11") == 1 then
+    return client:notify(method, params)
+  else
+    return client.notify(method, params)
+  end
 end
 
 ---@alias copilot_editor_info { name: string, version: string }
