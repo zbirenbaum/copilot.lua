@@ -37,12 +37,6 @@ function M.get_copilot_lua_version()
   return copilot_lua_version
 end
 
--- use `require("copilot.client").get()`
----@deprecated
-M.get_copilot_client = function()
-  return require("copilot.client").get()
-end
-
 local internal_filetypes = {
   yaml = false,
   markdown = false,
@@ -104,12 +98,6 @@ function M.should_attach()
   end
 
   return true
-end
-
--- use `require("copilot.client").buf_is_attached()`
----@deprecated
-function M.is_attached()
-  return require("copilot.client").buf_is_attached(0)
 end
 
 local language_normalization_map = {
@@ -179,12 +167,6 @@ function M.get_doc_params(overrides)
   return params
 end
 
--- use `require("copilot.util").get_doc_params()`
----@deprecated
-M.get_completion_params = function(opts)
-  return M.get_doc_params(opts)
-end
-
 ---@return copilot_workspace_configurations
 function M.get_workspace_configurations()
   local conf = config.get() --[[@as copilot_config]]
@@ -225,11 +207,6 @@ M.get_plugin_path = function()
   else
     logger.error("could not read" .. copilot_path)
   end
-end
-
----@deprecated
-M.auth = function()
-  require("copilot.auth").signin()
 end
 
 ---@param str string

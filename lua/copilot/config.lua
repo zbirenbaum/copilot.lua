@@ -45,8 +45,6 @@ local default_config = {
     trace_lsp_progress = false,
     log_lsp_messages = false,
   },
-  ---@deprecated
-  ft_disable = nil,
   ---@type table<string, boolean>
   filetypes = {},
   ---@type string|nil
