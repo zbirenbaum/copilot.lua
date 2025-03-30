@@ -521,6 +521,8 @@ function mod.accept(modifier)
 
   -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
   vim.schedule_wrap(function()
+    -- Create an undo breakpoint
+    vim.cmd("let &undolevels=&undolevels")
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
     local bufnr = vim.api.nvim_get_current_buf()
     local encoding = vim.api.nvim_get_option_value("fileencoding", { buf = bufnr }) ~= ""
