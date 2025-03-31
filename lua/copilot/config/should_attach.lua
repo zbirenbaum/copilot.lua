@@ -19,4 +19,9 @@ local should_attach = {
   end,
 }
 
+---@param config ShouldAttachFunc
+function should_attach.validate(config)
+  vim.validate("should_attach", config, "function")
+end
+
 return should_attach
