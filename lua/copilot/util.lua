@@ -3,12 +3,6 @@ local logger = require("copilot.logger")
 
 local M = {}
 
-local id = 0
-function M.get_next_id()
-  id = id + 1
-  return id
-end
-
 ---@return { editorInfo: copilot_editor_info, editorPluginInfo: copilot_editor_plugin_info }
 function M.get_editor_info()
   local info = {
@@ -37,94 +31,17 @@ function M.get_copilot_lua_version()
   return copilot_lua_version
 end
 
-local internal_filetypes = {
-  yaml = false,
-  markdown = false,
-  help = false,
-  gitcommit = false,
-  gitrebase = false,
-  hgcommit = false,
-  svn = false,
-  cvs = false,
-  ["."] = false,
-}
-
----@param filetype_enabled boolean|fun():boolean
-local function resolve_filetype_enabled(filetype_enabled)
-  if type(filetype_enabled) == "function" then
-    return filetype_enabled()
-  end
-  return filetype_enabled
-end
-
----@param ft string
----@param filetypes table<string, boolean>
----@return boolean ft_disabled
----@return string? ft_disabled_reason
-local function is_ft_disabled(ft, filetypes)
-  if filetypes[ft] ~= nil then
-    return not resolve_filetype_enabled(filetypes[ft]),
-      string.format("'filetype' %s rejected by config filetypes[%s]", ft, ft)
-  end
-
-  local short_ft = string.gsub(ft, "%..*", "")
-
-  if filetypes[short_ft] ~= nil then
-    return not resolve_filetype_enabled(filetypes[short_ft]),
-      string.format("'filetype' %s rejected by config filetypes[%s]", ft, short_ft)
-  end
-
-  if filetypes["*"] ~= nil then
-    return not resolve_filetype_enabled(filetypes["*"]),
-      string.format("'filetype' %s rejected by config filetypes[%s]", ft, "*")
-  end
-
-  if internal_filetypes[short_ft] ~= nil then
-    return not internal_filetypes[short_ft],
-      string.format("'filetype' %s rejected by internal_filetypes[%s]", ft, short_ft)
-  end
-
-  return false
-end
-
 ---@return boolean should_attach
 ---@return string? no_attach_reason
 function M.should_attach()
   local ft = config.filetypes
-  local ft_disabled, ft_disabled_reason = is_ft_disabled(vim.bo.filetype, ft)
+  local ft_disabled, ft_disabled_reason = require("copilot.client.filetypes").is_ft_disabled(vim.bo.filetype, ft)
 
   if ft_disabled then
     return not ft_disabled, ft_disabled_reason
   end
 
   return true
-end
-
-local language_normalization_map = {
-  bash = "shellscript",
-  bst = "bibtex",
-  cs = "csharp",
-  cuda = "cuda-cpp",
-  dosbatch = "bat",
-  dosini = "ini",
-  gitcommit = "git-commit",
-  gitrebase = "git-rebase",
-  make = "makefile",
-  objc = "objective-c",
-  objcpp = "objective-cpp",
-  ps1 = "powershell",
-  raku = "perl6",
-  sh = "shellscript",
-  text = "plaintext",
-}
-
-function M.language_for_file_type(filetype)
-  -- trim filetypes after dot, e.g. `yaml.gotexttmpl` -> `yaml`
-  local ft = string.gsub(filetype, "%..*", "")
-  if not ft or ft == "" then
-    ft = "text"
-  end
-  return language_normalization_map[ft] or ft
 end
 
 local function relative_path(absolute)
@@ -167,37 +84,6 @@ function M.get_doc_params(overrides)
   return params
 end
 
----@return copilot_workspace_configurations
-function M.get_workspace_configurations()
-  local filetypes = vim.deepcopy(config.filetypes) --[[@as table<string, boolean>]]
-
-  if filetypes["*"] == nil then
-    filetypes = vim.tbl_deep_extend("keep", filetypes, internal_filetypes)
-  end
-
-  local copilot_model = config and config.copilot_model ~= "" and config.copilot_model or ""
-
-  ---@type string[]
-  local disabled_filetypes = vim.tbl_filter(function(ft)
-    return filetypes[ft] == false
-  end, vim.tbl_keys(filetypes))
-  table.sort(disabled_filetypes)
-
-  return {
-    settings = {
-      github = {
-        copilot = {
-          selectedCompletionModel = copilot_model,
-        },
-      },
-      enableAutoCompletions = not not (config.panel.enabled or config.suggestion.enabled),
-      disabledLanguages = vim.tbl_map(function(ft)
-        return { languageId = ft }
-      end, disabled_filetypes),
-    },
-  }
-end
-
 M.get_plugin_path = function()
   local copilot_path = vim.api.nvim_get_runtime_file("lua/copilot/init.lua", false)[1]
   if vim.fn.filereadable(copilot_path) ~= 0 then
@@ -215,34 +101,6 @@ function M.strutf16len(str)
   else
     return vim.fn.strchars(vim.fn.substitute(str, [==[\\%#=2[^\u0001-\uffff]]==], "  ", "g"))
   end
-end
-
----@return copilot_window_show_document_result
----@param result copilot_window_show_document
-function M.show_document(_, result)
-  logger.trace("window/showDocument:", result)
-  local success, _ = pcall(vim.ui.open, result.uri)
-  if not success then
-    if vim.ui.open ~= nil then
-      vim.api.nvim_echo({
-        { "window/showDocument" },
-        { vim.inspect({ _, result }) },
-        { "\n", "NONE" },
-      }, true, {})
-      error("Unsupported OS: vim.ui.open exists but failed to execute.")
-    else
-      vim.api.nvim_echo({
-        { "window/showDocument" },
-        { vim.inspect({ _, result }) },
-        { "\n", "NONE" },
-      }, true, {})
-      error("Unsupported Version: vim.ui.open requires Neovim >= 0.10")
-    end
-  end
-
-  return {
-    success = success,
-  }
 end
 
 return M
