@@ -272,7 +272,7 @@ local function prepare_client_config(overrides)
     name = "copilot",
     capabilities = capabilities,
     get_language_id = function(_, filetype)
-      return util.language_for_file_type(filetype)
+      return require("copilot.client.filetypes").language_for_file_type(filetype)
     end,
     on_init = function(client, initialize_result)
       if M.id == client.id then
@@ -280,7 +280,7 @@ local function prepare_client_config(overrides)
       end
 
       vim.schedule(function()
-        local configurations = util.get_workspace_configurations()
+        local configurations = utils.get_workspace_configurations()
         api.notify_change_configuration(client, configurations)
         logger.trace("workspace configuration", configurations)
 
