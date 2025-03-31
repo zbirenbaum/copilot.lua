@@ -15,7 +15,6 @@ function M.add_workspace_folder(folder_path)
     return false
   end
 
-  -- Normalize path
   folder_path = vim.fn.fnamemodify(folder_path, ":p")
 
   --- @type workspace_folder

@@ -7,4 +7,9 @@ local root_dir = {
   end,
 }
 
+---@param config RootDirFuncOrString
+function root_dir.validate(config)
+  vim.validate("root_dir", config, { "string", "function" })
+end
+
 return root_dir
