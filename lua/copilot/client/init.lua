@@ -1,4 +1,3 @@
-local api = require("copilot.api")
 local config = require("copilot.config")
 local util = require("copilot.util")
 local logger = require("copilot.logger")
@@ -7,11 +6,15 @@ local utils = require("copilot.client.utils")
 
 local is_disabled = false
 
+---@class CopilotClient
+---@field id integer|nil
+---@field capabilities lsp.ClientCapabilities | nil
+---@field config vim.lsp.ClientConfig | nil
+---@field startup_error string | nil
+---@field initialized boolean
 local M = {
   augroup = "copilot.client",
   id = nil,
-  --- @class copilot_capabilities:lsp.ClientCapabilities
-  --- @field workspace table<'workspaceFolders', boolean>
   capabilities = nil,
   config = nil,
   startup_error = nil,
@@ -141,182 +144,6 @@ function M.use_client(callback)
   )
 end
 
-local function get_handlers()
-  local handlers = {
-    PanelSolution = api.handlers.PanelSolution,
-    PanelSolutionsDone = api.handlers.PanelSolutionsDone,
-    statusNotification = api.handlers.statusNotification,
-    ["window/showDocument"] = util.show_document,
-  }
-
-  -- optional handlers
-  local logger_conf = config.logger
-  if logger_conf.trace_lsp ~= "off" then
-    handlers = vim.tbl_extend("force", handlers, {
-      ["$/logTrace"] = logger.handle_lsp_trace,
-    })
-  end
-
-  if logger_conf.trace_lsp_progress then
-    handlers = vim.tbl_extend("force", handlers, {
-      ["$/progress"] = logger.handle_lsp_progress,
-    })
-  end
-
-  if logger_conf.log_lsp_messages then
-    handlers = vim.tbl_extend("force", handlers, {
-      ["window/logMessage"] = logger.handle_log_lsp_messages,
-    })
-  end
-
-  return handlers
-end
-
-local function prepare_client_config(overrides)
-  if lsp.binary.initialization_failed then
-    M.startup_error = "initialization of copilot-language-server failed"
-    return
-  end
-
-  M.startup_error = nil
-
-  local server_path = nil
-  local cmd = nil
-
-  if config.server.custom_server_filepath and vim.fn.filereadable(config.server.custom_server_filepath) then
-    server_path = config.server.custom_server_filepath
-  end
-
-  if config.server.type == "nodejs" then
-    cmd = {
-      lsp.nodejs.node_command,
-      server_path or lsp.nodejs.get_server_path(),
-      "--stdio",
-    }
-  elseif config.server.type == "binary" then
-    cmd = {
-      server_path or lsp.binary.get_server_path(),
-      "--stdio",
-    }
-  end
-
-  if not cmd then
-    logger.error("copilot server type not supported")
-    return
-  end
-
-  local capabilities = vim.lsp.protocol.make_client_capabilities() --[[@as copilot_capabilities]]
-  capabilities.window.showDocument.support = true
-
-  capabilities.workspace = {
-    workspaceFolders = true,
-  }
-
-  local root_dir = utils.get_root_dir(config.root_dir)
-  local workspace_folders = {
-    --- @type workspace_folder
-    {
-      uri = vim.uri_from_fname(root_dir),
-      -- important to keep root_dir as-is for the name as lsp.lua uses this to check the workspace has not changed
-      name = root_dir,
-    },
-  }
-
-  local config_workspace_folders = config.workspace_folders
-
-  for _, config_workspace_folder in ipairs(config_workspace_folders) do
-    if config_workspace_folder ~= "" then
-      table.insert(
-        workspace_folders,
-        --- @type workspace_folder
-        {
-          uri = vim.uri_from_fname(config_workspace_folder),
-          name = config_workspace_folder,
-        }
-      )
-    end
-  end
-
-  local editor_info = util.get_editor_info()
-  local provider_url = config.auth_provider_url
-  local proxy_uri = vim.g.copilot_proxy
-
-  local settings = { ---@type copilot_settings
-    telemetry = { ---@type github_settings_telemetry
-      telemetryLevel = "all",
-    },
-  }
-
-  if proxy_uri then
-    vim.tbl_extend("force", settings, {
-      http = { ---@type copilot_settings_http
-        proxy = proxy_uri,
-        proxyStrictSSL = vim.g.copilot_proxy_strict_ssl or false,
-        proxyKerberosServicePrincipal = nil,
-      },
-    })
-  end
-
-  if provider_url then
-    vim.tbl_extend("force", settings, {
-      ["github-enterprise"] = { ---@type copilot_settings_github-enterprise
-        uri = provider_url,
-      },
-    })
-  end
-
-  -- LSP config, not to be confused with config.lua
-  return vim.tbl_deep_extend("force", {
-    cmd = cmd,
-    root_dir = root_dir,
-    name = "copilot",
-    capabilities = capabilities,
-    get_language_id = function(_, filetype)
-      return require("copilot.client.filetypes").language_for_file_type(filetype)
-    end,
-    on_init = function(client, initialize_result)
-      if M.id == client.id then
-        M.capabilities = initialize_result.capabilities
-      end
-
-      vim.schedule(function()
-        local configurations = utils.get_workspace_configurations()
-        api.notify_change_configuration(client, configurations)
-        logger.trace("workspace configuration", configurations)
-
-        -- to activate tracing if we want it
-        local logger_conf = config.logger
-        local trace_params = { value = logger_conf.trace_lsp } --[[@as copilot_nofify_set_trace_params]]
-        api.notify_set_trace(client, trace_params)
-
-        -- prevent requests to copilot prior to being initialized
-        M.initialized = true
-      end)
-    end,
-    on_exit = function(code, _, client_id)
-      if M.id == client_id then
-        vim.schedule(function()
-          M.teardown()
-          M.id = nil
-          M.capabilities = nil
-        end)
-      end
-      if code > 0 then
-        vim.schedule(function()
-          require("copilot.command").status()
-        end)
-      end
-    end,
-    handlers = get_handlers(),
-    init_options = {
-      editorInfo = editor_info.editorInfo,
-      editorPluginInfo = editor_info.editorPluginInfo,
-    },
-    settings = settings,
-    workspace_folders = workspace_folders,
-  }, overrides)
-end
-
 function M.setup()
   local node_command = config.copilot_node_command
 
@@ -327,7 +154,7 @@ function M.setup()
     lsp.binary.setup(config.server.custom_server_filepath)
   end
 
-  M.config = prepare_client_config(config.server_opts_overrides)
+  M.config = require("copilot.client.config").prepare_client_config(config.server_opts_overrides, M)
 
   if not M.config then
     is_disabled = true
