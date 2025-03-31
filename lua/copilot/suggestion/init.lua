@@ -5,11 +5,7 @@ local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
 local logger = require("copilot.logger")
 
-local _, has_nvim_0_10_x = pcall(function()
-  return vim.version().minor >= 10
-end)
-
-local mod = {}
+local M = {}
 
 ---@alias copilot_suggestion_context { first?: integer, cycling?: integer, cycling_callbacks?: (fun(ctx: copilot_suggestion_context):nil)[], params?: table, suggestions?: copilot_get_completions_data_completion[], choice?: integer, shown_choices?: table<string, true> }
 
@@ -74,35 +70,35 @@ end
 
 local function set_keymap(keymap)
   if keymap.accept then
-    vim.keymap.set("i", keymap.accept, mod.accept, {
+    vim.keymap.set("i", keymap.accept, M.accept, {
       desc = "[copilot] accept suggestion",
       silent = true,
     })
   end
 
   if keymap.accept_word then
-    vim.keymap.set("i", keymap.accept_word, mod.accept_word, {
+    vim.keymap.set("i", keymap.accept_word, M.accept_word, {
       desc = "[copilot] accept suggestion (word)",
       silent = true,
     })
   end
 
   if keymap.accept_line then
-    vim.keymap.set("i", keymap.accept_line, mod.accept_line, {
+    vim.keymap.set("i", keymap.accept_line, M.accept_line, {
       desc = "[copilot] accept suggestion (line)",
       silent = true,
     })
   end
 
   if keymap.next then
-    vim.keymap.set("i", keymap.next, mod.next, {
+    vim.keymap.set("i", keymap.next, M.next, {
       desc = "[copilot] next suggestion",
       silent = true,
     })
   end
 
   if keymap.prev then
-    vim.keymap.set("i", keymap.prev, mod.prev, {
+    vim.keymap.set("i", keymap.prev, M.prev, {
       desc = "[copilot] prev suggestion",
       silent = true,
     })
@@ -110,8 +106,8 @@ local function set_keymap(keymap)
 
   if keymap.dismiss then
     vim.keymap.set("i", keymap.dismiss, function()
-      if mod.is_visible() then
-        mod.dismiss()
+      if M.is_visible() then
+        M.dismiss()
         return "<Ignore>"
       else
         return keymap.dismiss
@@ -441,7 +437,7 @@ local function schedule(ctx)
   end)
 end
 
-function mod.next()
+function M.next()
   local ctx = get_ctx()
   logger.trace("suggestion next", ctx)
 
@@ -457,7 +453,7 @@ function mod.next()
   end, ctx)
 end
 
-function mod.prev()
+function M.prev()
   local ctx = get_ctx()
   logger.trace("suggestion prev", ctx)
 
@@ -474,7 +470,7 @@ function mod.prev()
 end
 
 ---@param modifier? (fun(suggestion: copilot_get_completions_data_completion): copilot_get_completions_data_completion)
-function mod.accept(modifier)
+function M.accept(modifier)
   local ctx = get_ctx()
   logger.trace("suggestion accept", ctx)
 
@@ -531,15 +527,17 @@ function mod.accept(modifier)
     vim.lsp.util.apply_text_edits({ { range = range, newText = newText } }, bufnr, encoding)
     -- Put cursor at the end of current line.
     local cursor_keys = "<End>"
-    if has_nvim_0_10_x then
+
+    -- TODO: Move to util and check only once
+    if vim.fn.has("nvim-0.11") == 1 then
       cursor_keys = string.rep("<Down>", #vim.split(newText, "\n", { plain = true }) - 1) .. cursor_keys
     end
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(cursor_keys, true, false, true), "n", false)
   end)()
 end
 
-function mod.accept_word()
-  mod.accept(function(suggestion)
+function M.accept_word()
+  M.accept(function(suggestion)
     local range, text = suggestion.range, suggestion.text
 
     local cursor = vim.api.nvim_win_get_cursor(0)
@@ -557,8 +555,8 @@ function mod.accept_word()
   end)
 end
 
-function mod.accept_line()
-  mod.accept(function(suggestion)
+function M.accept_line()
+  M.accept(function(suggestion)
     local text = suggestion.text
 
     local cursor = vim.api.nvim_win_get_cursor(0)
@@ -574,19 +572,19 @@ function mod.accept_line()
   end)
 end
 
-function mod.dismiss()
+function M.dismiss()
   local ctx = get_ctx()
   reject()
   clear(ctx)
   update_preview(ctx)
 end
 
-function mod.is_visible()
+function M.is_visible()
   return not not vim.api.nvim_buf_get_extmark_by_id(0, copilot.ns_id, copilot.extmark_id, { details = false })[1]
 end
 
 -- toggles auto trigger for the current buffer
-function mod.toggle_auto_trigger()
+function M.toggle_auto_trigger()
   vim.b.copilot_suggestion_auto_trigger = not should_auto_trigger()
 end
 
@@ -701,7 +699,7 @@ local function create_autocmds()
   })
 end
 
-function mod.setup()
+function M.setup()
   local opts = config.suggestion
   if not opts.enabled then
     return
@@ -722,7 +720,7 @@ function mod.setup()
   copilot.setup_done = true
 end
 
-function mod.teardown()
+function M.teardown()
   local opts = config.suggestion
   if not opts.enabled then
     return
@@ -739,4 +737,4 @@ function mod.teardown()
   copilot.setup_done = false
 end
 
-return mod
+return M

@@ -28,6 +28,8 @@ vim.api.nvim_create_user_command("Copilot", function(opts)
       action_name = "open"
     elseif mod_name == "suggestion" then
       action_name = "toggle_auto_trigger"
+    elseif mod_name == "status" then
+      action_name = "status"
     end
   end
 
