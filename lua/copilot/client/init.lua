@@ -95,7 +95,7 @@ end
 ---@param callback fun(client:table):nil
 function M.use_client(callback)
   if is_disabled then
-    logger.warn("copilot is offline")
+    logger.notify("copilot is offline")
     return
   end
 
@@ -124,24 +124,30 @@ function M.use_client(callback)
     return
   end
 
-  local timer, err, _ = vim.uv.new_timer()
-
-  if not timer then
-    logger.error(string.format("error creating timer: %s", err))
-    return
-  end
-
-  timer:start(
-    0,
-    100,
-    vim.schedule_wrap(function()
-      if client.initialized and not timer:is_closing() then
-        timer:stop()
-        timer:close()
-        callback(client)
-      end
-    end)
-  )
+  logger.error("client is not initialized yet")
+  -- Following code is commented out for now because 1) I am hopint it is not needed anymore and
+  -- 2) It causes issues with testing >_<
+  --
+  -- local timer, err, _ = vim.uv.new_timer()
+  --
+  -- if not timer then
+  --   logger.error(string.format("error creating timer: %s", err))
+  --   return
+  -- end
+  --
+  -- timer:start(
+  --   0,
+  --   100,
+  --   vim.schedule_wrap(function()
+  --     if client.initialized and not timer:is_closing() then
+  --       timer:stop()
+  --       timer:close()
+  --       callback(client)
+  --     else
+  --       logger.error("client not initialized yet")
+  --     end
+  --   end)
+  -- )
 end
 
 function M.setup()

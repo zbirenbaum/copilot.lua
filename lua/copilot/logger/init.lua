@@ -24,7 +24,7 @@ local function get_timestamp_with_ms()
 end
 
 ---@param log_level integer --vim.log.levels
----@param msg string
+---@param msg string|string[]
 ---@param ... any
 ---@return string log_msg
 local function format_log(log_level, msg, ...)
@@ -47,7 +47,7 @@ local function format_log(log_level, msg, ...)
 end
 
 ---@param log_level integer -- one of the vim.log.levels
----@param msg string
+---@param msg string|string[]
 ---@param ... any
 local function notify_log(log_level, msg, ...)
   local log_msg = format_log(log_level, msg, ...)
@@ -56,7 +56,7 @@ end
 
 ---@param log_level integer -- one of the vim.log.levels
 ---@param log_file string
----@param msg string
+---@param msg string|string[]
 ---@param ... any
 local function write_log(log_level, log_file, msg, ...)
   local log_msg = format_log(log_level, msg, ...) .. "\n"
@@ -78,14 +78,14 @@ local function write_log(log_level, log_file, msg, ...)
 end
 
 ---@param log_level integer -- one of the vim.log.levels
----@param msg string
+---@param msg string|string[]
 ---@param ... any
 function M.log(log_level, msg, ...)
   M.log_force(log_level, msg, false, ...)
 end
 
 ---@param log_level integer -- one of the vim.log.levels
----@param msg string
+---@param msg string|string[]
 ---@param ... any
 ---@param force_print boolean
 function M.log_force(log_level, msg, force_print, ...)
@@ -98,37 +98,37 @@ function M.log_force(log_level, msg, force_print, ...)
   end
 end
 
----@param msg string
+---@param msg string|string[]
 ---@param ... any
 function M.debug(msg, ...)
   M.log(vim.log.levels.DEBUG, msg, ...)
 end
 
----@param msg string
+---@param msg string|string[]
 ---@param ... any
 function M.trace(msg, ...)
   M.log(vim.log.levels.TRACE, msg, ...)
 end
 
----@param msg string
+---@param msg string|string[]
 ---@param ... any
 function M.error(msg, ...)
   M.log(vim.log.levels.ERROR, msg, ...)
 end
 
----@param msg string
+---@param msg string|string[]
 ---@param ... any
 function M.warn(msg, ...)
   M.log(vim.log.levels.WARN, msg, ...)
 end
 
----@param msg string
+---@param msg string|string[]
 ---@param ... any
 function M.info(msg, ...)
   M.log(vim.log.levels.INFO, msg, ...)
 end
 
----@param msg string
+---@param msg string|string[]
 ---@param ... any
 function M.notify(msg, ...)
   M.log_force(vim.log.levels.INFO, msg, true, ...)

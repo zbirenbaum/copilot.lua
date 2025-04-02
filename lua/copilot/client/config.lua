@@ -84,7 +84,7 @@ function M.prepare_client_config(overrides, client)
   }
 
   if proxy_uri then
-    vim.tbl_extend("force", settings, {
+    settings = vim.tbl_extend("force", settings, {
       http = { ---@type copilot_settings_http
         proxy = proxy_uri,
         proxyStrictSSL = vim.g.copilot_proxy_strict_ssl or false,
@@ -94,7 +94,7 @@ function M.prepare_client_config(overrides, client)
   end
 
   if provider_url then
-    vim.tbl_extend("force", settings, {
+    settings = vim.tbl_extend("force", settings, {
       ["github-enterprise"] = { ---@type copilot_settings_github-enterprise
         uri = provider_url,
       },

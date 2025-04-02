@@ -1,6 +1,7 @@
 local u = require("copilot.util")
 local c = require("copilot.client")
 local a = require("copilot.api")
+local logger = require("copilot.logger")
 ---@alias copilot_status_notification_data { status: ''|'Normal'|'InProgress'|'Warning', message: string }
 
 local M = {
@@ -39,6 +40,7 @@ function M.unregister_status_notification_handler(handler)
 end
 
 function M.status()
+  logger.trace("Status called")
   local lines = {}
 
   local function add_line(line)
@@ -57,7 +59,7 @@ function M.status()
       add_line({ c.startup_error, "WarningMsg" })
     end
 
-    vim.api.nvim_echo(lines, true, {})
+    logger.notify(lines)
   end
 
   if c.is_disabled() then
@@ -73,46 +75,46 @@ function M.status()
 
   add_line("Online")
 
-  coroutine.wrap(function()
-    local cserr, status = a.check_status(client)
-    if cserr then
-      flush_lines(cserr)
-      return
-    end
+  -- coroutine.wrap(function()
+  local cserr, status = a.check_status(client)
+  if cserr then
+    flush_lines(cserr)
+    return
+  end
 
-    if not status.user then
-      flush_lines("Not authenticated. Run ':Copilot auth'")
-      return
-    elseif status.status == "NoTelemetryConsent" then
-      flush_lines("Telemetry terms not accepted")
-      return
-    elseif status.status == "NotAuthorized" then
-      flush_lines("Not authorized")
-      return
-    end
+  if not status.user then
+    flush_lines("Not authenticated. Run ':Copilot auth'")
+    return
+  elseif status.status == "NoTelemetryConsent" then
+    flush_lines("Telemetry terms not accepted")
+    return
+  elseif status.status == "NotAuthorized" then
+    flush_lines("Not authorized")
+    return
+  end
 
-    local should_attach, no_attach_reason = u.should_attach()
-    local is_attached = c.buf_is_attached()
-    if is_attached then
-      if not should_attach then
-        add_line("Enabled manually (" .. no_attach_reason .. ")")
-      else
-        add_line("Enabled for " .. vim.bo.filetype)
-      end
-    elseif not is_attached then
-      if should_attach then
-        add_line("Disabled manually for " .. vim.bo.filetype)
-      else
-        add_line("Disabled (" .. no_attach_reason .. ")")
-      end
+  local should_attach, no_attach_reason = u.should_attach()
+  local is_attached = c.buf_is_attached()
+  if is_attached then
+    if not should_attach then
+      add_line("Enabled manually (" .. no_attach_reason .. ")")
+    else
+      add_line("Enabled for " .. vim.bo.filetype)
     end
-
-    if string.lower(M.data.status) == "error" then
-      add_line(M.data.message)
+  elseif not is_attached then
+    if should_attach then
+      add_line("Disabled manually for " .. vim.bo.filetype)
+    else
+      add_line("Disabled (" .. no_attach_reason .. ")")
     end
+  end
 
-    flush_lines()
-  end)()
+  if string.lower(M.data.status) == "error" then
+    add_line(M.data.message)
+  end
+
+  flush_lines()
+  -- end)()
 end
 
 return M

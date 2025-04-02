@@ -1,6 +1,7 @@
 local a = require("copilot.api")
 local c = require("copilot.client")
 local u = require("copilot.util")
+local logger = require("copilot.logger")
 
 local M = {}
 
@@ -32,7 +33,7 @@ function M.version()
       chunks[#chunks + 1] = { "\n", "NONE" }
     end
 
-    vim.api.nvim_echo(chunks, true, {})
+    logger.notify(chunks)
   end)()
 end
 
