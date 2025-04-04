@@ -44,6 +44,12 @@ gh auth token
 Set either the environment variable `GITHUB_COPILOT_TOKEN` or `GH_COPILOT_TOKEN` to that token.
 Note that if you have the variable set, even empty, the LSP will attempt to use it to log in.
 
+#### Authentication with Alternate GitHub Instances
+
+If your access to Copilot is not provided by the public GitHub instance, you can set your
+authentication provider to a custom URL with the corresponding config key e.g.
+`auth_provider_url = "https://mycorp.ghe.com/"`.
+
 ## Setup and Configuration
 
 You have to run the `require("copilot").setup(options)` function in order to start Copilot.
@@ -107,6 +113,7 @@ require('copilot').setup({
     cvs = false,
     ["."] = false,
   },
+  auth_provider_url = nil, -- URL to authentication provider, if not "https://github.com/"
   logger = {
     file = vim.fn.stdpath("log") .. "/copilot-lua.log",
     file_log_level = vim.log.levels.OFF,
