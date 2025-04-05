@@ -51,4 +51,83 @@ T["suggestion()"]["suggestion works"] = function()
   reference_screenshot(child.get_screenshot())
 end
 
+T["suggestion()"]["auto_trigger is false, will not show ghost test"] = function()
+  child.o.lines, child.o.columns = 10, 15
+  child.lua([[M.setup({
+    suggestion = {
+      auto_trigger = false,
+    },
+    logger = {
+      file_log_level = vim.log.levels.TRACE,
+      file = "./tests/logs/test_suggestion.log",
+    },
+    filetypes = {
+      ["*"] = true,
+    },
+  })]])
+
+  -- look for a synchronous way to wait for engine to be up
+  vim.loop.sleep(500)
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
+  vim.loop.sleep(3000)
+  child.lua("vim.wait(0)")
+
+  reference_screenshot(child.get_screenshot())
+end
+
+T["suggestion()"]["accept keymap to trigger sugestion"] = function()
+  child.o.lines, child.o.columns = 10, 15
+  child.lua([[M.setup({
+    suggestion = {
+      auto_trigger = false,
+      keymap = {
+        accept = "<Tab>",
+      },
+    },
+    logger = {
+      file_log_level = vim.log.levels.TRACE,
+      file = "./tests/logs/test_suggestion.log",
+    },
+    filetypes = {
+      ["*"] = true,
+    },
+  })]])
+
+  -- look for a synchronous way to wait for engine to be up
+  vim.loop.sleep(500)
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<Tab>")
+  vim.loop.sleep(3000)
+  child.lua("vim.wait(0)")
+
+  reference_screenshot(child.get_screenshot())
+end
+
+T["suggestion()"]["accept keymap, no suggestion, execute normal keystroke"] = function()
+  child.o.lines, child.o.columns = 10, 15
+  child.lua([[M.setup({
+    suggestion = {
+      auto_trigger = false,
+      trigger_on_accept = false,
+      keymap = {
+        accept = "<Tab>",
+      },
+    },
+    logger = {
+      file_log_level = vim.log.levels.TRACE,
+      file = "./tests/logs/test_suggestion.log",
+    },
+    filetypes = {
+      ["*"] = true,
+    },
+  })]])
+
+  -- look for a synchronous way to wait for engine to be up
+  vim.loop.sleep(500)
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<Tab>")
+  vim.loop.sleep(3000)
+  child.lua("vim.wait(0)")
+
+  reference_screenshot(child.get_screenshot())
+end
+
 return T

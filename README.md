@@ -93,6 +93,7 @@ require('copilot').setup({
     auto_trigger = false,
     hide_during_completion = true,
     debounce = 75,
+    trigger_on_accept = true,
     keymap = {
       accept = "<M-l>",
       accept_word = false,
@@ -171,6 +172,7 @@ require("copilot.panel").refresh()
 
 When `auto_trigger` is `true`, copilot starts suggesting as soon as you enter insert mode.
 When `auto_trigger` is `false`, use the `next`, `prev` or `accept` keymap to trigger copilot suggestion.
+When `trigger_on_accept` is `false`, the keypress will be passed to the buffer as-is, instead of triggering completion.
 
 To toggle auto trigger for the current buffer, use `require("copilot.suggestion").toggle_auto_trigger()`.
 
