@@ -1,54 +1,38 @@
-local a = require("copilot.api")
 local c = require("copilot.client")
 local u = require("copilot.util")
 local logger = require("copilot.logger")
+local lsp = require("copilot.lsp")
 
 local M = {}
 
 function M.version()
   local info = u.get_editor_info()
 
-  ---@type (string|table)[]
+  ---@type string
   local lines = {
     info.editorInfo.name .. " " .. info.editorInfo.version,
-    "copilot.vim" .. " " .. info.editorPluginInfo.version,
+    "copilot language server" .. " " .. info.editorPluginInfo.version,
     "copilot.lua" .. " " .. u.get_copilot_lua_version(),
   }
 
   local client = c.get()
 
   coroutine.wrap(function()
-    -- TODO: this is now in lsp/*
-    local copilot_server_info = u.get_copilot_server_info()
-    if client then
-      local _, data = a.get_version(client)
-      lines[#lines + 1] = copilot_server_info.path .. "/" .. copilot_server_info().filename .. " " .. data.version
-    else
-      lines[#lines + 1] = copilot_server_info.path .. "/" .. copilot_server_info().filename .. " " .. "not running"
-    end
-
-    local chunks = {}
-    for _, line in ipairs(lines) do
-      chunks[#chunks + 1] = type(line) == "table" and line or { line }
-      chunks[#chunks + 1] = { "\n", "NONE" }
-    end
-
-    logger.notify(chunks)
+    local server_info = lsp.get_server_info(client)
+    logger.notify(lines .. "\n" .. server_info)
   end)()
 end
 
 ---@param opts? { force?: boolean }
 function M.attach(opts)
+  logger.trace("attaching to buffer")
   opts = opts or {}
 
   if not opts.force then
     local should_attach, no_attach_reason = u.should_attach()
-    -- TODO: add other should_attach method here
+
     if not should_attach then
-      vim.api.nvim_echo({
-        { "[Copilot] " .. no_attach_reason .. "\n" },
-        { "[Copilot] to force attach, run ':Copilot! attach'" },
-      }, true, {})
+      logger.notify(no_attach_reason .. "\nto force attach, run ':Copilot! attach'")
       return
     end
 
@@ -77,12 +61,14 @@ function M.toggle(opts)
 end
 
 function M.enable()
+  logger.trace("enabling Copilot")
   c.setup()
   require("copilot.panel").setup()
   require("copilot.suggestion").setup()
 end
 
 function M.disable()
+  logger.trace("disabling Copilot")
   c.teardown()
   require("copilot.panel").teardown()
   require("copilot.suggestion").teardown()

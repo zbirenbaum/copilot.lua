@@ -41,22 +41,27 @@ end
 
 function M.status()
   logger.trace("Status called")
-  local lines = {}
+  local lines = "Status:"
 
+  ---@param line string|nil
   local function add_line(line)
     if not line then
       return
     end
 
-    lines[#lines + 1] = type(line) == "table" and { "[Copilot] " .. line[1], line[2] } or { "[Copilot] " .. line }
-    lines[#lines + 1] = { "\n", "NONE" }
+    if lines ~= "" then
+      lines = lines .. "\n" .. line
+    else
+      lines = line
+    end
   end
 
+  ---@param last_line string|nil
   local function flush_lines(last_line)
     add_line(last_line)
 
     if c.startup_error then
-      add_line({ c.startup_error, "WarningMsg" })
+      add_line(c.startup_error)
     end
 
     logger.notify(lines)
@@ -75,46 +80,52 @@ function M.status()
 
   add_line("Online")
 
-  -- coroutine.wrap(function()
-  local cserr, status = a.check_status(client)
-  if cserr then
-    flush_lines(cserr)
-    return
-  end
-
-  if not status.user then
-    flush_lines("Not authenticated. Run ':Copilot auth'")
-    return
-  elseif status.status == "NoTelemetryConsent" then
-    flush_lines("Telemetry terms not accepted")
-    return
-  elseif status.status == "NotAuthorized" then
-    flush_lines("Not authorized")
-    return
-  end
-
-  local should_attach, no_attach_reason = u.should_attach()
-  local is_attached = c.buf_is_attached()
-  if is_attached then
-    if not should_attach then
-      add_line("Enabled manually (" .. no_attach_reason .. ")")
-    else
-      add_line("Enabled for " .. vim.bo.filetype)
+  coroutine.wrap(function()
+    local cserr, status = a.check_status(client)
+    if cserr then
+      flush_lines(cserr)
+      return
     end
-  elseif not is_attached then
-    if should_attach then
-      add_line("Disabled manually for " .. vim.bo.filetype)
-    else
-      add_line("Disabled (" .. no_attach_reason .. ")")
+
+    if not status.user then
+      flush_lines("Not authenticated. Run ':Copilot auth'")
+      return
+    elseif status.status == "NoTelemetryConsent" then
+      flush_lines("Telemetry terms not accepted")
+      return
+    elseif status.status == "NotAuthorized" then
+      flush_lines("Not authorized")
+      return
     end
-  end
 
-  if string.lower(M.data.status) == "error" then
-    add_line(M.data.message)
-  end
+    local should_attach, no_attach_reason = u.should_attach()
+    local is_attached = c.buf_is_attached()
+    if is_attached then
+      if not should_attach then
+        add_line("Enabled manually (" .. no_attach_reason .. ")")
+      elseif vim.bo.filetype and vim.bo.filetype ~= "" then
+        add_line("Enabled for " .. vim.bo.filetype)
+      else
+        add_line("Enabled")
+      end
+    elseif not is_attached then
+      if should_attach then
+        if vim.bo.filetype and vim.bo.filetype ~= "" then
+          add_line("Disabled manually for " .. vim.bo.filetype)
+        else
+          add_line("Disabled manually")
+        end
+      else
+        add_line("Disabled (" .. no_attach_reason .. ")")
+      end
+    end
 
-  flush_lines()
-  -- end)()
+    if string.lower(M.data.status) == "error" then
+      add_line(M.data.message)
+    end
+
+    flush_lines()
+  end)()
 end
 
 return M

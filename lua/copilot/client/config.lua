@@ -16,25 +16,7 @@ function M.prepare_client_config(overrides, client)
 
   client.startup_error = nil
 
-  local server_path = nil
-  local cmd = nil
-
-  if config.server.custom_server_filepath and vim.fn.filereadable(config.server.custom_server_filepath) then
-    server_path = config.server.custom_server_filepath
-  end
-
-  if config.server.type == "nodejs" then
-    cmd = {
-      lsp.nodejs.node_command,
-      server_path or lsp.nodejs.get_server_path(),
-      "--stdio",
-    }
-  elseif config.server.type == "binary" then
-    cmd = {
-      server_path or lsp.binary.get_server_path(),
-      "--stdio",
-    }
-  end
+  local cmd = lsp.get_execute_command()
 
   if not cmd then
     logger.error("copilot server type not supported")

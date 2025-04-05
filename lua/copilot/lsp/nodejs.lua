@@ -6,6 +6,7 @@ local M = {
   node_command = nil,
   ---@type string
   server_path = nil,
+  initialization_failed = false,
 }
 
 ---@return string node_version
@@ -38,6 +39,12 @@ function M.get_node_version()
   return M.node_version, M.node_version_error
 end
 
+---@param _ vim.lsp.Client|nil
+---@return string
+function M.get_server_info(_)
+  return string.format("Node.js %s\nLanguage server: %s\n", M.get_node_version(), M.server_path)
+end
+
 ---@return boolean
 function M.validate_node_version()
   local _, node_version_error = M.get_node_version()
@@ -68,6 +75,7 @@ function M.init_agent_path(server_path)
 
   if not agent_path or vim.fn.filereadable(agent_path) == 0 then
     logger.error(string.format("could not find server (bad install?) : %s", tostring(agent_path)))
+    M.initialization_failed = true
     return false
   end
 
@@ -83,6 +91,15 @@ function M.get_server_path()
   end
 
   return M.server_path
+end
+
+---@return table
+function M.get_execute_command()
+  return {
+    M.node_command,
+    M.server_path or M.get_server_path(),
+    "--stdio",
+  }
 end
 
 ---@param node_command? string

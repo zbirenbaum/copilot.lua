@@ -38,7 +38,8 @@ end
 
 ---@param force? boolean
 function M.buf_attach(force)
-  if lsp.binary.initialization_failed then
+  if lsp.initialization_failed() then
+    logger.error("copilot-language-server failed to initialize")
     M.startup_error = "initialization of copilot-language-server failed"
     return
   end
@@ -48,10 +49,7 @@ function M.buf_attach(force)
     return
   end
 
-  local bufnr = vim.api.nvim_get_current_buf()
-  local bufname = vim.api.nvim_buf_get_name(bufnr)
-
-  if not (force or (config.should_attach(bufnr, bufname) and util.should_attach())) then
+  if not (force or util.should_attach()) then
     logger.debug("not attaching to buffer based on force and should_attach criteria")
     return
   end
@@ -64,6 +62,7 @@ function M.buf_attach(force)
   -- In case it has changed, we update it
   M.config.root_dir = utils.get_root_dir(config.root_dir)
 
+  logger.trace("attaching to buffer")
   local ok, client_id_or_err = pcall(vim.lsp.start, M.config)
   if not ok then
     logger.error(string.format("failed to start LSP client: %s", client_id_or_err))
@@ -75,6 +74,7 @@ function M.buf_attach(force)
   else
     logger.error("LSP client failed to start (no client ID returned)")
   end
+  logger.trace("buffer attached")
 end
 
 function M.buf_detach()
@@ -83,7 +83,7 @@ function M.buf_detach()
   end
 end
 
----@return nil|vim.lsp.Client
+---@return vim.lsp.Client|nil
 function M.get()
   return vim.lsp.get_client_by_id(M.id)
 end
@@ -99,7 +99,7 @@ function M.use_client(callback)
     return
   end
 
-  local client = M.get() --[[@as table]]
+  local client = M.get()
 
   if not client then
     if not M.config then
@@ -125,7 +125,8 @@ function M.use_client(callback)
   end
 
   logger.error("client is not initialized yet")
-  -- Following code is commented out for now because 1) I am hopint it is not needed anymore and
+  -- Following code is commented out for now because:
+  -- 1) I am hoping it is not needed anymore and
   -- 2) It causes issues with testing >_<
   --
   -- local timer, err, _ = vim.uv.new_timer()
@@ -151,15 +152,9 @@ function M.use_client(callback)
 end
 
 function M.setup()
+  logger.trace("setting up client")
   local node_command = config.copilot_node_command
-
-  --TODO: merge the two types into an indirection
-  if config.server.type == "nodejs" then
-    lsp.nodejs.setup(node_command, config.server.custom_server_filepath)
-  elseif config.server.type == "binary" then
-    lsp.binary.setup(config.server.custom_server_filepath)
-  end
-
+  lsp.setup(config.server, node_command)
   M.config = require("copilot.client.config").prepare_client_config(config.server_opts_overrides, M)
 
   if not M.config then
