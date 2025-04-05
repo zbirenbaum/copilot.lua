@@ -46,7 +46,9 @@ function M.merge_with_user_configs(user_configs)
     M[k] = v
   end
 
-  M.validate(M)
+  if vim.fn.has("nvim-0.11") == 1 then
+    M.validate(M)
+  end
 
   initialized = true
 end
