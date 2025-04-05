@@ -5,10 +5,10 @@ local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
 local logger = require("copilot.logger")
 
-local mod = {}
-
+local M = {
+  handlers = require("copilot.panel.handlers"),
+}
 local marker_prefix = "[copilot] "
-
 local panel_uri_prefix = "copilot://"
 
 local panel = {
@@ -259,7 +259,7 @@ end
 
 local function set_keymap(bufnr)
   if panel.keymap.accept then
-    vim.keymap.set("n", panel.keymap.accept, mod.accept, {
+    vim.keymap.set("n", panel.keymap.accept, M.accept, {
       buffer = bufnr,
       desc = "[copilot] (panel) accept",
       silent = true,
@@ -267,7 +267,7 @@ local function set_keymap(bufnr)
   end
 
   if panel.keymap.jump_prev then
-    vim.keymap.set("n", panel.keymap.jump_prev, mod.jump_prev, {
+    vim.keymap.set("n", panel.keymap.jump_prev, M.jump_prev, {
       buffer = bufnr,
       desc = "[copilot] (panel) jump prev",
       silent = true,
@@ -275,7 +275,7 @@ local function set_keymap(bufnr)
   end
 
   if panel.keymap.jump_next then
-    vim.keymap.set("n", panel.keymap.jump_next, mod.jump_next, {
+    vim.keymap.set("n", panel.keymap.jump_next, M.jump_next, {
       buffer = bufnr,
       desc = "[copilot] (panel) jump next",
       silent = true,
@@ -283,7 +283,7 @@ local function set_keymap(bufnr)
   end
 
   if panel.keymap.refresh then
-    vim.keymap.set("n", panel.keymap.refresh, mod.refresh, {
+    vim.keymap.set("n", panel.keymap.refresh, M.refresh, {
       buffer = bufnr,
       desc = "[copilot] (panel) refresh",
       silent = true,
@@ -412,7 +412,7 @@ function panel:refresh()
   end
 
   if self.panelId then
-    api.unregister_panel_handlers(self.panelId)
+    M.handlers.unregister_panel_handlers(self.panelId)
   end
 
   if self.state.req_id then
@@ -423,11 +423,11 @@ function panel:refresh()
   self.req_number = self.req_number + 1
   self.panelId = self.req_number .. ":" .. self.panel_uri
 
-  api.register_panel_handlers(self.panelId, {
+  M.handlers.register_panel_handlers(self.panelId, {
     ---@param result copilot_panel_solution_data
     on_solution = function(result)
       if result.panelId ~= self.panelId then
-        api.unregister_panel_handlers(result.panelId)
+        M.handlers.unregister_panel_handlers(result.panelId)
         return
       end
 
@@ -439,7 +439,7 @@ function panel:refresh()
       self.state.req_id = nil
 
       if result.panelId ~= self.panelId then
-        api.unregister_panel_handlers(result.panelId)
+        M.handlers.unregister_panel_handlers(result.panelId)
         return
       end
 
@@ -502,7 +502,7 @@ function panel:init()
 
   if is_panel_uri(doc.uri) then
     -- currently inside the panel itself
-    mod.refresh()
+    M.refresh()
     return
   end
 
@@ -524,27 +524,27 @@ function panel:init()
   vim.api.nvim_set_current_win(self.winid)
 end
 
-function mod.accept()
+function M.accept()
   panel:accept()
 end
 
-function mod.jump_prev()
+function M.jump_prev()
   panel:jump(-1)
 end
 
-function mod.jump_next()
+function M.jump_next()
   panel:jump(1)
 end
 
-function mod.toggle()
+function M.toggle()
   if panel.winid and vim.api.nvim_win_is_valid(panel.winid) then
     panel:close()
   else
-    mod.open({})
+    M.open({})
   end
 end
 
-function mod.refresh()
+function M.refresh()
   vim.api.nvim_buf_call(vim.uri_to_bufnr(panel_uri_to_doc_uri(panel.panel_uri)), function()
     panel:refresh()
   end)
@@ -553,7 +553,7 @@ end
 ---@param layout {position: string, ratio: number}
 ---position: (optional) 'bottom' | 'top' | 'left' | 'right' | 'horizontal' | 'vertical'
 ---ratio: (optional) between 0 and 1
-function mod.open(layout)
+function M.open(layout)
   local client = c.get()
   if not client then
     logger.error("copilot is not running")
@@ -566,8 +566,8 @@ function mod.open(layout)
   panel:init()
 end
 
-function mod.setup()
-  local opts = config.config.panel
+function M.setup()
+  local opts = config.panel
   if not opts.enabled then
     return
   end
@@ -582,7 +582,7 @@ function mod.setup()
   panel.layout = vim.tbl_deep_extend("force", panel.layout, opts.layout or {})
 
   if panel.keymap.open then
-    vim.keymap.set("i", panel.keymap.open, mod.open, {
+    vim.keymap.set("i", panel.keymap.open, M.open, {
       desc = "[copilot] (panel) open",
       silent = true,
     })
@@ -591,8 +591,8 @@ function mod.setup()
   panel.setup_done = true
 end
 
-function mod.teardown()
-  local opts = config.config.panel
+function M.teardown()
+  local opts = config.panel
   if not opts.enabled then
     return
   end
@@ -610,4 +610,4 @@ function mod.teardown()
   panel.setup_done = false
 end
 
-return mod
+return M

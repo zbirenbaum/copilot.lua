@@ -1,0 +1,5098 @@
+2025-04-04 20:13:31.086 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:13:31.087 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = <function 1>,
+  get_language_id = <function 2>,
+  handlers = {
+    PanelSolution = <function 3>,
+    PanelSolutionsDone = <function 4>,
+    statusNotification = <function 5>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 6>,
+  on_init = <function 7>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:13:31.088 [3] [TRACE]: attaching to buffer
+2025-04-04 20:13:31.089 [4] [ERROR]: LSP client failed to start (no client ID returned)
+2025-04-04 20:13:31.089 [6] [TRACE]: buffer attached
+2025-04-04 20:13:33.100 [7] [TRACE]: suggestion context
+2025-04-04 20:13:33.100 [8] [TRACE]: suggestion new context
+{}
+2025-04-04 20:13:33.100 [9] [TRACE]: suggestion context
+2025-04-04 20:13:33.100 [10] [TRACE]: suggestion new context
+{}
+2025-04-04 20:13:33.085 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:13:33.086 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = <function 1>,
+  get_language_id = <function 2>,
+  handlers = {
+    PanelSolution = <function 3>,
+    PanelSolutionsDone = <function 4>,
+    statusNotification = <function 5>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 6>,
+  on_init = <function 7>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:13:33.087 [3] [TRACE]: attaching to buffer
+2025-04-04 20:13:33.088 [4] [ERROR]: LSP client failed to start (no client ID returned)
+2025-04-04 20:13:33.088 [6] [TRACE]: buffer attached
+2025-04-04 20:13:34.110 [7] [ERROR]: error starting LSP client: nil
+2025-04-04 20:13:34.118 [9] [TRACE]: suggestion context
+2025-04-04 20:13:34.118 [10] [TRACE]: suggestion new context
+{}
+2025-04-04 20:13:34.118 [11] [TRACE]: suggestion context
+2025-04-04 20:13:34.118 [12] [TRACE]: suggestion new context
+{}
+2025-04-04 20:19:57.044 [2] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:19:57.045 [3] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = <function 1>,
+  get_language_id = <function 2>,
+  handlers = {
+    PanelSolution = <function 3>,
+    PanelSolutionsDone = <function 4>,
+    statusNotification = <function 5>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 6>,
+  on_init = <function 7>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:19:57.048 [5] [ERROR]: failed to start LSP client: ...m Files\Neovim\share\nvim\runtime/lua/vim/lsp/client.lua:547: attempt to call field 'request' (a nil value)
+2025-04-04 20:19:57.046 [4] [TRACE]: attaching to buffer
+2025-04-04 20:19:58.066 [7] [TRACE]: suggestion context
+2025-04-04 20:19:58.066 [8] [TRACE]: suggestion new context
+{}
+2025-04-04 20:19:58.066 [9] [TRACE]: suggestion context
+2025-04-04 20:19:58.066 [10] [TRACE]: suggestion new context
+{}
+2025-04-04 20:19:59.047 [2] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:19:59.047 [3] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = <function 1>,
+  get_language_id = <function 2>,
+  handlers = {
+    PanelSolution = <function 3>,
+    PanelSolutionsDone = <function 4>,
+    statusNotification = <function 5>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 6>,
+  on_init = <function 7>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:19:59.048 [4] [TRACE]: attaching to buffer
+2025-04-04 20:19:59.050 [5] [ERROR]: failed to start LSP client: ...m Files\Neovim\share\nvim\runtime/lua/vim/lsp/client.lua:547: attempt to call field 'request' (a nil value)
+2025-04-04 20:20:00.068 [7] [ERROR]: client is not initialized yet
+2025-04-04 20:20:00.068 [9] [ERROR]: client not initialized yet
+2025-04-04 20:20:00.070 [11] [TRACE]: suggestion context
+2025-04-04 20:20:00.070 [12] [TRACE]: suggestion new context
+{}
+2025-04-04 20:20:00.070 [13] [TRACE]: suggestion context
+2025-04-04 20:20:00.070 [14] [TRACE]: suggestion new context
+{}
+2025-04-04 20:21:57.091 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:21:57.092 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = <function 1>,
+  get_language_id = <function 2>,
+  handlers = {
+    PanelSolution = <function 3>,
+    PanelSolutionsDone = <function 4>,
+    statusNotification = <function 5>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 6>,
+  on_init = <function 7>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:21:57.093 [3] [TRACE]: attaching to buffer
+2025-04-04 20:21:57.095 [4] [ERROR]: failed to start LSP client: ...m Files\Neovim\share\nvim\runtime/lua/vim/lsp/client.lua:547: attempt to call field 'request' (a nil value)
+2025-04-04 20:21:58.104 [6] [TRACE]: suggestion context
+2025-04-04 20:21:58.104 [9] [TRACE]: suggestion new context
+{}
+2025-04-04 20:21:58.104 [8] [TRACE]: suggestion context
+2025-04-04 20:21:58.104 [7] [TRACE]: suggestion new context
+{}
+2025-04-04 20:21:58.084 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:21:58.085 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = <function 1>,
+  get_language_id = <function 2>,
+  handlers = {
+    PanelSolution = <function 3>,
+    PanelSolutionsDone = <function 4>,
+    statusNotification = <function 5>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 6>,
+  on_init = <function 7>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:21:58.086 [3] [TRACE]: attaching to buffer
+2025-04-04 20:21:58.088 [4] [ERROR]: failed to start LSP client: ...m Files\Neovim\share\nvim\runtime/lua/vim/lsp/client.lua:547: attempt to call field 'request' (a nil value)
+2025-04-04 20:21:59.102 [6] [ERROR]: client is not initialized yet
+2025-04-04 20:21:59.102 [8] [ERROR]: client not initialized yet
+2025-04-04 20:21:59.106 [10] [TRACE]: suggestion context
+2025-04-04 20:21:59.106 [11] [TRACE]: suggestion new context
+{}
+2025-04-04 20:21:59.106 [13] [TRACE]: suggestion new context
+{}
+2025-04-04 20:21:59.106 [12] [TRACE]: suggestion context
+2025-04-04 20:22:49.085 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:22:49.086 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = <function 1>,
+  get_language_id = <function 2>,
+  handlers = {
+    PanelSolution = <function 3>,
+    PanelSolutionsDone = <function 4>,
+    statusNotification = <function 5>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 6>,
+  on_init = <function 7>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:22:49.087 [3] [TRACE]: attaching to buffer
+2025-04-04 20:22:49.089 [4] [ERROR]: failed to start LSP client: ...m Files\Neovim\share\nvim\runtime/lua/vim/lsp/client.lua:547: attempt to call field 'request' (a nil value)
+2025-04-04 20:22:50.114 [6] [TRACE]: suggestion context
+2025-04-04 20:22:50.114 [7] [TRACE]: suggestion new context
+{}
+2025-04-04 20:22:50.114 [8] [TRACE]: suggestion context
+2025-04-04 20:22:50.114 [9] [TRACE]: suggestion new context
+{}
+2025-04-04 20:22:50.081 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:22:50.082 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = <function 1>,
+  get_language_id = <function 2>,
+  handlers = {
+    PanelSolution = <function 3>,
+    PanelSolutionsDone = <function 4>,
+    statusNotification = <function 5>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 6>,
+  on_init = <function 7>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:22:50.083 [3] [TRACE]: attaching to buffer
+2025-04-04 20:22:50.085 [4] [ERROR]: failed to start LSP client: ...m Files\Neovim\share\nvim\runtime/lua/vim/lsp/client.lua:547: attempt to call field 'request' (a nil value)
+2025-04-04 20:22:51.098 [6] [ERROR]: client not initialized yet
+2025-04-04 20:22:51.098 [8] [TRACE]: suggestion context
+2025-04-04 20:22:51.098 [9] [TRACE]: suggestion new context
+{}
+2025-04-04 20:22:51.100 [11] [TRACE]: suggestion new context
+{}
+2025-04-04 20:22:51.098 [10] [TRACE]: suggestion context
+2025-04-04 20:24:14.083 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:24:14.083 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = <function 1>,
+  get_language_id = <function 2>,
+  handlers = {
+    PanelSolution = <function 3>,
+    PanelSolutionsDone = <function 4>,
+    statusNotification = <function 5>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 6>,
+  on_init = <function 7>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:24:14.085 [3] [TRACE]: attaching to buffer
+2025-04-04 20:24:14.087 [4] [ERROR]: failed to start LSP client: ...m Files\Neovim\share\nvim\runtime/lua/vim/lsp/client.lua:547: attempt to call field 'request' (a nil value)
+2025-04-04 20:24:15.114 [6] [TRACE]: suggestion context
+2025-04-04 20:24:15.114 [7] [TRACE]: suggestion new context
+{}
+2025-04-04 20:24:15.114 [8] [TRACE]: suggestion context
+2025-04-04 20:24:15.114 [9] [TRACE]: suggestion new context
+{}
+2025-04-04 20:24:15.081 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:24:15.082 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = <function 1>,
+  get_language_id = <function 2>,
+  handlers = {
+    PanelSolution = <function 3>,
+    PanelSolutionsDone = <function 4>,
+    statusNotification = <function 5>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 6>,
+  on_init = <function 7>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:24:15.085 [4] [ERROR]: failed to start LSP client: ...m Files\Neovim\share\nvim\runtime/lua/vim/lsp/client.lua:547: attempt to call field 'request' (a nil value)
+2025-04-04 20:24:15.083 [3] [TRACE]: attaching to buffer
+2025-04-04 20:24:16.092 [6] [ERROR]: client is not initialized yet
+2025-04-04 20:24:16.094 [8] [TRACE]: suggestion context
+2025-04-04 20:24:16.094 [9] [TRACE]: suggestion new context
+{}
+2025-04-04 20:24:16.094 [10] [TRACE]: suggestion context
+2025-04-04 20:24:16.094 [11] [TRACE]: suggestion new context
+{}
+2025-04-04 20:28:41.085 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:28:41.086 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = { "node", "C:\\Users\\antoi\\AppData\\Local\\nvim-data\\lazy\\copilot.lua\\copilot\\js\\language-server.js", "--stdio" },
+  get_language_id = <function 1>,
+  handlers = {
+    PanelSolution = <function 2>,
+    PanelSolutionsDone = <function 3>,
+    statusNotification = <function 4>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 5>,
+  on_init = <function 6>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:28:41.088 [4] [TRACE]: config
+{ "node", "C:\\Users\\antoi\\AppData\\Local\\nvim-data\\lazy\\copilot.lua\\copilot\\js\\language-server.js", "--stdio" }
+2025-04-04 20:28:41.097 [5] [TRACE]: buffer attached
+2025-04-04 20:28:41.088 [3] [TRACE]: attaching to buffer
+2025-04-04 20:28:41.102 [6] [TRACE]: suggestion context
+2025-04-04 20:28:41.102 [7] [TRACE]: suggestion new context
+{}
+2025-04-04 20:28:41.104 [8] [TRACE]: suggestion context
+2025-04-04 20:28:41.104 [9] [TRACE]: suggestion new context
+{}
+2025-04-04 20:28:41.083 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:28:41.085 [3] [TRACE]: attaching to buffer
+2025-04-04 20:28:41.084 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = { "node", "C:\\Users\\antoi\\AppData\\Local\\nvim-data\\lazy\\copilot.lua\\copilot\\js\\language-server.js", "--stdio" },
+  get_language_id = <function 1>,
+  handlers = {
+    PanelSolution = <function 2>,
+    PanelSolutionsDone = <function 3>,
+    statusNotification = <function 4>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 5>,
+  on_init = <function 6>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:28:41.095 [5] [TRACE]: buffer attached
+2025-04-04 20:28:41.085 [4] [TRACE]: config
+{ "node", "C:\\Users\\antoi\\AppData\\Local\\nvim-data\\lazy\\copilot.lua\\copilot\\js\\language-server.js", "--stdio" }
+2025-04-04 20:28:41.098 [6] [ERROR]: client is not initialized yet
+2025-04-04 20:28:41.100 [8] [TRACE]: suggestion context
+2025-04-04 20:28:41.101 [10] [TRACE]: suggestion context
+2025-04-04 20:28:41.100 [9] [TRACE]: suggestion new context
+{}
+2025-04-04 20:28:41.101 [11] [TRACE]: suggestion new context
+{}
+2025-04-04 20:30:25.082 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:30:25.083 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = { "node", "C:\\Users\\antoi\\AppData\\Local\\nvim-data\\lazy\\copilot.lua\\copilot\\js\\language-server.js", "--stdio" },
+  get_language_id = <function 1>,
+  handlers = {
+    PanelSolution = <function 2>,
+    PanelSolutionsDone = <function 3>,
+    statusNotification = <function 4>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 5>,
+  on_init = <function 6>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:30:25.084 [3] [TRACE]: attaching to buffer
+2025-04-04 20:30:25.095 [4] [TRACE]: buffer attached
+2025-04-04 20:30:25.099 [5] [TRACE]: suggestion context
+2025-04-04 20:30:25.099 [6] [TRACE]: suggestion new context
+{}
+2025-04-04 20:30:25.100 [7] [TRACE]: suggestion context
+2025-04-04 20:30:25.100 [8] [TRACE]: suggestion new context
+{}
+2025-04-04 20:30:25.082 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 20:30:25.083 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = { "node", "C:\\Users\\antoi\\AppData\\Local\\nvim-data\\lazy\\copilot.lua\\copilot\\js\\language-server.js", "--stdio" },
+  get_language_id = <function 1>,
+  handlers = {
+    PanelSolution = <function 2>,
+    PanelSolutionsDone = <function 3>,
+    statusNotification = <function 4>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 5>,
+  on_init = <function 6>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 20:30:25.084 [3] [TRACE]: attaching to buffer
+2025-04-04 20:30:25.094 [4] [TRACE]: buffer attached
+2025-04-04 20:30:25.097 [5] [ERROR]: client is not initialized yet
+2025-04-04 20:30:25.099 [7] [TRACE]: suggestion context
+2025-04-04 20:30:25.099 [8] [TRACE]: suggestion new context
+{}
+2025-04-04 20:30:25.101 [9] [TRACE]: suggestion context
+2025-04-04 20:30:25.101 [10] [TRACE]: suggestion new context
+{}
+2025-04-04 21:23:28.083 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 21:23:28.084 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = { "node", "C:\\Users\\antoi\\AppData\\Local\\nvim-data\\lazy\\copilot.lua\\copilot\\js\\language-server.js", "--stdio" },
+  get_language_id = <function 1>,
+  handlers = {
+    PanelSolution = <function 2>,
+    PanelSolutionsDone = <function 3>,
+    statusNotification = <function 4>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 5>,
+  on_init = <function 6>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 21:23:28.095 [4] [TRACE]: buffer attached
+2025-04-04 21:23:28.085 [3] [TRACE]: attaching to buffer
+2025-04-04 21:23:28.097 [6] [TRACE]: suggestion new context
+{}
+2025-04-04 21:23:28.097 [5] [TRACE]: suggestion context
+2025-04-04 21:23:28.098 [7] [TRACE]: suggestion context
+2025-04-04 21:23:28.098 [8] [TRACE]: suggestion new context
+{}
+2025-04-04 21:23:29.085 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 21:23:29.085 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = { "node", "C:\\Users\\antoi\\AppData\\Local\\nvim-data\\lazy\\copilot.lua\\copilot\\js\\language-server.js", "--stdio" },
+  get_language_id = <function 1>,
+  handlers = {
+    PanelSolution = <function 2>,
+    PanelSolutionsDone = <function 3>,
+    statusNotification = <function 4>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 5>,
+  on_init = <function 6>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 21:23:29.097 [4] [TRACE]: buffer attached
+2025-04-04 21:23:29.087 [3] [TRACE]: attaching to buffer
+2025-04-04 21:23:29.097 [5] [ERROR]: client is not initialized yet
+2025-04-04 21:23:29.098 [7] [TRACE]: suggestion context
+2025-04-04 21:23:29.098 [8] [TRACE]: suggestion new context
+{}
+2025-04-04 21:23:29.100 [10] [TRACE]: suggestion new context
+{}
+2025-04-04 21:23:29.100 [9] [TRACE]: suggestion context
+2025-04-04 21:26:16.081 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 21:26:16.082 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = { "node", "C:\\Users\\antoi\\AppData\\Local\\nvim-data\\lazy\\copilot.lua\\copilot\\js\\language-server.js", "--stdio" },
+  get_language_id = <function 1>,
+  handlers = {
+    PanelSolution = <function 2>,
+    PanelSolutionsDone = <function 3>,
+    statusNotification = <function 4>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 5>,
+  on_init = <function 6>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 21:26:16.093 [4] [TRACE]: buffer attached
+2025-04-04 21:26:16.083 [3] [TRACE]: attaching to buffer
+2025-04-04 21:26:16.096 [5] [TRACE]: suggestion context
+2025-04-04 21:26:16.096 [6] [TRACE]: suggestion new context
+{}
+2025-04-04 21:26:16.097 [7] [TRACE]: suggestion context
+2025-04-04 21:26:16.097 [8] [TRACE]: suggestion new context
+{}
+2025-04-04 21:26:16.082 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 21:26:16.083 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = { "node", "C:\\Users\\antoi\\AppData\\Local\\nvim-data\\lazy\\copilot.lua\\copilot\\js\\language-server.js", "--stdio" },
+  get_language_id = <function 1>,
+  handlers = {
+    PanelSolution = <function 2>,
+    PanelSolutionsDone = <function 3>,
+    statusNotification = <function 4>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 5>,
+  on_init = <function 6>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 21:26:16.094 [4] [TRACE]: buffer attached
+2025-04-04 21:26:16.084 [3] [TRACE]: attaching to buffer
+2025-04-04 21:26:16.097 [5] [ERROR]: client is not initialized yet
+2025-04-04 21:26:16.098 [8] [TRACE]: suggestion new context
+{}
+2025-04-04 21:26:16.098 [7] [TRACE]: suggestion context
+2025-04-04 21:26:16.099 [9] [TRACE]: suggestion context
+2025-04-04 21:26:16.099 [10] [TRACE]: suggestion new context
+{}
+2025-04-04 21:27:04.083 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 21:27:04.084 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = { "node", "C:\\Users\\antoi\\AppData\\Local\\nvim-data\\lazy\\copilot.lua\\copilot\\js\\language-server.js", "--stdio" },
+  get_language_id = <function 1>,
+  handlers = {
+    PanelSolution = <function 2>,
+    PanelSolutionsDone = <function 3>,
+    statusNotification = <function 4>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 5>,
+  on_init = <function 6>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 21:27:04.095 [4] [TRACE]: buffer attached
+2025-04-04 21:27:04.086 [3] [TRACE]: attaching to buffer
+2025-04-04 21:27:04.100 [5] [TRACE]: suggestion context
+2025-04-04 21:27:04.100 [6] [TRACE]: suggestion new context
+{}
+2025-04-04 21:27:04.101 [7] [TRACE]: suggestion context
+2025-04-04 21:27:04.101 [8] [TRACE]: suggestion new context
+{}
+2025-04-04 21:27:05.084 [1] [DEBUG]: active plugin config:
+{
+  copilot_node_command = "node",
+  filetypes = {},
+  logger = {
+    file = "tests/logs/test_example.log",
+    file_log_level = 0,
+    log_lsp_messages = false,
+    print_log_level = 3,
+    trace_lsp = "off",
+    trace_lsp_progress = false
+  },
+  merge_with_user_configs = <function 1>,
+  panel = {
+    auto_refresh = false,
+    enabled = true,
+    keymap = {
+      accept = "<CR>",
+      jump_next = "]]",
+      jump_prev = "[[",
+      open = "<M-CR>",
+      refresh = "gr"
+    },
+    layout = {
+      position = "bottom",
+      ratio = 0.4
+    }
+  },
+  root_dir = <function 2>,
+  server = {
+    type = "nodejs"
+  },
+  server_opts_overrides = {},
+  should_attach = <function 3>,
+  suggestion = {
+    auto_trigger = false,
+    debounce = 15,
+    enabled = true,
+    hide_during_completion = true,
+    keymap = {
+      accept = "<M-l>",
+      accept_line = false,
+      accept_word = false,
+      dismiss = "<C-]>",
+      next = "<M-]>",
+      prev = "<M-[>"
+    }
+  },
+  validate = <function 4>,
+  workspace_folders = {}
+}
+2025-04-04 21:27:05.085 [2] [DEBUG]: active LSP config (may change runtime):
+{
+  capabilities = {
+    general = {
+      positionEncodings = { "utf-8", "utf-16", "utf-32" }
+    },
+    textDocument = {
+      callHierarchy = {
+        dynamicRegistration = false
+      },
+      codeAction = {
+        codeActionLiteralSupport = {
+          codeActionKind = {
+            valueSet = { "", "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports" }
+          }
+        },
+        dataSupport = true,
+        dynamicRegistration = true,
+        isPreferredSupport = true,
+        resolveSupport = {
+          properties = { "edit", "command" }
+        }
+      },
+      codeLens = {
+        dynamicRegistration = false,
+        resolveSupport = {
+          properties = { "command" }
+        }
+      },
+      completion = {
+        completionItem = {
+          commitCharactersSupport = false,
+          deprecatedSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          preselectSupport = false,
+          resolveSupport = {
+            properties = { "additionalTextEdits", "command" }
+          },
+          snippetSupport = true,
+          tagSupport = {
+            valueSet = { 1 }
+          }
+        },
+        completionItemKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+        },
+        completionList = {
+          itemDefaults = { "editRange", "insertTextFormat", "insertTextMode", "data" }
+        },
+        contextSupport = true,
+        dynamicRegistration = false
+      },
+      declaration = {
+        linkSupport = true
+      },
+      definition = {
+        dynamicRegistration = true,
+        linkSupport = true
+      },
+      diagnostic = {
+        dynamicRegistration = false
+      },
+      documentHighlight = {
+        dynamicRegistration = false
+      },
+      documentSymbol = {
+        dynamicRegistration = false,
+        hierarchicalDocumentSymbolSupport = true,
+        symbolKind = {
+          valueSet = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 }
+        }
+      },
+      foldingRange = {
+        dynamicRegistration = false,
+        foldingRange = {
+          collapsedText = true
+        },
+        lineFoldingOnly = true
+      },
+      formatting = {
+        dynamicRegistration = true
+      },
+      hover = {
+        contentFormat = { "markdown", "plaintext" },
+        dynamicRegistration = true
+      },
+      implementation = {
+        linkSupport = true
+      },
+      inlayHint = {
+        dynamicRegistration = true,
+        resolveSupport = {
+          properties = { "textEdits", "tooltip", "location", "command" }
+        }
+      },
+      publishDiagnostics = {
+        dataSupport = true,
+        relatedInformation = true,
+        tagSupport = {
+          valueSet = { 1, 2 }
+        }
+      },
+      rangeFormatting = {
+        dynamicRegistration = true,
+        rangesSupport = true
+      },
+      references = {
+        dynamicRegistration = false
+      },
+      rename = {
+        dynamicRegistration = true,
+        prepareSupport = true
+      },
+      semanticTokens = {
+        augmentsSyntaxTokens = true,
+        dynamicRegistration = false,
+        formats = { "relative" },
+        multilineTokenSupport = false,
+        overlappingTokenSupport = true,
+        requests = {
+          full = {
+            delta = true
+          },
+          range = false
+        },
+        serverCancelSupport = false,
+        tokenModifiers = { "declaration", "definition", "readonly", "static", "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary" },
+        tokenTypes = { "namespace", "type", "class", "enum", "interface", "struct", "typeParameter", "parameter", "variable", "property", "enumMember", "event", "function", "method", "macro", "keyword", "modifier", "comment", "string", "number", "regexp", "operator", "decorator" }
+      },
+      signatureHelp = {
+        dynamicRegistration = false,
+        signatureInformation = {
+          activeParameterSupport = true,
+          documentationFormat = { "markdown", "plaintext" },
+          parameterInformation = {
+            labelOffsetSupport = true
+          }
+        }
+      },
+      synchronization = {
+        didSave = true,
+        dynamicRegistration = false,
+        willSave = true,
+        willSaveWaitUntil = true
+      },
+      typeDefinition = {
+        linkSupport = true
+      }
+    },
+    window = {
+      showDocument = {
+        support = true
+      },
+      showMessage = {
+        messageActionItem = {
+          additionalPropertiesSupport = true
+        }
+      },
+      workDoneProgress = true
+    },
+    workspace = {
+      workspaceFolders = true
+    }
+  },
+  cmd = { "node", "C:\\Users\\antoi\\AppData\\Local\\nvim-data\\lazy\\copilot.lua\\copilot\\js\\language-server.js", "--stdio" },
+  get_language_id = <function 1>,
+  handlers = {
+    PanelSolution = <function 2>,
+    PanelSolutionsDone = <function 3>,
+    statusNotification = <function 4>
+  },
+  init_options = {
+    editorInfo = {
+      name = "Neovim",
+      version = "0.11.0"
+    },
+    editorPluginInfo = {
+      name = "copilot.lua",
+      version = "1.295.0"
+    }
+  },
+  name = "copilot",
+  on_exit = <function 5>,
+  on_init = <function 6>,
+  root_dir = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+  settings = {
+    telemetry = {
+      telemetryLevel = "all"
+    }
+  },
+  workspace_folders = { {
+      name = "C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua",
+      uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua"
+    } }
+}
+2025-04-04 21:27:05.086 [3] [TRACE]: attaching to buffer
+2025-04-04 21:27:05.097 [4] [TRACE]: buffer attached
+2025-04-04 21:27:05.099 [5] [ERROR]: client is not initialized yet
+2025-04-04 21:27:05.101 [7] [TRACE]: suggestion context
+2025-04-04 21:27:05.101 [8] [TRACE]: suggestion new context
+{}
+2025-04-04 21:27:05.103 [9] [TRACE]: suggestion context
+2025-04-04 21:27:05.103 [10] [TRACE]: suggestion new context
+{}

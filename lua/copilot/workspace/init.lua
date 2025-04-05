@@ -1,11 +1,11 @@
 local logger = require("copilot.logger")
-local client = require("copilot.client")
+local utils = require("copilot.workspace.utils")
 
-local mod = {}
+local M = {}
 ---@class workspace_folder
 ---@field uri string The URI of the workspace folder
 ---@field name string The name of the workspace folder
-function mod.add(opts)
+function M.add(opts)
   local folder = opts.args
   if not folder or folder == "" then
     logger.error("folder is required to add a workspace_folder")
@@ -13,7 +13,7 @@ function mod.add(opts)
   end
 
   folder = vim.fn.fnamemodify(folder, ":p")
-  client.add_workspace_folder(folder)
+  utils.add_workspace_folder(folder)
 end
 
-return mod
+return M
