@@ -20,6 +20,7 @@ function M.get_editor_info()
 end
 
 local copilot_lua_version = nil
+
 function M.get_copilot_lua_version()
   if not copilot_lua_version then
     local plugin_version_ok, plugin_version = pcall(function()
@@ -39,6 +40,14 @@ function M.should_attach()
 
   if ft_disabled then
     return not ft_disabled, ft_disabled_reason
+  end
+
+  local bufnr = vim.api.nvim_get_current_buf()
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  local conf_attach = config.should_attach(bufnr, bufname)
+
+  if not conf_attach then
+    return false, "copilot is disabled"
   end
 
   return true

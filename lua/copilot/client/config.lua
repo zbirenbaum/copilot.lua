@@ -16,25 +16,7 @@ function M.prepare_client_config(overrides, client)
 
   client.startup_error = nil
 
-  local server_path = nil
-  local cmd = nil
-
-  if config.server.custom_server_filepath and vim.fn.filereadable(config.server.custom_server_filepath) then
-    server_path = config.server.custom_server_filepath
-  end
-
-  if config.server.type == "nodejs" then
-    cmd = {
-      lsp.nodejs.node_command,
-      server_path or lsp.nodejs.get_server_path(),
-      "--stdio",
-    }
-  elseif config.server.type == "binary" then
-    cmd = {
-      server_path or lsp.binary.get_server_path(),
-      "--stdio",
-    }
-  end
+  local cmd = lsp.get_execute_command()
 
   if not cmd then
     logger.error("copilot server type not supported")
@@ -84,7 +66,7 @@ function M.prepare_client_config(overrides, client)
   }
 
   if proxy_uri then
-    vim.tbl_extend("force", settings, {
+    settings = vim.tbl_extend("force", settings, {
       http = { ---@type copilot_settings_http
         proxy = proxy_uri,
         proxyStrictSSL = vim.g.copilot_proxy_strict_ssl or false,
@@ -94,7 +76,7 @@ function M.prepare_client_config(overrides, client)
   end
 
   if provider_url then
-    vim.tbl_extend("force", settings, {
+    settings = vim.tbl_extend("force", settings, {
       ["github-enterprise"] = { ---@type copilot_settings_github-enterprise
         uri = provider_url,
       },
