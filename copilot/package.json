@@ -1,0 +1,7 @@
+{
+  "name": "copilot",
+  "version": "1.0.0",
+  "description": "Fully featured & enhanced replacement for copilot.vim complete with API for interacting with Github Copilot",
+  "author": "zbirenbaum",
+  "license": "MIT"
+}

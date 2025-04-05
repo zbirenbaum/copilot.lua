@@ -3,6 +3,7 @@ local completion_store = {
   auth = { "signin", "signout" },
   panel = { "accept", "jump_next", "jump_prev", "open", "refresh" },
   suggestion = { "accept", "accept_line", "accept_word", "dismiss", "next", "prev", "toggle_auto_trigger" },
+  workspace = { "add" },
 }
 
 vim.api.nvim_create_user_command("Copilot", function(opts)
@@ -27,11 +28,12 @@ vim.api.nvim_create_user_command("Copilot", function(opts)
       action_name = "open"
     elseif mod_name == "suggestion" then
       action_name = "toggle_auto_trigger"
+    elseif mod_name == "status" then
+      action_name = "status"
     end
   end
 
   if not mod[action_name] then
-    print("[Copilot] Unknown params: " .. opts.args)
     return
   end
 
@@ -42,9 +44,15 @@ vim.api.nvim_create_user_command("Copilot", function(opts)
     return
   end
 
+  local remaining_args = ""
+  if #params > 2 then
+    remaining_args = table.concat(params, " ", 3)
+  end
+
   require("copilot.client").use_client(function()
     mod[action_name]({
       force = opts.bang,
+      args = remaining_args,
     })
   end)
 end, {
