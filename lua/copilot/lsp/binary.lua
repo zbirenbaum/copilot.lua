@@ -364,6 +364,8 @@ function M.setup(custom_server_path)
 
     M.initialized = true
   end
+
+  M.init()
 end
 
 return M
