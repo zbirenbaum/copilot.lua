@@ -180,10 +180,9 @@ local function set_permissions(filename)
   return true
 end
 
--- TODO: when this fails, it will cause a couple more errors before crashing
 -- let's hope the naming convention does not change!!!
 ---@return boolean
-function M.ensure_client_is_downloaded()
+function M.init()
   if M.initialized then
     return true
   elseif M.initialization_failed then
@@ -268,6 +267,26 @@ local function is_musl()
   return string.sub(ldd_output, 1, 4) == "musl"
 end
 
+---@param client vim.lsp.Client|nil
+---@return string
+function M.get_server_info(client)
+  local copilot_server_info = M.get_copilot_server_info()
+
+  if client then
+    return copilot_server_info.path .. "/" .. copilot_server_info().filename
+  else
+    return copilot_server_info.path .. "/" .. copilot_server_info().filename .. " " .. "not running"
+  end
+end
+
+---@return table
+function M.get_execute_command()
+  return {
+    M.server_path or M.get_server_path(),
+    "--stdio",
+  }
+end
+
 ---@return copilot_server_info
 function M.get_copilot_server_info()
   if M.copilot_server_info then
@@ -345,8 +364,6 @@ function M.setup(custom_server_path)
 
     M.initialized = true
   end
-
-  M.ensure_client_is_downloaded()
 end
 
 return M
