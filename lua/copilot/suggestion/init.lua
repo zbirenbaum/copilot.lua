@@ -70,7 +70,16 @@ end
 
 local function set_keymap(keymap)
   if keymap.accept then
-    vim.keymap.set("i", keymap.accept, M.accept, {
+    vim.keymap.set("i", keymap.accept, function()
+      local ctx = get_ctx()
+      -- If we trigger on accept but the suggestion has not been triggered yet, we let it go through so it does
+      if (config.suggestion.trigger_on_accept and not ctx.first) or M.is_visible() then
+        M.accept()
+      else
+        local termcode = vim.api.nvim_replace_termcodes(keymap.accept, true, false, true)
+        vim.api.nvim_feedkeys(termcode, "n", true)
+      end
+    end, {
       desc = "[copilot] accept suggestion",
       silent = true,
     })
@@ -475,7 +484,7 @@ function M.accept(modifier)
   logger.trace("suggestion accept", ctx)
 
   -- no suggestion request yet
-  if not ctx.first then
+  if (not ctx.first) and config.suggestion.trigger_on_accept then
     logger.trace("suggestion accept, not first request", ctx)
     schedule(ctx)
     return
