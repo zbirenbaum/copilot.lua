@@ -1,5 +1,6 @@
 local config = require("copilot.config")
 local logger = require("copilot.logger")
+local client_ft = require("copilot.client.filetypes")
 local M = {}
 
 ---@param config_root_dir RootDirFuncOrString
@@ -25,7 +26,7 @@ function M.get_workspace_configurations()
   local filetypes = vim.deepcopy(config.filetypes) --[[@as table<string, boolean>]]
 
   if filetypes["*"] == nil then
-    filetypes = vim.tbl_deep_extend("keep", filetypes, require("copilot.client.filetypes").internal_filetypes)
+    filetypes = vim.tbl_deep_extend("keep", filetypes, client_ft.internal_filetypes)
   end
 
   local copilot_model = config and config.copilot_model ~= "" and config.copilot_model or ""

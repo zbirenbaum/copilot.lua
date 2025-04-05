@@ -34,7 +34,6 @@ vim.api.nvim_create_user_command("Copilot", function(opts)
   end
 
   if not mod[action_name] then
-    print("[Copilot] Unknown params: " .. opts.args)
     return
   end
 

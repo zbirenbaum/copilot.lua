@@ -1,4 +1,16 @@
-local M = {}
+local M = {
+  internal_filetypes = {
+    yaml = false,
+    markdown = false,
+    help = false,
+    gitcommit = false,
+    gitrebase = false,
+    hgcommit = false,
+    svn = false,
+    cvs = false,
+    ["."] = false,
+  },
+}
 
 local language_normalization_map = {
   bash = "shellscript",
@@ -26,18 +38,6 @@ function M.language_for_file_type(filetype)
   end
   return language_normalization_map[ft] or ft
 end
-
-local internal_filetypes = {
-  yaml = false,
-  markdown = false,
-  help = false,
-  gitcommit = false,
-  gitrebase = false,
-  hgcommit = false,
-  svn = false,
-  cvs = false,
-  ["."] = false,
-}
 
 ---@param filetype_enabled boolean|fun():boolean
 local function resolve_filetype_enabled(filetype_enabled)
@@ -69,8 +69,8 @@ function M.is_ft_disabled(ft, filetypes)
       string.format("'filetype' %s rejected by config filetypes[%s]", ft, "*")
   end
 
-  if internal_filetypes[short_ft] ~= nil then
-    return not internal_filetypes[short_ft],
+  if M.internal_filetypes[short_ft] ~= nil then
+    return not M.internal_filetypes[short_ft],
       string.format("'filetype' %s rejected by internal_filetypes[%s]", ft, short_ft)
   end
 
