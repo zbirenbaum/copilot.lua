@@ -6,6 +6,9 @@ local lsp = require("copilot.lsp")
 local utils = require("copilot.client.utils")
 local M = {}
 
+---@type table<fun(client:table)>
+local callbacks = {}
+
 ---@param overrides table<string, any>
 ---@param client CopilotClient
 function M.prepare_client_config(overrides, client)
@@ -109,6 +112,10 @@ function M.prepare_client_config(overrides, client)
 
         -- prevent requests to copilot prior to being initialized
         client.initialized = true
+
+        for _, callback in ipairs(callbacks) do
+          callback(lsp_client)
+        end
       end)
     end,
     on_exit = function(code, _, client_id)
@@ -133,6 +140,11 @@ function M.prepare_client_config(overrides, client)
     settings = settings,
     workspace_folders = workspace_folders,
   }, overrides)
+end
+
+---@param callback fun(client:table)
+function M.add_callback(callback)
+  table.insert(callbacks, callback)
 end
 
 return M

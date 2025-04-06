@@ -3,6 +3,7 @@ local util = require("copilot.util")
 local logger = require("copilot.logger")
 local lsp = require("copilot.lsp")
 local utils = require("copilot.client.utils")
+local client_config = require("copilot.client.config")
 
 local is_disabled = false
 
@@ -107,6 +108,7 @@ function M.use_client(callback)
       return
     end
 
+    client_config.add_callback(callback)
     local client_id, err = vim.lsp.start(M.config)
 
     if not client_id then
@@ -115,40 +117,11 @@ function M.use_client(callback)
     end
 
     store_client_id(client_id)
-
-    client = M.get() --[[@as table]]
-  end
-
-  if client.initialized then
+  elseif not client.initialized then
+    client_config.add_callback(callback)
+  else
     callback(client)
-    return
   end
-
-  logger.error("client is not initialized yet")
-  -- Following code is commented out for now because:
-  -- 1) I am hoping it is not needed anymore and
-  -- 2) It causes issues with testing >_<
-  --
-  -- local timer, err, _ = vim.uv.new_timer()
-  --
-  -- if not timer then
-  --   logger.error(string.format("error creating timer: %s", err))
-  --   return
-  -- end
-  --
-  -- timer:start(
-  --   0,
-  --   100,
-  --   vim.schedule_wrap(function()
-  --     if client.initialized and not timer:is_closing() then
-  --       timer:stop()
-  --       timer:close()
-  --       callback(client)
-  --     else
-  --       logger.error("client not initialized yet")
-  --     end
-  --   end)
-  -- )
 end
 
 function M.setup()
