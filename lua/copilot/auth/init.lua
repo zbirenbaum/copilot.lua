@@ -132,7 +132,7 @@ function M.signout()
   end)
 end
 
-local function find_config_path()
+function M.find_config_path()
   local config = vim.fn.expand("$XDG_CONFIG_HOME")
   if config and vim.fn.isdirectory(config) > 0 then
     return config
@@ -151,16 +151,33 @@ local function find_config_path()
   end
 end
 
-local function oauth_user(token)
-  return vim.fn.system('curl -s --header "Authorization: Bearer ' .. token .. '" https://api.github.com/user')
+M.get_creds = function()
+  local filename = M.find_config_path() .. "/github-copilot/apps.json"
+
+  if vim.fn.filereadable(filename) == 0 then
+    logger.error("Copilot auth file could not be read from:" .. filename)
+    return
+  end
+
+  local filedata = vim.api.nvim_eval("readfile('" .. filename .. "')")
+
+  if not filedata or #filedata == 0 then
+    logger.error("Copilot's apps.json file not found or empty, make sure to sign in first")
+    return
+  end
+
+  local appsdata = vim.json.decode(filedata[1])
+  return appsdata
 end
 
-M.get_cred = function()
-  local userdata =
-    vim.json.decode(vim.api.nvim_eval("readfile('" .. find_config_path() .. "/github-copilot/hosts.json')")[1])
-  local token = userdata["github.com"].oauth_token
-  local user = oauth_user(token)
-  return { user = user, token = token }
+function M.info()
+  local info = M.get_creds()
+  if not info then
+    logger.error("no GitHub Copilot token found, make sure to sign in first")
+    return
+  end
+
+  logger.notify("GitHub Copilot token information: ", info)
 end
 
 return M

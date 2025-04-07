@@ -1,6 +1,6 @@
 local completion_store = {
   [""] = { "auth", "attach", "detach", "disable", "enable", "panel", "status", "suggestion", "toggle", "version" },
-  auth = { "signin", "signout" },
+  auth = { "signin", "signout", "info" },
   panel = { "accept", "jump_next", "jump_prev", "open", "refresh" },
   suggestion = { "accept", "accept_line", "accept_word", "dismiss", "next", "prev", "toggle_auto_trigger" },
   workspace = { "add" },
