@@ -46,11 +46,26 @@ local function format_log(log_level, msg, ...)
   return log_msg
 end
 
+---@param msg string
+---@param ... any
+---@return string log_msg
+local function format_notify(msg, ...)
+  -- we add an id as this process is asynchronous and the logs end up in a different order
+  local log_msg = string.format("[Copilot.lua] %s", msg)
+
+  local args = { ... }
+  for _, v in ipairs(args) do
+    log_msg = string.format("%s\n%s", log_msg, vim.inspect(v))
+  end
+
+  return log_msg
+end
+
 ---@param log_level integer -- one of the vim.log.levels
 ---@param msg string
 ---@param ... any
 local function notify_log(log_level, msg, ...)
-  local log_msg = format_log(log_level, msg, ...)
+  local log_msg = format_notify(msg, ...)
 
   if vim.in_fast_event then
     vim.schedule(function()
@@ -88,19 +103,11 @@ end
 ---@param msg string
 ---@param ... any
 function M.log(log_level, msg, ...)
-  M.log_force(log_level, msg, false, ...)
-end
-
----@param log_level integer -- one of the vim.log.levels
----@param msg string
----@param ... any
----@param force_print boolean
-function M.log_force(log_level, msg, force_print, ...)
   if M.file_log_level <= log_level then
     write_log(log_level, M.log_file, msg, ...)
   end
 
-  if force_print or (M.print_log_level <= log_level) then
+  if M.print_log_level <= log_level then
     notify_log(log_level, msg, ...)
   end
 end
@@ -138,7 +145,7 @@ end
 ---@param msg string
 ---@param ... any
 function M.notify(msg, ...)
-  M.log_force(vim.log.levels.INFO, msg, true, ...)
+  notify_log(vim.log.levels.INFO, msg, ...)
 end
 
 ---@param conf LoggerConfig
