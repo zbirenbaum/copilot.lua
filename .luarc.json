@@ -1,3 +1,5 @@
 {
-  "_workspace.ignoreDir": ["deps"]
+  "runtime.version": "Lua 5.1",
+  "workspace.library": ["deps"],
+  "workspace.ignoreDir": ["deps"]
 }
