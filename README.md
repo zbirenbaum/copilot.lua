@@ -15,6 +15,7 @@ As lua is far more efficient and makes things easier to integrate with modern pl
 
 - Curl
 - NeoVim 0.10.0 or higher
+- NodeJS v20 or higher if using the default nodejs LSP version
 
 ## Install
 
@@ -29,20 +30,26 @@ use { "zbirenbaum/copilot.lua" }
 
 You can authenticate using one of the following methods:
 
-#### Permanent sign-in (Recommended)
+<details>
+<summary>Permanent sign-in (Recommended)</summary>
 
 Once copilot is running, run `:Copilot auth` to start the authentication process.
 
-#### Token
+</details>
 
-Get a token from the github cli using:
+<details>
+<summary>Token (not officially supported)</summary>
 
-```sh
-gh auth token
-```
+Tokens given by `gh auth token` do not support Copilot, you therefore need to first generate a token through the LSP by:
+
+- Authenticating using the `Permanent sign-in` method
+- Grab the token by running `:Copilot auth info`
+- You can then safely delete the `github-copilot` folder created in your NeoVim base data directory.
 
 Set either the environment variable `GITHUB_COPILOT_TOKEN` or `GH_COPILOT_TOKEN` to that token.
 Note that if you have the variable set, even empty, the LSP will attempt to use it to log in.
+
+</details>
 
 #### Authentication with Alternate GitHub Instances
 
@@ -385,7 +392,7 @@ example:
 require("copilot").setup {
   server = {
     type = "nodejs",
-    custom_server_filepath = "/home/user/copilot-lsp/language-server.js",,
+    custom_server_filepath = "/home/user/copilot-lsp/language-server.js",
   },
 }
 ```
