@@ -1,6 +1,6 @@
 local child = MiniTest.new_child_neovim()
 local u = require("tests.utils")
--- local env = require("tests.env")
+local env = require("tests.env")
 
 local T = MiniTest.new_set({
   hooks = {
@@ -18,7 +18,7 @@ local T = MiniTest.new_set({
       child.lua([[a = require('copilot.api')]])
       child.lua("logger = require('copilot.logger')")
       -- child.lua([[require("osv").launch({ port = 8086 })]])
-      -- child.fn.setenv("GITHUB_COPILOT_TOKEN", env.COPILOT_TOKEN)
+      child.fn.setenv("GITHUB_COPILOT_TOKEN", env.COPILOT_TOKEN)
     end,
     post_once = child.stop,
   },
