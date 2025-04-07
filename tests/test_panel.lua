@@ -1,6 +1,6 @@
 local eq = MiniTest.expect.equality
 local child = MiniTest.new_child_neovim()
--- local env = require("tests.env")
+local env = require("tests.env")
 
 local T = MiniTest.new_set({
   hooks = {
@@ -16,7 +16,7 @@ local T = MiniTest.new_set({
       child.lua("cmd = require('copilot.command')")
       child.lua("p = require('copilot.panel')")
       -- child.lua([[require("osv").launch({ port = 8086 })]])
-      -- child.fn.setenv("GITHUB_COPILOT_TOKEN", env.COPILOT_TOKEN)
+      child.fn.setenv("GITHUB_COPILOT_TOKEN", env.COPILOT_TOKEN)
     end,
     post_once = child.stop,
   },
