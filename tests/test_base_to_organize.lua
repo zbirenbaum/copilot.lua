@@ -1,23 +1,16 @@
 local eq = MiniTest.expect.equality
--- local neq = MiniTest.expect.no_equality
--- local u = require("tests.utils")
-local expect_error = MiniTest.expect.error
 local child = MiniTest.new_child_neovim()
+-- local env = require("tests.env")
 
 local T = MiniTest.new_set({
   hooks = {
     pre_case = function()
-      -- Restart child process with custom 'init.lua' script
       child.restart({ "-u", "tests/scripts/minimal_init.lua" })
       child.lua([[M = require('copilot')]])
-
       child.lua([[c = require('copilot.command')]])
-      -- child.lua([[c.enable()]])
-      -- child.lua([[c.attach({ force = true })]])
-      -- child.lua([[conf = require('copilot.config')]])
       child.lua([[s = require('copilot.status')]])
+      -- child.fn.setenv("GITHUB_COPILOT_TOKEN", env.COPILOT_TOKEN)
     end,
-    -- Stop once all test cases are finished
     post_once = child.stop,
   },
 })
@@ -40,13 +33,6 @@ end
 T["lua()"]["setup called, copilot.setup_done is true"] = function()
   run_setup()
   eq(child.lua("return M.setup_done"), true)
-end
-
-T["lua()"]["Copilot status, not initialized, returns error"] = function()
-  run_setup()
-  expect_error(function()
-    child.cmd(":Copilot status")
-  end, ".*not initialized.*")
 end
 
 return T

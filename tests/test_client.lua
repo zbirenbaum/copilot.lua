@@ -1,7 +1,6 @@
--- local eq = MiniTest.expect.equality
--- local neq = MiniTest.expect.no_equality
 local child = MiniTest.new_child_neovim()
 local u = require("tests.utils")
+-- local env = require("tests.env")
 
 local T = MiniTest.new_set({
   hooks = {
@@ -11,18 +10,16 @@ local T = MiniTest.new_set({
       end
     end,
     pre_case = function()
-      -- Restart child process with custom 'init.lua' script
       child.restart({ "-u", "tests/scripts/minimal_init.lua" })
       child.lua([[M = require('copilot')]])
       child.lua([[c = require('copilot.client')]])
-      -- child.lua([[conf = require('copilot.config')]])
       child.lua([[s = require('copilot.status')]])
       child.lua([[cmd = require('copilot.command')]])
       child.lua([[a = require('copilot.api')]])
       child.lua("logger = require('copilot.logger')")
       -- child.lua([[require("osv").launch({ port = 8086 })]])
+      -- child.fn.setenv("GITHUB_COPILOT_TOKEN", env.COPILOT_TOKEN)
     end,
-    -- Stop once all test cases are finished
     post_once = child.stop,
   },
 })

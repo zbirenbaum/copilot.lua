@@ -51,7 +51,14 @@ end
 ---@param ... any
 local function notify_log(log_level, msg, ...)
   local log_msg = format_log(log_level, msg, ...)
-  vim.notify(log_msg, log_level)
+
+  if vim.in_fast_event then
+    vim.schedule(function()
+      vim.notify(log_msg, log_level)
+    end)
+  else
+    vim.notify(log_msg, log_level)
+  end
 end
 
 ---@param log_level integer -- one of the vim.log.levels
