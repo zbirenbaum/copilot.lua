@@ -128,7 +128,7 @@ function M.prepare_client_config(overrides, client)
       end
       if code > 0 then
         vim.schedule(function()
-          require("copilot.command").status()
+          require("copilot.status").status()
         end)
       end
     end,
