@@ -1,6 +1,9 @@
 local logger = require("copilot.logger")
 ---@class CopilotApi
-local M = {}
+local M = {
+  ---@deprecated
+  status = require("copilot.status"),
+}
 
 ---@param callback? fun(err: any|nil, data: table, ctx: table): nil
 ---@return any|nil err
