@@ -1,6 +1,4 @@
 local u = require("copilot.util")
-local c = require("copilot.client")
-local a = require("copilot.api")
 local logger = require("copilot.logger")
 ---@alias copilot_status_notification_data { status: ''|'Normal'|'InProgress'|'Warning', message: string }
 
@@ -40,6 +38,8 @@ function M.unregister_status_notification_handler(handler)
 end
 
 function M.status()
+  local c = require("copilot.client")
+  local a = require("copilot.api")
   logger.trace("Status called")
   local lines = "Status:"
 
