@@ -292,6 +292,12 @@ local function update_preview(ctx)
 
   vim.api.nvim_buf_set_extmark(0, copilot.ns_id, vim.fn.line(".") - 1, cursor_col - 1, extmark)
 
+  if config.suggestion.suggestion_notification then
+    vim.schedule(function()
+      config.suggestion.suggestion_notification(extmark.virt_text, extmark.virt_lines or {})
+    end)
+  end
+
   if not ctx.shown_choices[suggestion.uuid] then
     ctx.shown_choices[suggestion.uuid] = true
     with_client(function(client)
