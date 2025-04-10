@@ -1,22 +1,15 @@
 local eq = MiniTest.expect.equality
-local child = MiniTest.new_child_neovim()
-local env = require("tests.env")
+local child_helper = require("tests.child_helper")
+local child = child_helper.new_child_neovim("test_client")
 
 local T = MiniTest.new_set({
   hooks = {
-    pre_once = function()
-      if vim.fn.filereadable("./tests/logs/test_suggestion.log") == 1 then
-        vim.fn.delete("./tests/logs/test_suggestion.log")
-      end
-    end,
+    pre_once = function() end,
     pre_case = function()
-      child.restart({ "-u", "tests/scripts/minimal_init.lua" })
+      child.run_pre_case()
       child.bo.readonly = false
       child.lua("M = require('copilot')")
-      child.lua("cmd = require('copilot.command')")
       child.lua("p = require('copilot.panel')")
-      -- child.lua([[require("osv").launch({ port = 8086 })]])
-      child.fn.setenv("GITHUB_COPILOT_TOKEN", env.COPILOT_TOKEN)
     end,
     post_once = child.stop,
   },
@@ -27,24 +20,9 @@ T["panel()"] = MiniTest.new_set()
 -- This test can fail if the LSP is taking more time than usual and re-running it passes
 T["panel()"]["panel suggestions works"] = function()
   child.o.lines, child.o.columns = 30, 100
-  child.lua([[M.setup({
-    panel = {
-      auto_refresh = true,
-    },
-    suggestion = {
-      auto_trigger = true,
-    },
-    logger = {
-      file_log_level = vim.log.levels.TRACE,
-      file = "./tests/logs/test_suggestion.log",
-    },
-    filetypes = {
-      ["*"] = true,
-    },
-  })]])
-
-  -- look for a synchronous way to wait for engine to be up
-  vim.loop.sleep(500)
+  child.config.panel = child.config.panel .. "auto_refresh = true,"
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
+  child.configure_copilot()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
   child.lua("p.toggle()")
 
