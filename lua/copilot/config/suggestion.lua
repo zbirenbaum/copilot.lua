@@ -1,9 +1,12 @@
+---@alias SuggestionNotification fun(virtual_text: {}, virtual_lines: {})
+
 ---@class (exact) SuggestionConfig
 ---@field enabled boolean Whether to enable the suggestion
 ---@field auto_trigger boolean Whether to trigger the suggestion automatically
 ---@field hide_during_completion boolean Whether to hide the suggestion during completion
 ---@field debounce integer Debounce time in milliseconds
 ---@field trigger_on_accept boolean To either trigger the suggestion on accept or pass the keystroke to the buffer
+---@field suggestion_notification SuggestionNotification|nil Callback function whenever a suggestion is triggered
 ---@field keymap SuggestionKeymapConfig Keymap for the suggestion
 
 ---@class (exact) SuggestionKeymapConfig
@@ -22,6 +25,7 @@ local suggestion = {
     hide_during_completion = true,
     debounce = 15,
     trigger_on_accept = true,
+    suggestion_notification = nil,
     keymap = {
       accept = "<M-l>",
       accept_word = false,
@@ -39,6 +43,7 @@ function suggestion.validate(config)
   vim.validate("hide_during_completion", config.hide_during_completion, "boolean")
   vim.validate("debounce", config.debounce, { "number", "nil" })
   vim.validate("trigger_on_accept", config.trigger_on_accept, "boolean")
+  vim.validate("suggestion_notification", config.suggestion_notification, { "function", "nil" })
   vim.validate("keymap", config.keymap, "table")
   vim.validate("keymap.accept", config.keymap.accept, { "string", "boolean" })
   vim.validate("keymap.accept_word", config.keymap.accept_word, { "string", "boolean" })
