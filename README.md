@@ -14,24 +14,25 @@ As lua is far more efficient and makes things easier to integrate with modern pl
 ## Table Of Contents
 
 <!--toc:start-->
+
 - [Requirements](#requirements)
 - [Install](#install)
   - [Authentication](#authentication)
-     - [Authentication with Alternate GitHub Instances](#authentication-with-alternate-github-instances)
+    - [Authentication with Alternate GitHub Instances](#authentication-with-alternate-github-instances)
 - [Setup and Configuration](#setup-and-configuration)
-   - [panel](#panel)
-   - [suggestion](#suggestion)
-   - [filetypes](#filetypes)
-   - [logger](#logger)
-   - [copilot_node_command](#copilot_node_command)
-   - [server_opts_overrides](#server_opts_overrides)
-   - [workspace_folders](#workspace_folders)
-   - [root_dir](#root_dir)
-   - [should_attach](#should_attach)
-   - [server](#server)
- - [Commands](#commands)
- - [Integrations](#integrations)
- - [FAQ](#faq)
+  - [panel](#panel)
+  - [suggestion](#suggestion)
+  - [filetypes](#filetypes)
+  - [logger](#logger)
+  - [copilot_node_command](#copilot_node_command)
+  - [server_opts_overrides](#server_opts_overrides)
+  - [workspace_folders](#workspace_folders)
+  - [root_dir](#root_dir)
+  - [should_attach](#should_attach)
+  - [server](#server)
+- [Commands](#commands)
+- [Integrations](#integrations)
+- [FAQ](#faq)
 <!--toc:end-->
 
 ## Requirements
@@ -403,8 +404,7 @@ require("copilot").setup {
 
 ### server
 
-> [!CAUTION]
-> `"binary"` mode is still very much experimental, please report any issues you encounter.
+> [!CAUTION] > `"binary"` mode is still very much experimental, please report any issues you encounter.
 
 `type` can be either `"nodejs"` or `"binary"`. The binary version will be downloaded if used.
 
@@ -438,8 +438,9 @@ The `copilot.api` module can be used to build integrations on top of `copilot.lu
 
 > Certificate Parsing Error
 
-This is an issue with the copilot lsp itself as described in [this discussion](https://github.com/orgs/community/discussions/136273#discussioncomment-10433527). Please update copilot lsp to the latest version to solve this issue.
-If updating didn't help, update the `/usr/bin/update-ca-trust` and remove the --comment option from the trust extract commands.
+This is an issue with the copilot lsp itself as described in [this discussion](https://github.com/orgs/community/discussions/136273#discussioncomment-10433527). Please update the plugin to the latest version to solve this issue.
+If updating does not help, some users have reported that updating the `/usr/bin/update-ca-trust` and removing the --comment option from the trust extract commands.
+However this has not been verified by the author of this plugin and may have unintended consequences so thread with care.
 
 > Multiple offset encodings warning
 
@@ -450,6 +451,7 @@ local capabilities = vim.lsp.protocol.make_client_capabilities() -- Get The capa
 capabilities.general.positionEncodings = { "utf-16" } -- Set the offset encoding, see `:h vim.lsp.start` for more info
 require("lspconfig")[server].setup({ capabilities = capabilities }) -- Setup the server
 ```
+
 Set the same for copilot in `server_opts_overrides`:
 
 ```lua
@@ -457,4 +459,5 @@ server_opts_overrides = {
   offset_encoding = "utf-16" -- Set the offset encoding same as above, see `:h vim.lsp.start` for more info
 }
 ```
+
 Refer to your plugins documentation for changes.
