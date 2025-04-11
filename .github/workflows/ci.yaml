@@ -1,0 +1,45 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  unit_tests:
+    name: unit tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-latest, windows-2025]
+        rev: [nightly, v0.10.4, v0.11.0]
+        include:
+          - os: ubuntu-24.04
+            install-rg: sudo apt-get update && sudo apt-get install -y nodejs curl
+          - os: ubuntu-24.04-arm
+            install-rg: sudo apt-get update && sudo apt-get install -y nodejs curl
+          - os: macos-latest
+            install-rg: brew update && brew install node curl
+          - os: windows-2025
+            install-rg: choco install nodejs-lts curl
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: ${{ matrix.rev }}
+
+      - name: Prepare
+        run: |
+          ${{ matrix.install-rg }}
+          mkdir deps
+          mkdir ./tests/logs
+          git clone --filter=blob:none https://github.com/echasnovski/mini.nvim deps/mini.nvim
+          mv ./tests/env.lua.ci ./tests/env.lua
+
+      - name: Run tests
+        env:
+          GH_COPILOT_TOKEN: ${{ secrets.GH_COPILOT_TOKEN }}
+        run: |
+          nvim --version
+          make test

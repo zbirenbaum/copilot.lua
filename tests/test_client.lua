@@ -28,10 +28,20 @@ end
 T["client()"] = MiniTest.new_set()
 
 T["client()"]["status info"] = function()
+  local messages = ""
+  local function check_messages()
+    messages = child.cmd_capture("messages")
+    if messages:find(".*Online.*Enabled.*") then
+      return true
+    end
+  end
+
   child.configure_copilot()
   child.cmd("Copilot status")
-  vim.loop.sleep(500)
-  local messages = child.cmd_capture("messages")
+  vim.wait(30000, function()
+    return check_messages()
+  end, 100)
+
   u.expect_match(messages, ".*Online.*Enabled.*")
 end
 
