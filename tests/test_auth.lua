@@ -20,7 +20,6 @@ local T = MiniTest.new_set({
       child.lua("cmd = require('copilot.command')")
       child.lua("a = require('copilot.api')")
       child.lua("logger = require('copilot.logger')")
-      child.fn.setenv("GITHUB_COPILOT_TOKEN", vim.NIL)
     end,
     post_once = function()
       child.stop()
