@@ -8,7 +8,6 @@ local T = MiniTest.new_set({
     pre_case = function()
       child.run_pre_case()
       child.bo.readonly = false
-      child.lua("M = require('copilot')")
       child.lua("p = require('copilot.panel')")
     end,
     post_once = child.stop,
@@ -17,7 +16,6 @@ local T = MiniTest.new_set({
 
 T["panel()"] = MiniTest.new_set()
 
--- This test can fail if the LSP is taking more time than usual and re-running it passes
 T["panel()"]["panel suggestions works"] = function()
   child.o.lines, child.o.columns = 30, 100
   child.config.panel = child.config.panel .. "auto_refresh = true,"
@@ -26,16 +24,23 @@ T["panel()"]["panel suggestions works"] = function()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
   child.lua("p.toggle()")
 
-  local i = 0
-  local lines = ""
-  while i < 50 do
-    vim.loop.sleep(200)
-    child.lua("vim.wait(0)")
-    lines = child.api.nvim_buf_get_lines(2, 4, 5, false)
-    if lines[1] == "789" then
-      break
+  local lines = child.lua([[
+    local messages = ""
+    local function suggestion_is_visible()
+      lines = vim.api.nvim_buf_get_lines(2, 4, 5, false)
+      return lines[1] == "789" or lines[1] == "789\r"
     end
-    i = i + 1
+
+    vim.wait(30000, function()
+      return suggestion_is_visible()
+    end, 50)
+
+    return lines
+  ]])
+
+  -- For Windows, on some shells not all
+  if lines[1] == "789\r" then
+    lines[1] = "789"
   end
 
   eq(lines[1], "789")

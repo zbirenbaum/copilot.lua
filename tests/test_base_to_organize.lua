@@ -6,7 +6,6 @@ local T = MiniTest.new_set({
   hooks = {
     pre_case = function()
       child.run_pre_case()
-      child.lua([[M = require('copilot')]])
       child.lua([[s = require('copilot.status')]])
       child.lua([[a = require('copilot.api')]])
     end,

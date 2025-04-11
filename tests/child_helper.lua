@@ -60,8 +60,11 @@ function M.new_child_neovim(test_name)
   function child.run_pre_case()
     child.reset_config()
     child.restart({ "-u", "tests/scripts/minimal_init.lua" })
-    child.fn.setenv("GITHUB_COPILOT_TOKEN", env.COPILOT_TOKEN)
+    if env.COPILOT_TOKEN and env.COPILOT_TOKEN ~= "" then
+      child.fn.setenv("GITHUB_COPILOT_TOKEN", env.COPILOT_TOKEN)
+    end
     child.setup_and_wait_for_debugger()
+    child.lua("M = require('copilot')")
   end
 
   function child.configure_copilot()

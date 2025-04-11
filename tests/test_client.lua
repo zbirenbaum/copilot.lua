@@ -7,7 +7,6 @@ local T = MiniTest.new_set({
     pre_once = function() end,
     pre_case = function()
       child.run_pre_case()
-      child.lua("M = require('copilot')")
       child.lua("s = require('copilot.status')")
       child.lua("c = require('copilot.client')")
     end,
@@ -30,8 +29,23 @@ T["client()"] = MiniTest.new_set()
 T["client()"]["status info"] = function()
   child.configure_copilot()
   child.cmd("Copilot status")
-  vim.loop.sleep(500)
-  local messages = child.cmd_capture("messages")
+
+  local messages = child.lua([[
+    local messages = ""
+    local function has_passed()
+      messages = vim.api.nvim_exec("messages", { output = true }) or ""
+      if messages:find(".*Online.*Enabled.*") then
+        return true
+      end
+    end
+
+    vim.wait(30000, function()
+      return has_passed()
+    end, 50)
+
+    return messages
+  ]])
+
   u.expect_match(messages, ".*Online.*Enabled.*")
 end
 
