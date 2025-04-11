@@ -21,10 +21,7 @@ jobs:
       - name: Download latest LSP
         run: |
           curl -s https://api.github.com/repos/github/copilot-language-server-release/releases/latest | grep "browser_download_url.*copilot-language-server-js-.*zip" | cut -d : -f 2,3 | tr -d \" | wget -vi -
-          export COPILOT_LATEST_RELEASE_VER=$(curl -s https://api.github.com/repos/github/copilot-language-server-release/releases | jq -r '.[0].tag_name')
-          sed -i.bak -E "s/(version = \")[^\"]+(\",)/\1$COPILOT_LATEST_RELEASE_VER\2/" "lua/copilot/util.lua"
-          rm lua/copilot/util.lua.bak
-
+          COPILOT_LATEST_RELEASE_VER=$(curl -s https://api.github.com/repos/github/copilot-language-server-release/releases | jq -r '.[0].tag_name') && sed -i.bak -E "s/(version = \")[^\"]+(\",)/\1$COPILOT_LATEST_RELEASE_VER\2/" "lua/copilot/util.lua" && rm lua/copilot/util.lua.bak
       - name: Unzip LSP
         run: |
           unzip -o copilot-language-server-js-*.zip -d copilot/js
