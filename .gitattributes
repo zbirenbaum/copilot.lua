@@ -1,2 +1,3 @@
 /copilot/dist/** -whitespace -diff
 /dist/** -whitespace -diff
+*.lua eol=lf
