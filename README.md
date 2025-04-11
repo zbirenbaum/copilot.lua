@@ -11,6 +11,28 @@ As lua is far more efficient and makes things easier to integrate with modern pl
 
 </details>
 
+## Table Of Contents
+
+<!--toc:start-->
+- [Requirements](#requirements)
+- [Install](#install)
+  - [Authentication](#authentication)
+     - [Authentication with Alternate GitHub Instances](#authentication-with-alternate-github-instances)
+- [Setup and Configuration](#setup-and-configuration)
+   - [panel](#panel)
+   - [suggestion](#suggestion)
+   - [filetypes](#filetypes)
+   - [logger](#logger)
+   - [copilot_node_command](#copilot_node_command)
+   - [server_opts_overrides](#server_opts_overrides)
+   - [workspace_folders](#workspace_folders)
+   - [root_dir](#root_dir)
+   - [should_attach](#should_attach)
+   - [server](#server)
+ - [Commands](#commands)
+ - [Integrations](#integrations)
+<!--toc:end-->
+
 ## Requirements
 
 - Curl
@@ -297,7 +319,7 @@ vim.log = {
 
 - `off`
 - `messages` which will output the LSP messages
-- `verbose` which adds additonal information to the message.
+- `verbose` which adds additional information to the message.
 
 When `trace_lsp_progress` is true, LSP progress messages (`$/progress`) will also be logged.
 When `log_lsp_messages` is true, LSP log messages (`window/logMessage`) events will be logged.
@@ -339,7 +361,7 @@ require("copilot").setup {
 ### workspace_folders
 
 Workspace folders improve Copilot's suggestions.
-By default, the root_dir is used as a wokspace_folder.
+By default, the root_dir is used as a workspace_folder.
 
 Additional folders can be added through the configuration as such:
 
@@ -380,7 +402,8 @@ require("copilot").setup {
 
 ### server
 
-> [!CAUTION] > `"binary"` mode is still very much experimental, please report any issues you encounter.
+> [!CAUTION]
+> `"binary"` mode is still very much experimental, please report any issues you encounter.
 
 `type` can be either `"nodejs"` or `"binary"`. The binary version will be downloaded if used.
 
