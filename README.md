@@ -101,7 +101,8 @@ use {
 }
 ```
 
-The following is the default configuration:
+<details>
+<summary>Default configuration</summary>
 
 ```lua
 require('copilot').setup({
@@ -181,6 +182,8 @@ require('copilot').setup({
   server_opts_overrides = {},
 })
 ```
+
+</details>
 
 ### panel
 
