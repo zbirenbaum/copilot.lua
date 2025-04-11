@@ -2,9 +2,10 @@ local child_helper = require("tests.child_helper")
 local child = child_helper.new_child_neovim("test_auth")
 local u = require("tests.utils")
 
-local config_path = require("copilot.auth").find_config_path()
+local config_path = require("copilot.auth").find_config_path() .. "/github-copilot"
 local config_path_renamed = config_path .. "_temp_renamed"
 
+--TODO: find a way to not mess with folders
 local T = MiniTest.new_set({
   hooks = {
     pre_once = function()
@@ -14,13 +15,6 @@ local T = MiniTest.new_set({
     end,
     pre_case = function()
       child.run_pre_case()
-      child.lua("M = require('copilot')")
-      child.lua("c = require('copilot.client')")
-      child.lua("s = require('copilot.status')")
-      child.lua("cmd = require('copilot.command')")
-      child.lua("a = require('copilot.api')")
-      child.lua("logger = require('copilot.logger')")
-      child.fn.setenv("GITHUB_COPILOT_TOKEN", vim.NIL)
     end,
     post_once = function()
       child.stop()
@@ -34,22 +28,59 @@ local T = MiniTest.new_set({
 
 T["auth()"] = MiniTest.new_set()
 
--- TODO: callback for this too
 T["auth()"]["auth before attaching, should not give error"] = function()
   child.configure_copilot()
   child.cmd("Copilot auth")
-  vim.loop.sleep(3000)
-  local messages = child.cmd_capture("messages")
+
+  local messages = child.lua([[
+    local messages = ""
+    local function has_passed()
+      messages = vim.api.nvim_exec("messages", { output = true }) or ""
+      return string.find(messages, ".*Authenticated as GitHub user.*") ~= nil
+    end
+
+    vim.wait(30000, function()
+      return has_passed()
+    end, 50)
+
+    return messages 
+  ]])
+
   u.expect_match(messages, ".*Authenticated as GitHub user.*")
 end
 
 T["auth()"]["auth issue replication"] = function()
   child.configure_copilot()
   child.cmd("Copilot auth")
-  vim.loop.sleep(2000)
+
+  child.lua([[
+    local messages = ""
+    local function has_passed()
+      messages = vim.api.nvim_exec("messages", { output = true }) or ""
+      return string.find(messages, ".*Authenticated as GitHub user.*") ~= nil
+    end
+
+    vim.wait(30000, function()
+      return has_passed()
+    end, 50)
+  ]])
+
   child.cmd("Copilot status")
-  vim.loop.sleep(500)
-  local messages = child.cmd_capture("messages")
+
+  local messages = child.lua([[
+    local messages = ""
+    local function has_passed()
+      messages = vim.api.nvim_exec("messages", { output = true }) or ""
+      return string.find(messages, ".*Online.*Enabled.*") ~= nil
+    end
+
+    vim.wait(30000, function()
+      return has_passed()
+    end, 50)
+
+    return messages 
+  ]])
+
   u.expect_match(messages, ".*Online.*Enabled.*")
 end
 

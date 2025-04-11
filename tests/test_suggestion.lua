@@ -8,7 +8,6 @@ local T = MiniTest.new_set({
     pre_case = function()
       child.run_pre_case()
       child.bo.readonly = false
-      child.lua("M = require('copilot')")
     end,
     post_once = child.stop,
   },

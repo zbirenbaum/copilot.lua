@@ -145,10 +145,10 @@ function M.find_config_path()
     config = vim.fn.expand("~/.config")
     if vim.fn.isdirectory(config) > 0 then
       return config
-    else
-      logger.error("could not find config path")
     end
   end
+
+  logger.error("could not find config path")
 end
 
 M.get_creds = function()
