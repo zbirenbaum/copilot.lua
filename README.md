@@ -33,6 +33,7 @@ As lua is far more efficient and makes things easier to integrate with modern pl
 - [Commands](#commands)
 - [Integrations](#integrations)
 - [FAQ](#faq)
+
 <!--toc:end-->
 
 ## Requirements
@@ -404,7 +405,8 @@ require("copilot").setup {
 
 ### server
 
-> [!CAUTION] > `"binary"` mode is still very much experimental, please report any issues you encounter.
+> [!CAUTION]
+> `"binary"` mode is still very much experimental, please report any issues you encounter.
 
 `type` can be either `"nodejs"` or `"binary"`. The binary version will be downloaded if used.
 
