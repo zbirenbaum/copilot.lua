@@ -31,6 +31,7 @@ As lua is far more efficient and makes things easier to integrate with modern pl
    - [server](#server)
  - [Commands](#commands)
  - [Integrations](#integrations)
+ - [FAQ](#faq)
 <!--toc:end-->
 
 ## Requirements
@@ -340,7 +341,7 @@ copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v20
 
 Override copilot lsp client settings. The `settings` field is where you can set the values of the options defined in [SettingsOpts.md](./SettingsOpts.md).
 These options are specific to the copilot lsp and can be used to customize its behavior. Ensure that the name field is not overridden as is is used for
-efficiency reasons in numerous checks to verify copilot is actually running. See `:h vim.lsp.start_client` for list of options.
+efficiency reasons in numerous checks to verify copilot is actually running. See `:h vim.lsp.start` for list of options.
 
 Example:
 
@@ -432,3 +433,28 @@ The `copilot.api` module can be used to build integrations on top of `copilot.lu
 - [giuxtaposition/blink-cmp-copilot](https://github.com/giuxtaposition/blink-cmp-copilot): Integration with [`blink.cmp`](https://github.com/Saghen/blink.cmp).
 - [fang2hou/blink-copilot](https://github.com/fang2hou/blink-copilot): Integration with [`blink.cmp`](https://github.com/Saghen/blink.cmp), with some differences.
 - [AndreM222/copilot-lualine](https://github.com/AndreM222/copilot-lualine): Integration with [`lualine.nvim`](https://github.com/nvim-lualine/lualine.nvim).
+
+## FAQ
+
+> Certificate Parsing Error
+
+This is an issue with the copilot lsp itself as described in [this discussion](https://github.com/orgs/community/discussions/136273#discussioncomment-10433527). Please update copilot lsp to the latest version to solve this issue.
+If updating didn't help, update the `/usr/bin/update-ca-trust` and remove the --comment option from the trust extract commands.
+
+> Multiple offset encodings warning
+
+As discussed in #247 ,The problem arises because two or more clients are using different offset encodings. To solve this, in lspconfig:
+
+```lua
+local capabilities = vim.lsp.protocol.make_client_capabilities() -- Get The capabilities
+capabilities.general.positionEncodings = { "utf-16" } -- Set the offset encoding, see `:h vim.lsp.start` for more info
+require("lspconfig")[server].setup({ capabilities = capabilities }) -- Setup the server
+```
+Set the same for copilot in `server_opts_overrides`:
+
+```lua
+server_opts_overrides = {
+  offset_encoding = "utf-16" -- Set the offset encoding same as above, see `:h vim.lsp.start` for more info
+}
+```
+Refer to your plugins documentation for changes.
