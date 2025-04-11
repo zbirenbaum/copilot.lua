@@ -1,15 +1,15 @@
 local env = require("tests.env")
 local M = {}
-_G.attach_debugger = false
+
+if not _G.attach_debugger then
+  _G.attach_debugger = false
+end
 
 ---@param test_name string
 function M.new_child_neovim(test_name)
   ---@class MiniTest.child
   local child = MiniTest.new_child_neovim()
   local logfile = string.format("./tests/logs/%s.log", test_name)
-
-  -- TODO: this needs a reset, as it is reused in multiple tests
-  -- TODO: this does not work, as the child needs a string representation of the config
   child.config = nil
 
   if vim.fn.filereadable(logfile) == 1 then
@@ -53,12 +53,7 @@ function M.new_child_neovim(test_name)
     end
 
     child.lua([[
-      local osv = require("osv")
-      local debugger_attached = false
-      osv.on_attach = function() debugger_attached = true end
-      osv.launch({ port = 8086 })
-      -- wait until a debuggee is attached, or 30 seconds
-      vim.wait(30000, function() return debugger_attached end, 10)
+      require("osv").launch({ port = 8086, blocking = true })
     ]])
   end
 
