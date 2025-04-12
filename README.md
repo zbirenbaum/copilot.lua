@@ -444,7 +444,7 @@ The `copilot.api` module can be used to build integrations on top of `copilot.lu
 > Certificate Parsing Error
 
 This is an issue with the copilot lsp itself as described in [this discussion](https://github.com/orgs/community/discussions/136273#discussioncomment-10433527). Please update the plugin to the latest version to solve this issue.
-If updating does not help, some users have reported that updating the `/usr/bin/update-ca-trust` and removing the --comment option from the trust extract commands.
+If updating does not help, some users have reported that updating the `/usr/bin/update-ca-trust` and removing the --comment option from the trust extract commands solves the issue.
 However this has not been verified by the author of this plugin and may have unintended consequences so thread with care.
 
 > Multiple offset encodings warning
