@@ -10,6 +10,7 @@ jobs:
   update_copilot_lsp:
     runs-on: ubuntu-latest
     name: Update Copilot LSP
+    if: github.repository == 'zbirenbaum/copilot.lua'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
