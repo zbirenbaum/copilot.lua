@@ -1,0 +1,25 @@
+name: Auto Generate Vimdoc
+on:
+  push:
+    branches: [main]
+    paths:
+      - README.md
+      - .github/workflows/vimdocgen.yml
+permissions:
+  contents: write
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    name: Convert Markdown to Vimdoc
+    steps:
+      - uses: actions/checkout@v2
+      - uses: kdheepak/panvimdoc@main
+        with:
+          vimdoc: copilot.lua # Output vimdoc project name (required)
+          version: "NVIM v0.11.0" # Vim version number
+          description: "Fully featured & enhanced replacement for copilot.vim complete with API for interacting with Github Copilot" # Project description used in title (if empty, uses neovim version and current date)
+          titledatepattern: "%d %B, %Y" # Pattern for the date that used in the title
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "chore: auto generate docs"
+          branch: ${{ github.head_ref }}
