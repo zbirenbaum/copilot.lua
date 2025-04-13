@@ -544,7 +544,7 @@ function M.accept(modifier)
     local cursor_keys = "<End>"
 
     -- TODO: Move to util and check only once
-    if vim.fn.has("nvim-0.11") == 1 then
+    if vim.fn.has("nvim-0.10") == 1 then
       cursor_keys = string.rep("<Down>", #vim.split(newText, "\n", { plain = true }) - 1) .. cursor_keys
     end
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(cursor_keys, true, false, true), "n", false)
