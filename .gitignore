@@ -1,0 +1,3 @@
+tests/logs
+tests/env.lua
+deps/

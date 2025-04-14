@@ -1,0 +1,46 @@
+name: Update Copilot LSP
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  push:
+    branches: [master]
+
+jobs:
+  update_copilot_lsp:
+    runs-on: ubuntu-latest
+    name: Update Copilot LSP
+    if: github.repository == 'zbirenbaum/copilot.lua'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create directory
+        run: |
+          mkdir -p copilot/js
+
+      - name: Download latest LSP
+        run: |
+          curl -s https://api.github.com/repos/github/copilot-language-server-release/releases/latest | grep "browser_download_url.*copilot-language-server-js-.*zip" | cut -d : -f 2,3 | tr -d \" | wget -vi -
+
+      - name: Update version in util.lua
+        run: |
+          COPILOT_LATEST_RELEASE_VER=$(curl -s https://api.github.com/repos/github/copilot-language-server-release/releases | jq -r '.[0].tag_name') && sed -i.bak -E "s/(version = \")[^\"]+(\",)/\1$COPILOT_LATEST_RELEASE_VER\2/" "lua/copilot/util.lua" && rm lua/copilot/util.lua.bak
+
+      - name: Unzip LSP
+        run: |
+          unzip -o copilot-language-server-js-*.zip -d copilot/js
+          rm copilot-language-server-js-*.zip
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          add-paths: |
+            copilot/js/*
+            lua/copilot/util.lua
+          author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+          base: master
+          branch: create-pull-request/update-copilot-lsp
+          commit-message: "feat: update to latest Copilot LSP"
+          reviewers: MunifTanjim,zbirenbaum,AntoineGS
+          title: "Update Copilot LSP"

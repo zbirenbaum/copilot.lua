@@ -1,4 +1,4 @@
-local mod = {
+local M = {
   group = {
     CopilotAnnotation = "CopilotAnnotation",
     CopilotSuggestion = "CopilotSuggestion",
@@ -6,11 +6,11 @@ local mod = {
 }
 
 local links = {
-  [mod.group.CopilotAnnotation] = "Comment",
-  [mod.group.CopilotSuggestion] = "Comment",
+  [M.group.CopilotAnnotation] = "Comment",
+  [M.group.CopilotSuggestion] = "Comment",
 }
 
-function mod.setup()
+function M.setup()
   -- Some environments will load themes after plugins (like ChadNv) so we do it as late as possible
   vim.schedule(function()
     for from_group, to_group in pairs(links) do
@@ -22,4 +22,4 @@ function mod.setup()
   end)
 end
 
-return mod
+return M
