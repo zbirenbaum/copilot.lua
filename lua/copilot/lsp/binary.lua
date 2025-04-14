@@ -348,7 +348,7 @@ end
 ---@param custom_server_path? string
 function M.setup(custom_server_path)
   if custom_server_path then
-    if vim.fn.filereadable(custom_server_path) == 0 then
+    if vim.fn.filereadable(custom_server_path) == 0 and vim.fn.executable(custom_server_path) == 0 then
       logger.error("copilot-language-server not found at " .. custom_server_path)
       return M
     end
