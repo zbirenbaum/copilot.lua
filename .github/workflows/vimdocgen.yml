@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Convert Markdown to Vimdoc
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: kdheepak/panvimdoc@main
         with:
           vimdoc: copilot.lua # Output vimdoc project name (required)
