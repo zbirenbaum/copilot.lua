@@ -449,7 +449,7 @@ However this has not been verified by the author of this plugin and may have uni
 
 > Multiple offset encodings warning
 
-As discussed in #247 ,The problem arises because two or more clients are using different offset encodings. To solve this, in lspconfig:
+As discussed in #247, the problem arises because two or more clients are using different offset encodings. To solve this, in lspconfig:
 
 ```lua
 local capabilities = vim.lsp.protocol.make_client_capabilities() -- Get The capabilities
