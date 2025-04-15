@@ -25,7 +25,7 @@ local M = {
 ---@param id integer
 local function store_client_id(id)
   if M.id and M.id ~= id then
-    if vim.lsp.get_client_by_id(M.id) then
+    if M.get() then
       vim.lsp.stop_client(M.id)
     end
   end
@@ -86,7 +86,7 @@ end
 
 ---@return vim.lsp.Client|nil
 function M.get()
-  return vim.lsp.get_client_by_id(M.id)
+  return utils.wrap_client(vim.lsp.get_client_by_id(M.id))
 end
 
 function M.is_disabled()

@@ -19,11 +19,11 @@ function M.request(client, method, params, callback)
   params.bufnr = nil
 
   if callback then
-    return client.request(method, params, callback, bufnr)
+    return client:request(method, params, callback, bufnr)
   end
 
   local co = coroutine.running()
-  client.request(method, params, function(err, data, ctx)
+  client:request(method, params, function(err, data, ctx)
     coroutine.resume(co, err, data, ctx)
   end, bufnr)
   return coroutine.yield()
@@ -32,12 +32,7 @@ end
 ---@return boolean sent
 function M.notify(client, method, params)
   logger.trace("api notify:", method, params)
-
-  if vim.fn.has("nvim-0.11") == 1 then
-    return client:notify(method, params)
-  else
-    return client.notify(method, params)
-  end
+  return client:notify(method, params)
 end
 
 ---@alias copilot_editor_info { name: string, version: string }
