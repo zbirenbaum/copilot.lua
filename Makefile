@@ -11,4 +11,4 @@ test_file: deps/mini.nvim
 # deps/mini.nvim:
 # 	@mkdir deps
 # 	git clone --filter=blob:none https://github.com/echasnovski/mini.nvim deps/mini.nvim 
-# 	git clone https://github.com/jbyuki/one-small-step-for-vimkind dpes/osv
+# 	git clone https://github.com/jbyuki/one-small-step-for-vimkind deps/osv

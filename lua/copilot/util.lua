@@ -77,7 +77,7 @@ function M.get_doc()
   return doc
 end
 
--- Used by copilot.cmp to watch out if moving it
+-- Used by copilot.cmp so watch out if moving it
 function M.get_doc_params(overrides)
   overrides = overrides or {}
 
