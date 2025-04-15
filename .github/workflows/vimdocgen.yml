@@ -5,6 +5,7 @@ on:
     paths:
       - README.md
       - .github/workflows/vimdocgen.yml
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
