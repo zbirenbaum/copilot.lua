@@ -96,6 +96,7 @@ function M.prepare_client_config(overrides, client)
       return require("copilot.client.filetypes").language_for_file_type(filetype)
     end,
     on_init = function(lsp_client, initialize_result)
+      lsp_client = utils.wrap_client(lsp_client)
       if client.id == lsp_client.id then
         client.capabilities = initialize_result.capabilities
       end
