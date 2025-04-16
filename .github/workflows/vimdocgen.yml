@@ -6,8 +6,10 @@ on:
       - README.md
       - .github/workflows/vimdocgen.yml
   workflow_dispatch:
+
 permissions:
   contents: write
+
 jobs:
   docs:
     runs-on: ubuntu-latest
