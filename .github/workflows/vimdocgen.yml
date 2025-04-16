@@ -29,6 +29,5 @@ jobs:
           author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           base: master
           branch: create-pull-request/autogenerate-vimdoc
-          commit-messssage: "chore: auto generate docs"
-          reviewers: MunifTanjim,zbirenbaum,AntoineGS
-          title: "Auto Generate Docs"
+          commit-message: "docs: update vimdocs"
+          title: "Update Vimdocs"
