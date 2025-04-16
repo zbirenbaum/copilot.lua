@@ -5,8 +5,11 @@ on:
     paths:
       - README.md
       - .github/workflows/vimdocgen.yml
+  workflow_dispatch:
+
 permissions:
   contents: write
+
 jobs:
   docs:
     runs-on: ubuntu-latest
@@ -15,18 +18,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: kdheepak/panvimdoc@main
         with:
-          vimdoc: copilot.lua # Output vimdoc project name (required)
-          version: "NVIM v0.11.0" # Vim version number
-          description: "Fully featured & enhanced replacement for copilot.vim complete with API for interacting with Github Copilot" # Project description used in title (if empty, uses neovim version and current date)
-          titledatepattern: "%d %B, %Y" # Pattern for the date that used in the title
+          vimdoc: "copilot"
+          version: "NVIM v0.11.0"
+          description: "Fully featured & enhanced replacement for copilot.vim complete with API for interacting with Github Copilot"
+          titledatepattern: "%d %B, %Y"
+          toc: false
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
           add-paths: |
-             doc/*
+            doc/*
           author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           base: master
           branch: create-pull-request/autogenerate-vimdoc
-          commit-messssage: "chore: auto generate docs"
-          reviewers: MunifTanjim,zbirenbaum,AntoineGS
-          title: "Auto Generate Docs"
+          commit-message: "docs: update vimdocs"
+          title: "Update Vimdocs"

@@ -5,6 +5,7 @@ on:
     - cron: "0 0 * * *"
   push:
     branches: [master]
+  workflow_dispatch:
 
 jobs:
   update_copilot_lsp:
@@ -42,5 +43,4 @@ jobs:
           base: master
           branch: create-pull-request/update-copilot-lsp
           commit-message: "feat: update to latest Copilot LSP"
-          reviewers: MunifTanjim,zbirenbaum,AntoineGS
           title: "Update Copilot LSP"

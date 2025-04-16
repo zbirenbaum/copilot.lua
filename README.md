@@ -413,7 +413,8 @@ require("copilot").setup {
 
 `type` can be either `"nodejs"` or `"binary"`. The binary version will be downloaded if used.
 
-`custom_server_filepath` is used to specify the path of either the path (filename included) of the `js` file if using `"nodejs"` or the path to the binary if using `"binary"`.
+`custom_server_filepath` is used to specify the server path (filename included) of either the `js` file if using `"nodejs"` or to the binary if using `"binary"`.
+The filename on its own can also be set if accessible through your PATH.
 When using `"binary"`, the download process will be disabled and the binary will be used directly.
 example:
 

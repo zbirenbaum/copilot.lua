@@ -33,8 +33,6 @@ jobs:
       - name: Prepare
         run: |
           ${{ matrix.install-rg }}
-          mkdir deps
-          mkdir ./tests/logs
           git clone --filter=blob:none https://github.com/echasnovski/mini.nvim deps/mini.nvim
           mv ./tests/env.lua.ci ./tests/env.lua
 

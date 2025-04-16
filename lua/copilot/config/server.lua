@@ -1,6 +1,6 @@
 ---@class (exact) ServerConfig
 ---@field type string<'nodejs', 'binary'> Type of the server
----@field custom_server_filepath? string|nil Path to the custom server file
+---@field custom_server_filepath? string|nil Path to the custom server file, can be absolute, relative or a file name (for PATH)
 
 local server = {
   ---@type ServerConfig
@@ -10,6 +10,7 @@ local server = {
   },
 }
 
+-- TODO: add support for relative paths
 ---@param config ServerConfig
 function server.validate(config)
   vim.validate("type", config.type, function(server_type)
