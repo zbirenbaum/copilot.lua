@@ -42,5 +42,4 @@ jobs:
           base: master
           branch: create-pull-request/update-copilot-lsp
           commit-message: "feat: update to latest Copilot LSP"
-          reviewers: MunifTanjim,zbirenbaum,AntoineGS
           title: "Update Copilot LSP"
