@@ -208,12 +208,12 @@ local function cancel_inflight_requests(ctx)
 
   with_client(function(client)
     if ctx.first then
-      client:cancel_request(ctx.first)
+      client.cancel_request(ctx.first)
       ctx.first = nil
       logger.trace("suggestion cancel first request")
     end
     if ctx.cycling then
-      client:cancel_request(ctx.cycling)
+      client.cancel_request(ctx.cycling)
       ctx.cycling = nil
       logger.trace("suggestion cancel cycling request")
     end
