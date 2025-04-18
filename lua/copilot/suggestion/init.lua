@@ -5,6 +5,7 @@ local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
 local logger = require("copilot.logger")
 local suggestion_util = require("copilot.suggestion.utils")
+local utils = require("copilot.client.utils")
 
 local M = {}
 
@@ -208,12 +209,12 @@ local function cancel_inflight_requests(ctx)
 
   with_client(function(client)
     if ctx.first then
-      client.cancel_request(ctx.first)
+      utils.wrap(client):cancel_request(ctx.first)
       ctx.first = nil
       logger.trace("suggestion cancel first request")
     end
     if ctx.cycling then
-      client.cancel_request(ctx.cycling)
+      utils.wrap(client):cancel_request(ctx.cycling)
       ctx.cycling = nil
       logger.trace("suggestion cancel cycling request")
     end

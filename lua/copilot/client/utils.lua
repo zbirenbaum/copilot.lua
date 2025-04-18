@@ -80,4 +80,15 @@ function M.show_document(_, result)
   }
 end
 
+M.wrap = vim.fn.has("nvim-0.11") == 1 and function(client)
+  return client
+end or function(client)
+  -- stylua: ignore
+  return setmetatable({
+    notify = function(_, ...) return client.notify(...) end,
+    request = function(_, ...) return client.request(...) end,
+    cancel_request = function(_, ...) return client.cancel_request(...) end,
+  }, { __index = client })
+end
+
 return M
