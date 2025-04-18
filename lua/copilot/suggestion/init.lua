@@ -4,6 +4,7 @@ local config = require("copilot.config")
 local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
 local logger = require("copilot.logger")
+local suggestion_util = require("copilot.suggestion.utils")
 
 local M = {}
 
@@ -54,6 +55,27 @@ local function get_ctx(bufnr)
     logger.trace("suggestion new context", ctx)
   end
   return ctx
+end
+
+---@param idx integer
+---@param text string
+---@param bufnr? integer
+local function set_ctx_suggestion_text(idx, text, bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+
+  if not copilot.context[bufnr] then
+    return
+  end
+
+  if not copilot.context[bufnr].suggestions[idx] then
+    return
+  end
+
+  local suggestion = copilot.context[bufnr].suggestions[idx]
+  local end_offset = #suggestion.text - #text
+  suggestion.text = text
+  suggestion.range["end"].character = suggestion.range["end"].character - end_offset
+  copilot.context[bufnr].suggestions[idx] = suggestion
 end
 
 ---@param ctx copilot_suggestion_context
@@ -255,8 +277,6 @@ local function update_preview(ctx)
     return
   end
 
-  ---@todo support popup preview
-
   local annot = ""
   if ctx.cycling_callbacks then
     annot = "(1/…)"
@@ -265,14 +285,25 @@ local function update_preview(ctx)
   end
 
   local cursor_col = vim.fn.col(".")
+  local cursor_line = vim.fn.line(".") - 1
+  local current_line = vim.api.nvim_buf_get_lines(0, cursor_line, cursor_line + 1, false)[1]
+  local text_after_cursor = string.sub(current_line, cursor_col)
 
   displayLines[1] =
     string.sub(string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1), cursor_col)
 
+  local suggestion_line1 = displayLines[1]
+
+  if #displayLines == 1 then
+    suggestion_line1 = suggestion_util.remove_common_suffix(text_after_cursor, suggestion_line1)
+    local suggest_text = suggestion_util.remove_common_suffix(text_after_cursor, suggestion.text)
+    set_ctx_suggestion_text(ctx.choice, suggest_text)
+  end
+
   local extmark = {
     id = copilot.extmark_id,
-    virt_text_win_col = vim.fn.virtcol(".") - 1,
-    virt_text = { { displayLines[1], hl_group.CopilotSuggestion } },
+    virt_text = { { suggestion_line1, hl_group.CopilotSuggestion } },
+    virt_text_pos = "inline",
   }
 
   if #displayLines > 1 then
@@ -289,7 +320,6 @@ local function update_preview(ctx)
   end
 
   extmark.hl_mode = "combine"
-
   vim.api.nvim_buf_set_extmark(0, copilot.ns_id, vim.fn.line(".") - 1, cursor_col - 1, extmark)
 
   if config.suggestion.suggestion_notification then
@@ -540,14 +570,17 @@ function M.accept(modifier)
         and vim.api.nvim_get_option_value("fileencoding", { buf = bufnr })
       or vim.api.nvim_get_option_value("encoding", { scope = "global" })
     vim.lsp.util.apply_text_edits({ { range = range, newText = newText } }, bufnr, encoding)
-    -- Put cursor at the end of current line.
-    local cursor_keys = "<End>"
+    print(range["end"].line)
+    print(range["end"].character)
 
-    -- TODO: Move to util and check only once
-    if vim.fn.has("nvim-0.10") == 1 then
-      cursor_keys = string.rep("<Down>", #vim.split(newText, "\n", { plain = true }) - 1) .. cursor_keys
-    end
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(cursor_keys, true, false, true), "n", false)
+    -- instead of calling <End>, go to the pos of the row after the last \n of inserted text
+    -- local cursor_keys = string.rep("<Down>", #vim.split(newText, "\n", { plain = true }) - 1) .. "<End>"
+    -- vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(cursor_keys, true, false, true), "n", false)
+    local lines = vim.split(newText, "\n", { plain = true })
+    local last_line = lines[#lines]
+    local cursor_keys = string.rep("<Down>", #lines - 1)
+    -- Position cursor at the end of the last inserted line
+    vim.api.nvim_win_set_cursor(0, { range["start"].line + #lines, #last_line })
   end)()
 end
 
