@@ -571,8 +571,6 @@ function M.accept(modifier)
         and vim.api.nvim_get_option_value("fileencoding", { buf = bufnr })
       or vim.api.nvim_get_option_value("encoding", { scope = "global" })
     vim.lsp.util.apply_text_edits({ { range = range, newText = newText } }, bufnr, encoding)
-    print(range["end"].line)
-    print(range["end"].character)
 
     -- instead of calling <End>, go to the pos of the row after the last \n of inserted text
     -- local cursor_keys = string.rep("<Down>", #vim.split(newText, "\n", { plain = true }) - 1) .. "<End>"
