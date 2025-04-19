@@ -9,11 +9,17 @@ function M.version()
   local info = u.get_editor_info()
 
   ---@type string
-  local lines = {
-    info.editorInfo.name .. " " .. info.editorInfo.version,
-    "copilot language server" .. " " .. info.editorPluginInfo.version,
-    "copilot.lua" .. " " .. u.get_copilot_lua_version(),
-  }
+  local lines = info.editorInfo.name
+    .. " "
+    .. info.editorInfo.version
+    .. "\n"
+    .. "copilot language server"
+    .. " "
+    .. info.editorPluginInfo.version
+    .. "\n"
+    .. "copilot.lua"
+    .. " "
+    .. u.get_copilot_lua_version()
 
   local client = c.get()
 
