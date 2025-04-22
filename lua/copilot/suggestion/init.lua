@@ -614,9 +614,15 @@ function M.accept(modifier)
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
     local bufnr = vim.api.nvim_get_current_buf()
 
-    local encoding = vim.api.nvim_get_option_value("fileencoding", { buf = bufnr }) ~= ""
-        and vim.api.nvim_get_option_value("fileencoding", { buf = bufnr })
-      or vim.api.nvim_get_option_value("encoding", { scope = "global" })
+    -- only utf encodings are supported
+    local encoding = vim.api.nvim_get_option_value("fileencoding", { buf = bufnr })
+    if not encoding or encoding == "" or encoding ~= "utf-8" or encoding ~= "utf-16" or encoding ~= "utf-32" then
+      encoding = vim.api.nvim_get_option_value("encoding", { scope = "global" })
+
+      if not encoding or encoding == "" or encoding ~= "utf-8" or encoding ~= "utf-16" or encoding ~= "utf-32" then
+        encoding = "utf-8"
+      end
+    end
 
     local lines = vim.split(newText, "\n", { plain = true })
     local lines_count = #lines
