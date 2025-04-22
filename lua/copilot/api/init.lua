@@ -130,7 +130,7 @@ function M.notify_shown(client, params, callback)
   return M.request(client, "notifyShown", params, callback)
 end
 
----@alias copilot_get_completions_data_completion { displayText: string, position: { character: integer, line: integer }, range: { ['end']: { character: integer, line: integer }, start: { character: integer, line: integer } }, text: string, uuid: string }
+---@alias copilot_get_completions_data_completion { displayText: string, position: { character: integer, line: integer }, range: { ['end']: { character: integer, line: integer }, start: { character: integer, line: integer } }, text: string, uuid: string, partial_text: string }
 ---@alias copilot_get_completions_data { completions: copilot_get_completions_data_completion[] }
 
 ---@return any|nil err
