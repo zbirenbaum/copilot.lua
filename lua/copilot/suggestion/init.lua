@@ -9,7 +9,7 @@ local utils = require("copilot.client.utils")
 
 local M = {}
 
----@alias copilot_suggestion_context { first?: integer, cycling?: integer, cycling_callbacks?: (fun(ctx: copilot_suggestion_context):nil)[], params?: table, suggestions?: copilot_get_completions_data_completion[], choice?: integer, shown_choices?: table<string, true> }
+---@alias copilot_suggestion_context { first?: integer, cycling?: integer, cycling_callbacks?: (fun(ctx: copilot_suggestion_context):nil)[], params?: table, suggestions?: copilot_get_completions_data_completion[], choice?: integer, shown_choices?: table<string, true>, accepted_partial?: boolean }
 
 local copilot = {
   setup_done = false,
@@ -25,6 +25,8 @@ local copilot = {
   hide_during_completion = true,
   debounce = 75,
 }
+
+local ignore_next_cursor_moved = false
 
 local function with_client(fn)
   local client = c.get()
@@ -59,6 +61,28 @@ local function get_ctx(bufnr)
 end
 
 ---@param idx integer
+---@param new_line integer
+---@param new_end_col integer
+---@param bufnr? integer
+local function update_ctx_suggestion_position(idx, new_line, new_end_col, bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+
+  if not copilot.context[bufnr] then
+    return
+  end
+
+  if not copilot.context[bufnr].suggestions[idx] then
+    return
+  end
+
+  local suggestion = copilot.context[bufnr].suggestions[idx]
+  suggestion.range["start"].line = new_line
+  suggestion.range["start"].character = 0
+  suggestion.range["end"].line = new_line
+  suggestion.range["end"].character = new_end_col
+end
+
+---@param idx integer
 ---@param text string
 ---@param bufnr? integer
 local function set_ctx_suggestion_text(idx, text, bufnr)
@@ -89,6 +113,7 @@ local function reset_ctx(ctx)
   ctx.suggestions = nil
   ctx.choice = nil
   ctx.shown_choices = nil
+  ctx.accepted_partial = nil
 end
 
 local function set_keymap(keymap)
@@ -249,10 +274,10 @@ local function get_current_suggestion(ctx)
       return nil
     end
 
-    if choice.range.start.character ~= 0 then
-      -- unexpected range
-      return nil
-    end
+    -- if choice.range.start.character ~= 0 then
+    --   -- unexpected range
+    --   return nil
+    -- end
 
     return choice
   end)
@@ -475,7 +500,7 @@ local function schedule(ctx)
     stop_timer()
   end
 
-  update_preview(ctx)
+  -- update_preview(ctx)
   local bufnr = vim.api.nvim_get_current_buf()
   copilot._copilot_timer = vim.fn.timer_start(copilot.debounce, function(timer)
     logger.trace("suggestion schedule timer", bufnr)
@@ -486,6 +511,10 @@ end
 function M.next()
   local ctx = get_ctx()
   logger.trace("suggestion next", ctx)
+
+  if ctx.accepted_partial then
+    reset_ctx(ctx)
+  end
 
   -- no suggestion request yet
   if not ctx.first then
@@ -502,6 +531,10 @@ end
 function M.prev()
   local ctx = get_ctx()
   logger.trace("suggestion prev", ctx)
+
+  if ctx.accepted_partial then
+    reset_ctx(ctx)
+  end
 
   -- no suggestion request yet
   if not ctx.first then
@@ -532,11 +565,15 @@ function M.accept(modifier)
     return
   end
 
-  cancel_inflight_requests(ctx)
-  reset_ctx(ctx)
-
   if type(modifier) == "function" then
     suggestion = modifier(suggestion)
+  end
+
+  local accepted_partial = suggestion.partial_text and suggestion.partial_text ~= ""
+
+  if not accepted_partial then
+    cancel_inflight_requests(ctx)
+    reset_ctx(ctx)
   end
 
   with_client(function(client)
@@ -552,34 +589,62 @@ function M.accept(modifier)
     end
   end)
 
-  clear_preview()
+  local newText
 
-  local range, newText = suggestion.range, suggestion.text
+  if accepted_partial then
+    newText = suggestion.partial_text
+    ctx.accepted_partial = true
+    ignore_next_cursor_moved = true
+  else
+    clear_preview()
+    newText = suggestion.text
+  end
+
+  local range = suggestion.range
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line, character = cursor[1] - 1, cursor[2]
   if range["end"].line == line and range["end"].character < character then
     range["end"].character = character
   end
 
-  -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
   vim.schedule_wrap(function()
     -- Create an undo breakpoint
     vim.cmd("let &undolevels=&undolevels")
+    -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
     local bufnr = vim.api.nvim_get_current_buf()
+
     local encoding = vim.api.nvim_get_option_value("fileencoding", { buf = bufnr }) ~= ""
         and vim.api.nvim_get_option_value("fileencoding", { buf = bufnr })
       or vim.api.nvim_get_option_value("encoding", { scope = "global" })
+
+    local lines = vim.split(newText, "\n", { plain = true })
+    local lines_count = #lines
+    local last_col = #lines[lines_count]
+
+    -- apply_text_edits will remove the last \n if the last line is empty,
+    -- so we trick it by adding an extra one
+    if last_col == 0 then
+      newText = newText .. "\n"
+    end
+
     vim.lsp.util.apply_text_edits({ { range = range, newText = newText } }, bufnr, encoding)
 
-    -- instead of calling <End>, go to the pos of the row after the last \n of inserted text
-    -- local cursor_keys = string.rep("<Down>", #vim.split(newText, "\n", { plain = true }) - 1) .. "<End>"
-    -- vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(cursor_keys, true, false, true), "n", false)
-    local lines = vim.split(newText, "\n", { plain = true })
-    local last_line = lines[#lines]
-    local cursor_keys = string.rep("<Down>", #lines - 1)
     -- Position cursor at the end of the last inserted line
-    vim.api.nvim_win_set_cursor(0, { range["start"].line + #lines, #last_line })
+    local new_cursor_line = range["start"].line + #lines
+    vim.api.nvim_win_set_cursor(0, { new_cursor_line, last_col })
+
+    if accepted_partial then
+      suggestion.partial_text = nil
+
+      for _ = 1, lines_count - 1 do
+        suggestion.text = suggestion.text:sub(suggestion.text:find("\n") + 1)
+        suggestion.displayText = suggestion.displayText:sub(suggestion.displayText:find("\n") + 1)
+      end
+
+      update_ctx_suggestion_position(ctx.choice, new_cursor_line - 1, last_col, bufnr)
+      update_preview(ctx)
+    end
   end)()
 end
 
@@ -592,19 +657,18 @@ function M.accept_word()
 
     local _, char_idx = string.find(text, "%s*%p*[^%s%p]*%s*", character + 1)
     if char_idx then
-      suggestion.text = string.sub(text, 1, char_idx)
-
-      range["end"].line = range["start"].line
+      suggestion.partial_text = string.sub(text, 1, char_idx)
       range["end"].character = char_idx
     end
 
+    range["end"].line = range["start"].line
     return suggestion
   end)
 end
 
 function M.accept_line()
   M.accept(function(suggestion)
-    local text = suggestion.text
+    local range, text = suggestion.range, suggestion.text
 
     local cursor = vim.api.nvim_win_get_cursor(0)
     local _, character = cursor[1], cursor[2]
@@ -612,9 +676,11 @@ function M.accept_line()
     local next_char = string.sub(text, character + 1, character + 1)
     local _, char_idx = string.find(text, next_char == "\n" and "\n%s*[^\n]*\n%s*" or "\n%s*", character)
     if char_idx then
-      suggestion.text = string.sub(text, 1, char_idx)
+      suggestion.partial_text = string.sub(text, 1, char_idx)
+      range["end"].character = char_idx
     end
 
+    range["end"].line = range["start"].line
     return suggestion
   end)
 end
@@ -659,6 +725,11 @@ local function on_buf_enter()
 end
 
 local function on_cursor_moved_i()
+  if ignore_next_cursor_moved then
+    ignore_next_cursor_moved = false
+    return
+  end
+
   local ctx = get_ctx()
   if copilot._copilot_timer or ctx.params or should_auto_trigger() then
     logger.trace("suggestion on cursor moved insert")

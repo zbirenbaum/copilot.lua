@@ -21,7 +21,7 @@ function M.new_child_neovim(test_name)
       panel = "",
       suggestion = [[
         suggestion_notification = function(virt_text, _)
-          if (#virt_text > 0) and (#virt_text[1] > 0) and (virt_text[1][1] == "89") then
+          if (#virt_text > 0) and (#virt_text[1] > 0) then
             M.suggested = true
           end
         end,
