@@ -127,6 +127,7 @@ function M.schedule(ctx)
     timer.stop_timer()
   end
 
+  require("copilot.suggestion.preview").update_preview(ctx)
   local bufnr = vim.api.nvim_get_current_buf()
   timer.copilot_timer = vim.fn.timer_start(copilot.debounce, function(curr_timer)
     logger.trace("suggestion schedule timer", bufnr)
