@@ -274,11 +274,6 @@ local function get_current_suggestion(ctx)
       return nil
     end
 
-    -- if choice.range.start.character ~= 0 then
-    --   -- unexpected range
-    --   return nil
-    -- end
-
     return choice
   end)
 
@@ -500,7 +495,7 @@ local function schedule(ctx)
     stop_timer()
   end
 
-  -- update_preview(ctx)
+  update_preview(ctx)
   local bufnr = vim.api.nvim_get_current_buf()
   copilot._copilot_timer = vim.fn.timer_start(copilot.debounce, function(timer)
     logger.trace("suggestion schedule timer", bufnr)
