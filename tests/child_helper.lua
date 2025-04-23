@@ -22,7 +22,7 @@ function M.new_child_neovim(test_name)
       suggestion = [[
         suggestion_notification = function(virt_text, _)
           if (#virt_text > 0) and (#virt_text[1] > 0) then
-            M.suggested = true
+            copilot.suggested = true
           end
         end,
       ]],
@@ -64,7 +64,7 @@ function M.new_child_neovim(test_name)
       child.fn.setenv("GITHUB_COPILOT_TOKEN", env.COPILOT_TOKEN)
     end
     child.setup_and_wait_for_debugger()
-    child.lua("M = require('copilot')")
+    child.lua("copilot = require('copilot')")
   end
 
   function child.configure_copilot()
@@ -87,8 +87,8 @@ function M.new_child_neovim(test_name)
 
     script = string.format(
       [[
-        M.suggested = false
-        M.setup({ %s })
+        copilot.suggested = false
+        copilot.setup({ %s })
       ]],
       script
     )
@@ -108,7 +108,7 @@ function M.new_child_neovim(test_name)
   function child.wait_for_suggestion()
     child.lua([[
       vim.wait(30000, function()
-        return M.suggested
+        return copilot.suggested
       end, 10)
     ]])
   end

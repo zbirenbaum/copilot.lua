@@ -17,7 +17,7 @@ local T = MiniTest.new_set({
 T["client.config()"] = MiniTest.new_set()
 
 T["client.config()"]["config, github-enterprise populated"] = function()
-  child.lua([[M.setup({
+  child.lua([[copilot.setup({
     auth_provider_url = "https://someurl.com",
   })]])
   local settings = child.lua("return vim.inspect(c.config.settings)")

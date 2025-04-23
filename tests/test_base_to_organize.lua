@@ -16,12 +16,12 @@ local T = MiniTest.new_set({
 T["lua()"] = MiniTest.new_set()
 
 T["lua()"]["setup not called, copilot.setup_done is false"] = function()
-  eq(child.lua("return M.setup_done"), false)
+  eq(child.lua("return copilot.setup_done"), false)
 end
 
 T["lua()"]["setup called, copilot.setup_done is true"] = function()
   child.configure_copilot()
-  eq(child.lua("return M.setup_done"), true)
+  eq(child.lua("return copilot.setup_done"), true)
 end
 
 T["lua()"]["api.status reroutes to status"] = function()

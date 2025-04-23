@@ -1,4 +1,14 @@
-local M = {}
+local M = {
+  ns_id = vim.api.nvim_create_namespace("copilot.suggestion"),
+}
+local c = require("copilot.client")
+
+function M.with_client(fn)
+  local client = c.get()
+  if client then
+    fn(client)
+  end
+end
 
 function M.remove_common_suffix(str, suggestion)
   if str == "" or suggestion == "" then
