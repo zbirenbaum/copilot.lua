@@ -1,6 +1,8 @@
 local eq = MiniTest.expect.equality
 local child_helper = require("tests.child_helper")
-local child = child_helper.new_child_neovim("test_client")
+local child = child_helper.new_child_neovim("test_panel")
+local reference_screenshot = MiniTest.expect.reference_screenshot
+local utils = require("copilot.panel.utils")
 
 local T = MiniTest.new_set({
   hooks = {
@@ -23,19 +25,10 @@ T["panel()"]["panel suggestions works"] = function()
   child.configure_copilot()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
   child.lua("p.toggle()")
+  child.wait_for_panel_suggestion()
 
   local lines = child.lua([[
-    local messages = ""
-    local function suggestion_is_visible()
-      lines = vim.api.nvim_buf_get_lines(2, 4, 5, false)
-      return lines[1] == "789" or lines[1] == "789\r"
-    end
-
-    vim.wait(30000, function()
-      return suggestion_is_visible()
-    end, 50)
-
-    return lines
+    return vim.api.nvim_buf_get_lines(2, 4, 5, false)
   ]])
 
   -- For Windows, on some shells not all
@@ -44,6 +37,36 @@ T["panel()"]["panel suggestions works"] = function()
   end
 
   eq(lines[1], "789")
+end
+
+-- Disabled for now as unnamed buffers have issues with not having a URI
+-- T["panel()"]["panel suggestion accept works"] = function()
+--   child.o.lines, child.o.columns = 30, 100
+--   child.config.panel = child.config.panel .. "auto_refresh = true,"
+--   child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
+--   child.configure_copilot()
+--   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
+--   child.lua("p.toggle()")
+--   child.wait_for_panel_suggestion()
+--   child.cmd("buffer 2")
+--   child.type_keys("4gg")
+--   child.lua("p.accept()")
+--   child.cmd("buffer 1")
+--   reference_screenshot(child.get_screenshot())
+-- end
+
+T["panel.utils()"] = MiniTest.new_set()
+
+T["panel.utils()"]["panel_uri_from_doc_uri works"] = function()
+  local panel_uri = "copilot:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua"
+  local doc_uri = utils.panel_uri_to_doc_uri(panel_uri)
+  eq(doc_uri, "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua")
+end
+
+T["panel.utils()"]["panel_uri_to_doc_uri"] = function()
+  local doc_uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua"
+  local panel_uri = utils.panel_uri_from_doc_uri(doc_uri)
+  eq(panel_uri, "copilot:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua")
 end
 
 return T
