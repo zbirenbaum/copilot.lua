@@ -113,6 +113,19 @@ function M.new_child_neovim(test_name)
     ]])
   end
 
+  function child.wait_for_panel_suggestion()
+    child.lua([[
+      local function suggestion_is_visible()
+        lines = vim.api.nvim_buf_get_lines(2, 4, 5, false)
+        return lines[1] and lines[1] ~= "" 
+      end
+
+      vim.wait(30000, function()
+        return suggestion_is_visible()
+      end, 50)
+    ]])
+  end
+
   return child
 end
 
