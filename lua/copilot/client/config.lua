@@ -63,8 +63,11 @@ function M.prepare_client_config(overrides, client)
   local proxy_uri = vim.g.copilot_proxy
 
   local settings = { ---@type copilot_settings
-    telemetry = { ---@type github_settings_telemetry
+    telemetry = { ---@type copilot_settings_telemetry
       telemetryLevel = "all",
+    },
+    nextEditSuggestion = { ---@type copilot_settings_nextEditSuggesetions
+      enabled = true,
     },
   }
 
@@ -99,6 +102,35 @@ function M.prepare_client_config(overrides, client)
       if client.id == lsp_client.id then
         client.capabilities = initialize_result.capabilities
       end
+
+      vim.api.nvim_set_hl(0, "NesAdd", { link = "DiffAdd", default = true })
+      vim.api.nvim_set_hl(0, "NesDelete", { link = "DiffDelete", default = true })
+      vim.api.nvim_set_hl(0, "NesApply", { link = "DiffText", default = true })
+
+      local au = vim.api.nvim_create_augroup("copilot-language-server", { clear = true })
+
+      --NOTE: NES Completions
+      local debounced_request =
+        require("copilot.nes.util").debounce(require("copilot.nes").request_nes, vim.g.copilot_nes_debounce or 500)
+      vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
+        callback = function()
+          debounced_request(client)
+        end,
+        group = au,
+      })
+
+      --NOTE: didFocus
+      vim.api.nvim_create_autocmd("BufEnter", {
+        callback = function()
+          local td_params = vim.lsp.util.make_text_document_params()
+          api.notify("textDocument/didFocus", {
+            textDocument = {
+              uri = td_params.uri,
+            },
+          })
+        end,
+        group = au,
+      })
 
       vim.schedule(function()
         local configurations = utils.get_workspace_configurations()

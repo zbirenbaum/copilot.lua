@@ -40,9 +40,10 @@ end
 ---@alias copilot_editor_plugin_info { name: string, version: string }
 
 ---@alias copilot_settings_http { proxy: string, proxyStrictSSL: boolean, proxyKerberosServicePrincipal?: string }
----@alias github_settings_telemetry { telemetryLevel: string }
+---@alias copilot_settings_telemetry { telemetryLevel: string }
 ---@alias copilot_settings_github-enterprise { uri: string }
----@alias copilot_settings { http?: copilot_settings_http, telemetry: github_settings_telemetry, github-enterprise?: copilot_settings_github-enterprise }
+---@alias copilot_settings_nextEditSuggesetions { enabled: boolean }
+---@alias copilot_settings { http?: copilot_settings_http, telemetry: copilot_settings_telemetry, github-enterprise?: copilot_settings_github-enterprise, nextEditSuggestion: copilot_settings_nextEditSuggesetions }
 
 ---@alias copilot_workspace_selected_completion_model { selectedCompletionModel: string }
 ---@alias copilot_workspace_copilot { copilot: copilot_workspace_copilot }

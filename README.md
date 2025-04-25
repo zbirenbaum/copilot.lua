@@ -467,3 +467,7 @@ server_opts_overrides = {
 ```
 
 Refer to your plugins documentation for changes.
+
+
+## Credit
+Thank you to [copilot-lsp](https://github.com/copilotlsp-nvim/copilot-lsp) for the Next Edit Suggestion code, as the majority of the code for it comes from that repo.
