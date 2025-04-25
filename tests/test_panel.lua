@@ -66,7 +66,18 @@ end
 T["panel.utils()"]["panel_uri_to_doc_uri"] = function()
   local doc_uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua"
   local panel_uri = utils.panel_uri_from_doc_uri(doc_uri)
-  eq(panel_uri, "copilot:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua")
+
+  -- Windows result
+  if
+    panel_uri == "copilot:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua"
+  then
+    eq(panel_uri, "copilot:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua")
+  else
+    eq(
+      panel_uri,
+      [[copilot:///C:\Users\antoi\AppData\Local\nvim-data\lazy\copilot.lua\lua\copilot\suggestion\init.lua]]
+    )
+  end
 end
 
 return T
