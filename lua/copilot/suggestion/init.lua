@@ -340,7 +340,7 @@ local function update_preview(ctx)
     extmark.virt_text[3] = { annot, hl_group.CopilotAnnotation }
   end
 
-  extmark.hl_mode = "combine"
+  extmark.hl_mode = "replace"
   vim.api.nvim_buf_set_extmark(0, copilot.ns_id, vim.fn.line(".") - 1, cursor_col - 1, extmark)
 
   if config.suggestion.suggestion_notification then
