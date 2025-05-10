@@ -86,6 +86,12 @@ export type ContextUsageStatistics = {
     usageDetails?: ContextItemUsageDetails[];
 };
 
+export type ProposedTextEdit = TextEdit & {
+    positionAfterEdit: Position;
+    // Indicates whether the edit is suggested by the IDE. Otherwise it's assumed to be speculative
+    source?: 'selectedCompletionInfo';
+};
+
 export interface DocumentContext {
     uri: DocumentUri;
     languageId: string;
@@ -95,7 +101,7 @@ export interface DocumentContext {
      */
     offset: number;
     position: Position;
-    proposedEdits?: TextEdit[];
+    proposedEdits?: ProposedTextEdit[];
 }
 export interface ResolveRequest {
     // A unique ID to correlate the request with the completion request.
