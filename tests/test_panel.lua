@@ -1,7 +1,7 @@
 local eq = MiniTest.expect.equality
 local child_helper = require("tests.child_helper")
 local child = child_helper.new_child_neovim("test_panel")
-local reference_screenshot = MiniTest.expect.reference_screenshot
+-- local reference_screenshot = MiniTest.expect.reference_screenshot
 local utils = require("copilot.panel.utils")
 
 local T = MiniTest.new_set({
@@ -57,26 +57,40 @@ end
 
 T["panel.utils()"] = MiniTest.new_set()
 
-T["panel.utils()"]["panel_uri_from_doc_uri works"] = function()
-  local panel_uri = "copilot:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua"
+T["panel.utils()"]["panel_uri_from_doc_uri"] = function()
+  local panel_uri = ""
+
+  if vim.fn.has("win32") > 0 then
+    panel_uri = "copilot:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua"
+  else
+    panel_uri = "copilot:///home/antoi/test.lua"
+  end
+
   local doc_uri = utils.panel_uri_to_doc_uri(panel_uri)
-  eq(doc_uri, "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua")
+
+  if vim.fn.has("win32") > 0 then
+    eq(doc_uri, "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua")
+  else
+    eq(doc_uri, "file:///home/antoi/test.lua")
+  end
 end
 
 T["panel.utils()"]["panel_uri_to_doc_uri"] = function()
-  local doc_uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua"
+  local doc_uri = ""
+
+  if vim.fn.has("win32") > 0 then
+    doc_uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua"
+  else
+    doc_uri = "file:///home/antoi/test.lua"
+  end
+
   local panel_uri = utils.panel_uri_from_doc_uri(doc_uri)
 
   -- Windows result
-  if
-    panel_uri == "copilot:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua"
-  then
+  if vim.fn.has("win32") > 0 then
     eq(panel_uri, "copilot:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua")
   else
-    eq(
-      panel_uri,
-      [[copilot:///C:\Users\antoi\AppData\Local\nvim-data\lazy\copilot.lua\lua\copilot\suggestion\init.lua]]
-    )
+    eq(panel_uri, "copilot:///home/antoi/test.lua")
   end
 end
 
