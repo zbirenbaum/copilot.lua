@@ -1,7 +1,7 @@
 name: Auto Generate Vimdoc
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - README.md
       - .github/workflows/vimdocgen.yml
