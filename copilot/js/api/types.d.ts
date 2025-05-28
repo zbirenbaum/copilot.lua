@@ -117,8 +117,15 @@ export interface ResolveRequest {
      * After the time budget runs out, the request will be cancelled via the CancellationToken.
      * Providers can use this value as a hint when computing context. Providers should expect the
      * request to be cancelled once the time budget runs out.
+     *
+     * @deprecated Use `timeoutEnd` instead.
      */
     timeBudget: number;
+
+    /**
+     * Unix timestamp representing the exact time the request will be cancelled via the CancellationToken.
+     */
+    timeoutEnd: number;
 
     /**
      * Various statistics about the last completion request. This can be used by the context provider
