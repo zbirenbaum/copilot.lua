@@ -51,8 +51,14 @@ export interface ContextProvider<T extends SupportedContextItem> {
     selector: DocumentSelector;
     resolver: ContextResolver<T>;
 }
+
+export type ResolveOnTimeoutResult<T> = T | readonly T[];
+export type ResolveResult<T> = Promise<T> | Promise<readonly T[]> | AsyncIterable<T>;
+
 export interface ContextResolver<T extends SupportedContextItem> {
-    resolve(request: ResolveRequest, token: CancellationToken): Promise<T> | Promise<T[]> | AsyncIterable<T>;
+    resolve(request: ResolveRequest, token: CancellationToken): ResolveResult<T>;
+    // Optional method to be invoked if the request timed out. This requests additional context items.
+    resolveOnTimeout?(request: ResolveRequest): ResolveOnTimeoutResult<T> | undefined;
 }
 
 /**
@@ -142,14 +148,6 @@ export interface ResolveRequest {
 }
 
 /**
- * A context item marked as backup will only be used if the provider hits the timeout
- * and is not able to fully resolve.
- */
-export enum ContextItemTag {
-    Backup = 'backup',
-}
-
-/**
  * These are the data types that can be provided by a context provider. Any non-conforming
  * context items will be filtered out.
  */
@@ -175,13 +173,6 @@ interface ContextItem {
      * - update: context is provided via context/update
      */
     origin?: ContextItemOrigin;
-
-    /**
-     * Tags are used to provide additional metadata about the context item. Valid tags
-     * are defined in the ContextItemTag. The type is a string[] to allow arbitrary tags
-     * to be passed without failing schema validation.
-     */
-    tags?: string[];
 }
 
 // A key-value pair used for short string snippets.
