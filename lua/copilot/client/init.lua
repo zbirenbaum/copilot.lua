@@ -142,14 +142,10 @@ function M.setup()
 
   vim.api.nvim_create_autocmd("FileType", {
     group = M.augroup,
-    callback = vim.schedule_wrap(function()
+    callback = function()
       M.buf_attach()
-    end),
+    end,
   })
-
-  vim.schedule(function()
-    M.buf_attach()
-  end)
 end
 
 function M.teardown()
