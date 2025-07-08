@@ -109,6 +109,12 @@ function M.use_client(callback)
     end
 
     client_config.add_callback(callback)
+
+    if not util.should_attach() then
+      logger.debug("not attaching to buffer based on should_attach criteria")
+      return
+    end
+
     local client_id, err = vim.lsp.start(M.config)
 
     if not client_id then
