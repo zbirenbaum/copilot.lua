@@ -87,14 +87,12 @@ authentication provider to a custom URL with the corresponding config key e.g.
 You have to run the `require("copilot").setup(options)` function in order to start Copilot.
 If no options are provided, the defaults are used.
 
-Because the copilot server takes some time to start up, it is recommended that you lazy load copilot.
 For example:
 
 ```lua
 use {
   "zbirenbaum/copilot.lua",
-  cmd = "Copilot",
-  event = "InsertEnter",
+  lazy = false,
   config = function()
     require("copilot").setup({})
   end,
