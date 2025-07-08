@@ -23,7 +23,7 @@ M.setup = function(opts)
   local token_env_set = (os.getenv("GITHUB_COPILOT_TOKEN") ~= nil) or (os.getenv("GH_COPILOT_TOKEN") ~= nil)
 
   if token_env_set then
-    auth.signin()
+    vim.schedule(auth.signin)
   end
 
   M.setup_done = true
