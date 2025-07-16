@@ -22,7 +22,7 @@ T["suggestion()"]["suggestion works"] = function()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
   child.wait_for_suggestion()
 
-  reference_screenshot(child.get_screenshot(), nil, { ignore_lines = { 9, 10 } })
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
 T["suggestion()"]["auto_trigger is false, will not show ghost test"] = function()
@@ -32,7 +32,7 @@ T["suggestion()"]["auto_trigger is false, will not show ghost test"] = function(
   vim.loop.sleep(3000)
   child.lua("vim.wait(0)")
 
-  reference_screenshot(child.get_screenshot(), nil, { ignore_lines = { 9, 10 } })
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
 T["suggestion()"]["accept keymap to trigger sugestion"] = function()
@@ -42,7 +42,7 @@ T["suggestion()"]["accept keymap to trigger sugestion"] = function()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<Tab>")
   child.wait_for_suggestion()
 
-  reference_screenshot(child.get_screenshot(), nil, { ignore_lines = { 9, 10 } })
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
 T["suggestion()"]["accept keymap, no suggestion, execute normal keystroke"] = function()
@@ -53,7 +53,7 @@ T["suggestion()"]["accept keymap, no suggestion, execute normal keystroke"] = fu
   child.configure_copilot()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<Tab>")
 
-  reference_screenshot(child.get_screenshot(), nil, { ignore_lines = { 9, 10 } })
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
 T["suggestion()"]["accept_word, 1 word, works"] = function()
@@ -64,7 +64,7 @@ T["suggestion()"]["accept_word, 1 word, works"] = function()
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<Esc>")
 
-  reference_screenshot(child.get_screenshot(), nil, { ignore_lines = { 9, 10 } })
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
 T["suggestion()"]["accept_word, 3 words, works"] = function()
@@ -75,7 +75,7 @@ T["suggestion()"]["accept_word, 3 words, works"] = function()
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<C-e>", "<C-e>", "<Esc>")
 
-  reference_screenshot(child.get_screenshot(), nil, { ignore_lines = { 9, 10 } })
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
 -- - accept_word, 1 word then next
@@ -91,7 +91,7 @@ T["suggestion()"]["accept_word, 1 word, then dismiss"] = function()
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<Tab>")
 
-  reference_screenshot(child.get_screenshot(), nil, { ignore_lines = { 9, 10 } })
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
 T["suggestion()"]["accept_word, 1 word, then accept"] = function()
@@ -104,7 +104,7 @@ T["suggestion()"]["accept_word, 1 word, then accept"] = function()
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<Tab>")
 
-  reference_screenshot(child.get_screenshot(), nil, { ignore_lines = { 9, 10 } })
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
 T["suggestion()"]["accept_line, 1 line, works"] = function()
@@ -117,7 +117,7 @@ T["suggestion()"]["accept_line, 1 line, works"] = function()
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<Esc>")
 
-  reference_screenshot(child.get_screenshot(), nil, { ignore_lines = { 29, 30 } })
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 29, 30 }, ignore_attr = { 29, 30 } })
 end
 
 T["suggestion()"]["accept_line, 3 lines, works"] = function()
@@ -130,7 +130,7 @@ T["suggestion()"]["accept_line, 3 lines, works"] = function()
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<C-e>", "<C-e>", "<Esc>")
 
-  reference_screenshot(child.get_screenshot(), nil, { ignore_lines = { 49, 50 } })
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 49, 50 }, ignore_attr = { 49, 50 } })
 end
 
 -- - accept_line, 1 line then next
@@ -148,7 +148,7 @@ T["suggestion()"]["accept_line, 1 line, then dismiss"] = function()
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<Tab>")
 
-  reference_screenshot(child.get_screenshot(), nil, { ignore_lines = { 29, 30 } })
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 29, 30 }, ignore_attr = { 29, 30 } })
 end
 
 T["suggestion()"]["accept_line, 1 line, then accept"] = function()
@@ -164,7 +164,7 @@ T["suggestion()"]["accept_line, 1 line, then accept"] = function()
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<Tab>")
 
-  reference_screenshot(child.get_screenshot(), nil, { ignore_lines = { 49, 50 } })
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 49, 50 }, ignore_attr = { 49, 50 } })
 end
 
 return T
