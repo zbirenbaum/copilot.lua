@@ -235,20 +235,8 @@ function M.init()
 end
 
 ---@return boolean
-local function is_arm()
-  local fh, err = assert(io.popen("uname -m 2>/dev/null", "r"))
-  if err then
-    logger.error("could not determine if cpu is arm, assuming it is not: " .. err)
-    return false -- we assume not arm
-  end
-
-  local os_name
-  if fh then
-    os_name = fh:read()
-    fh:close()
-  end
-
-  return os_name == "aarch64" or string.sub(os_name, 1, 3) == "arm"
+local function is_arm(machine)
+  return machine == "aarch64" or machine:sub(1, 3) == "arm"
 end
 
 ---@return boolean
@@ -298,9 +286,10 @@ function M.get_copilot_server_info()
   local path = ""
   local extracted_filename = "copilot-language-server"
   local filename = "copilot-language-server-" .. copilot_version
-  local os = vim.loop.os_uname().sysname
+  local uname = vim.loop.os_uname()
+  local os = uname.sysname
   if os == "Linux" then
-    if is_arm() then
+    if is_arm(uname.machine) then
       path = "linux-arm64"
     elseif not is_musl() then
       path = "linux-x64"
@@ -309,7 +298,7 @@ function M.get_copilot_server_info()
       path = "js"
     end
   elseif os == "Darwin" then
-    if is_arm() then
+    if is_arm(uname.machine) then
       path = "darwin-arm64"
     else
       path = "darwin-x64"
