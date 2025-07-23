@@ -151,18 +151,23 @@ function M.find_config_path()
   logger.error("could not find config path")
 end
 
-M.get_creds = function()
+M.get_creds = function(opts)
   local filename = M.find_config_path() .. "/github-copilot/apps.json"
+  opts = opts or {}
 
   if vim.fn.filereadable(filename) == 0 then
-    logger.error("Copilot auth file could not be read from:" .. filename)
+    if not opts.silent then
+      logger.error("Copilot auth file could not be read from:" .. filename)
+    end
     return
   end
 
   local filedata = vim.api.nvim_eval("readfile('" .. filename .. "')")
 
   if not filedata or #filedata == 0 then
-    logger.error("Copilot's apps.json file not found or empty, make sure to sign in first")
+    if not opts.silent then
+      logger.error("Copilot's apps.json file not found or empty, make sure to sign in first")
+    end
     return
   end
 
@@ -178,6 +183,16 @@ function M.info()
   end
 
   logger.notify("GitHub Copilot token information: ", info)
+end
+
+function M.is_authenticated()
+  local token_env_set = (os.getenv("GITHUB_COPILOT_TOKEN") ~= nil) or (os.getenv("GH_COPILOT_TOKEN") ~= nil)
+  if token_env_set then
+    return true
+  end
+  
+  local creds = M.get_creds({ silent = true })
+  return creds ~= nil
 end
 
 return M
