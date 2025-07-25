@@ -114,6 +114,7 @@ export interface DocumentContext {
 export interface ResolveRequest {
     // A unique ID to correlate the request with the completion request.
     completionId: string;
+    opportunityId: string;
     documentContext: DocumentContext;
 
     activeExperiments: Map<string, string | number | boolean | string[]>;
