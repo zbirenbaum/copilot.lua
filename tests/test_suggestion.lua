@@ -19,6 +19,7 @@ T["suggestion()"]["suggestion works"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
   child.configure_copilot()
+  child.wait_for_lsp_authentication()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
   child.wait_for_suggestion()
 
@@ -28,6 +29,7 @@ end
 T["suggestion()"]["auto_trigger is false, will not show ghost test"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.configure_copilot()
+  child.wait_for_lsp_authentication()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
   vim.loop.sleep(3000)
   child.lua("vim.wait(0)")
@@ -39,6 +41,7 @@ T["suggestion()"]["accept keymap to trigger sugestion"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.config.suggestion = child.config.suggestion .. "keymap = { accept = '<Tab>' },"
   child.configure_copilot()
+  child.wait_for_lsp_authentication()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<Tab>")
   child.wait_for_suggestion()
 
@@ -51,6 +54,7 @@ T["suggestion()"]["accept keymap, no suggestion, execute normal keystroke"] = fu
     .. "keymap = { accept = '<Tab>' },\n"
     .. "trigger_on_accept = false,"
   child.configure_copilot()
+  child.wait_for_lsp_authentication()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<Tab>")
 
   reference_screenshot(child.get_screenshot(), nil, { ignore_lines = { 9, 10 } })
@@ -60,6 +64,7 @@ T["suggestion()"]["accept_word, 1 word, works"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true," .. "keymap = { accept_word = '<C-e>' },"
   child.configure_copilot()
+  child.wait_for_lsp_authentication()
   child.type_keys("i1, 2, 3,", "<Esc>", "o4, 5, 6,", "<Esc>", "o7, ")
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<Esc>")
@@ -71,6 +76,7 @@ T["suggestion()"]["accept_word, 3 words, works"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true," .. "keymap = { accept_word = '<C-e>' },"
   child.configure_copilot()
+  child.wait_for_lsp_authentication()
   child.type_keys("i1, 2, 3,", "<Esc>", "o4, 5, 6,", "<Esc>", "o7, ")
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<C-e>", "<C-e>", "<Esc>")
@@ -87,6 +93,7 @@ T["suggestion()"]["accept_word, 1 word, then dismiss"] = function()
     .. "auto_trigger = true,"
     .. "keymap = { accept_word = '<C-e>', dismiss = '<Tab>' },"
   child.configure_copilot()
+  child.wait_for_lsp_authentication()
   child.type_keys("i1, 2, 3,", "<Esc>", "o4, 5, 6,", "<Esc>", "o7, ")
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<Tab>")
@@ -100,6 +107,7 @@ T["suggestion()"]["accept_word, 1 word, then accept"] = function()
     .. "auto_trigger = true,"
     .. "keymap = { accept_word = '<C-e>', accept = '<Tab>' },"
   child.configure_copilot()
+  child.wait_for_lsp_authentication()
   child.type_keys("i1, 2, 3,", "<Esc>", "o4, 5, 6,", "<Esc>", "o7, ")
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<Tab>")
@@ -111,6 +119,7 @@ T["suggestion()"]["accept_line, 1 line, works"] = function()
   child.o.lines, child.o.columns = 30, 15
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true," .. "keymap = { accept_line = '<C-e>' },"
   child.configure_copilot()
+  child.wait_for_lsp_authentication()
   child.type_keys("i{", "<Esc>o", "  1,2,3", "<Esc>o", "4,5,6", "<Esc>o", "7,8,9", "<Esc>o<bs>", "}", "<Esc>")
   child.type_keys("o{", "<Esc>o", "  10,11,12", "<Esc>", "o13,14,15", "<Esc>", "o16,17,18", "<Esc>o<bs>", "}", "<Esc>")
   child.type_keys("o{", "<Esc>o")
@@ -124,6 +133,7 @@ T["suggestion()"]["accept_line, 3 lines, works"] = function()
   child.o.lines, child.o.columns = 50, 15
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true," .. "keymap = { accept_line = '<C-e>' },"
   child.configure_copilot()
+  child.wait_for_lsp_authentication()
   child.type_keys("i{", "<Esc>o", "  1,2,3", "<Esc>o", "4,5,6", "<Esc>o", "7,8,9", "<Esc>o<bs>", "}", "<Esc>")
   child.type_keys("o{", "<Esc>o", "  10,11,12", "<Esc>", "o13,14,15", "<Esc>", "o16,17,18", "<Esc>o<bs>", "}", "<Esc>")
   child.type_keys("o{", "<Esc>o")
@@ -142,6 +152,7 @@ T["suggestion()"]["accept_line, 1 line, then dismiss"] = function()
     .. "auto_trigger = true,"
     .. "keymap = { accept_line = '<C-e>', dismiss = '<Tab>' },"
   child.configure_copilot()
+  child.wait_for_lsp_authentication()
   child.type_keys("i{", "<Esc>o", "  1,2,3", "<Esc>o", "4,5,6", "<Esc>o", "7,8,9", "<Esc>o<bs>", "}", "<Esc>")
   child.type_keys("o{", "<Esc>o", "  10,11,12", "<Esc>", "o13,14,15", "<Esc>", "o16,17,18", "<Esc>o<bs>", "}", "<Esc>")
   child.type_keys("o{", "<Esc>o")
@@ -157,6 +168,7 @@ T["suggestion()"]["accept_line, 1 line, then accept"] = function()
     .. "auto_trigger = true,"
     .. "keymap = { accept_line = '<C-e>', accept = '<Tab>' },"
   child.configure_copilot()
+  child.wait_for_lsp_authentication()
   child.type_keys("i# Numbers in a 3x3 grid, up to 63", "<Esc>")
   child.type_keys("o{", "<Esc>o", "  1,2,3", "<Esc>o", "4,5,6", "<Esc>o", "7,8,9", "<Esc>o<bs>", "}", "<Esc>")
   child.type_keys("o{", "<Esc>o", "  10,11,12", "<Esc>", "o13,14,15", "<Esc>", "o16,17,18", "<Esc>o<bs>", "}", "<Esc>")
