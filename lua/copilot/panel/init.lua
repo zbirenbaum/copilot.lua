@@ -320,8 +320,6 @@ function panel:ensure_winid()
     right = { cmd_prefix = "vertical botright ", winsize_fn = get_width },
     bottom = { cmd_prefix = "botright ", winsize_fn = get_height },
     left = { cmd_prefix = "vertical topleft ", winsize_fn = get_width },
-    horizontal = { cmd_prefix = "horizontal ", winsize_fn = get_height },
-    vertical = { cmd_prefix = "vertical ", winsize_fn = get_width },
   }
 
   local split_info = split_map[position]
