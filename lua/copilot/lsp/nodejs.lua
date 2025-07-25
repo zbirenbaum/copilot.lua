@@ -13,10 +13,13 @@ local M = {
 ---@return nil|string node_version_error
 function M.get_node_version()
   if not M.node_version then
-    local cmd = { M.node_command, "--version" }
-    local cmd_output_table = vim.fn.executable(M.node_command) == 1 and vim.fn.systemlist(cmd, nil, 0) or { "" }
-    local cmd_output = cmd_output_table[#cmd_output_table]
-    local cmd_exit_code = vim.v.shell_error
+    local cmd = vim.split(M.node_command, " ")
+    table.insert(cmd, "--version")
+
+    local process = vim.system(cmd)
+    local result = process:wait()
+    local cmd_output = result.stdout or ""
+    local cmd_exit_code = result.code
 
     local node_version = string.match(cmd_output, "^v(%S+)") or ""
     local node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or 0
@@ -58,12 +61,12 @@ function M.validate_node_version()
 end
 
 function M.node_exists()
-  local node_exists = vim.fn.executable(M.node_command) == 1
-
-  if not node_exists then
-    logger.error("node.js is not installed or not in PATH")
-    return false
-  end
+  -- local node_exists = vim.fn.executable(M.node_command) == 1
+  --
+  -- if not node_exists then
+  --   logger.error("node.js is not installed or not in PATH")
+  --   return false
+  -- end
 
   return true
 end
@@ -95,11 +98,10 @@ end
 
 ---@return table
 function M.get_execute_command()
-  return {
-    M.node_command,
-    M.server_path or M.get_server_path(),
-    "--stdio",
-  }
+  local cmd = vim.split(M.node_command, " ")
+  table.insert(cmd, M.server_path or M.get_server_path())
+  table.insert(cmd, "--stdio")
+  return cmd
 end
 
 ---@param node_command? string
