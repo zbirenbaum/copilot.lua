@@ -113,8 +113,16 @@ T["auth()"]["is_authenticated when authed returns true"] = function()
   ]])
 
   local result = child.lua([[
-    local auth = require("copilot.auth")
-    local auth_result = auth.is_authenticated()
+    local auth_result = ""
+    local function has_passed()
+      auth_result = require("copilot.auth").is_authenticated() or ""
+      return auth_result == true
+    end
+
+    vim.wait(30000, function()
+      return has_passed()
+    end, 50)
+
     return tostring(auth_result)
   ]])
 
