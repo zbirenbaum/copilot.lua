@@ -117,7 +117,7 @@ require('copilot').setup({
       open = "<M-CR>"
     },
     layout = {
-      position = "bottom", -- | top | left | right | horizontal | vertical
+      position = "bottom", -- | top | left | right | bottom |
       ratio = 0.4
     },
   },
