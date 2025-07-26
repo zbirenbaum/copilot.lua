@@ -1,4 +1,5 @@
 local api = require("copilot.api")
+local auth = require("copilot.auth")
 local c = require("copilot.client")
 local config = require("copilot.config")
 local hl_group = require("copilot.highlight").group
@@ -484,7 +485,7 @@ local function advance(count, ctx)
 end
 
 local function schedule(ctx)
-  if not is_enabled() or not c.initialized then
+  if not is_enabled() or not c.initialized or not auth.is_authenticated() then
     clear()
     return
   end

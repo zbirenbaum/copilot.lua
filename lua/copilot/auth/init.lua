@@ -180,4 +180,59 @@ function M.info()
   logger.notify("GitHub Copilot token information: ", info)
 end
 
+local auth_cache = {
+  status = nil,
+  timestamp = 0,
+  lsp_check_pending = false,
+}
+
+local function get_cache_ttl(status)
+  if status then
+    return 300000 -- 5 minutes for true status
+  else
+    return 30000  -- 30 seconds for false status
+  end
+end
+
+function M.is_authenticated()
+  local current_time = vim.loop.now()
+
+  if auth_cache.status ~= nil and not auth_cache.lsp_check_pending then
+
+    local ttl = get_cache_ttl(auth_cache.status)
+    if (current_time - auth_cache.timestamp) < ttl then
+      return auth_cache.status
+    end
+  end
+
+  local client = c.get()
+  if not client then
+    auth_cache.status = false
+    auth_cache.timestamp = current_time
+    return false
+  end
+
+  if auth_cache.lsp_check_pending then
+    return auth_cache.status or false
+  end
+
+  auth_cache.lsp_check_pending = true
+  vim.schedule(function()
+    api.check_status(client, {}, function(err, status)
+      auth_cache.lsp_check_pending = false
+      local current_check_time = vim.loop.now()
+
+      if not err and status and status.user then
+        auth_cache.status = true
+        auth_cache.timestamp = current_check_time
+      else
+        auth_cache.status = false
+        auth_cache.timestamp = current_check_time
+      end
+    end)
+  end)
+
+  return auth_cache.status or false
+end
+
 return M
