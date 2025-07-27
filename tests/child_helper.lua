@@ -105,14 +105,6 @@ function M.new_child_neovim(test_name)
     ]])
   end
 
-  function child.wait_for_lsp_authentication()
-    child.lua([[
-      vim.wait(30000, function()
-        return require("copilot.auth").is_authenticated()
-      end, 10)
-    ]])
-  end
-
   function child.wait_for_suggestion()
     child.lua([[
       vim.wait(30000, function()
