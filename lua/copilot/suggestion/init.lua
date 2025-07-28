@@ -1,4 +1,5 @@
 local api = require("copilot.api")
+local auth = require("copilot.auth")
 local c = require("copilot.client")
 local config = require("copilot.config")
 local hl_group = require("copilot.highlight").group
@@ -484,10 +485,17 @@ local function advance(count, ctx)
 end
 
 local function schedule(ctx)
-  if not is_enabled() or not c.initialized then
+  -- in case we need to call the lsp API to know if we are authenticated,
+  -- we want to retry this method after the authentication check
+  local is_authenticated = auth.is_authenticated(function()
+    schedule(ctx)
+  end)
+
+  if not is_enabled() or not c.initialized or not is_authenticated then
     clear()
     return
   end
+
   logger.trace("suggestion schedule", ctx)
 
   if copilot._copilot_timer then
