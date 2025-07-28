@@ -102,7 +102,7 @@ function M.new_child_neovim(test_name)
     )
 
     -- write to temporary file for debugging purposes
-    local tmpfile = string.format("./tests/logs/test_config.lua")
+    local tmpfile = string.format("./tests/logs/test_config.txt")
     local file = io.open(tmpfile, "w")
     if file then
       file:write(script)
