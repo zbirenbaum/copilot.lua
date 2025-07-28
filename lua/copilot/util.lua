@@ -45,9 +45,6 @@ function M.should_attach()
   local bufnr = vim.api.nvim_get_current_buf()
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local conf_attach = config.should_attach(bufnr, bufname)
-  logger.debug(
-    "should_attach: " .. tostring(conf_attach) .. " for buffer: " .. bufnr .. " and filetype:" .. vim.bo.filetype
-  )
 
   if not conf_attach then
     return false, "copilot is disabled"
