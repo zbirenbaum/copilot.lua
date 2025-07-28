@@ -111,7 +111,7 @@ function M.use_client(callback)
     client_config.add_callback(callback)
 
     if not util.should_attach() then
-      logger.debug("not attaching to buffer based on should_attach criteria")
+      logger.debug("use_client: not attaching to buffer based on should_attach criteria")
       return
     end
 

@@ -72,15 +72,23 @@ function M.new_child_neovim(test_name)
     for k, v in pairs(child.config) do
       if v ~= "" and v ~= nil then
         if type(v) == "string" then
-          script = string.format(
-            [[%s%s = {
-          %s
-          },
-          ]],
-            script,
-            k,
-            v
-          )
+          if v:sub(1, 8) == "function" then
+            script = string.format(
+              [[%s
+%s = %s,]],
+              script,
+              k,
+              v
+            )
+          else
+            script = string.format(
+              [[%s
+%s = { %s },]],
+              script,
+              k,
+              v
+            )
+          end
         end
       end
     end
@@ -93,6 +101,16 @@ function M.new_child_neovim(test_name)
       script
     )
 
+    -- write to temporary file for debugging purposes
+    local tmpfile = string.format("./tests/logs/test_config.lua")
+    local file = io.open(tmpfile, "w")
+    if file then
+      file:write(script)
+      file:close()
+    else
+      error("Could not open temporary file for writing: " .. tmpfile)
+    end
+
     child.lua(script)
 
     child.lua([[
@@ -101,13 +119,13 @@ function M.new_child_neovim(test_name)
         return client.initialized
       end
 
-      vim.wait(30000, copilot_is_initialized, 10)
+      vim.wait(5000, copilot_is_initialized, 10)
     ]])
   end
 
   function child.wait_for_suggestion()
     child.lua([[
-      vim.wait(30000, function()
+      vim.wait(50000, function()
         return M.suggested
       end, 10)
     ]])
@@ -120,7 +138,7 @@ function M.new_child_neovim(test_name)
         return lines[1] and lines[1] ~= "" 
       end
 
-      vim.wait(30000, function()
+      vim.wait(5000, function()
         return suggestion_is_visible()
       end, 50)
     ]])
