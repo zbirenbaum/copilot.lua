@@ -125,7 +125,7 @@ function M.new_child_neovim(test_name)
 
   function child.wait_for_suggestion()
     child.lua([[
-      vim.wait(50000, function()
+      vim.wait(5000, function()
         return M.suggested
       end, 10)
     ]])
