@@ -39,7 +39,7 @@ T["auth()"]["auth before attaching, should not give error"] = function()
       return string.find(messages, ".*Authenticated as GitHub user.*") ~= nil
     end
 
-    vim.wait(30000, function()
+    vim.wait(5000, function()
       return has_passed()
     end, 50)
 
@@ -60,7 +60,7 @@ T["auth()"]["auth issue replication"] = function()
       return string.find(messages, ".*Authenticated as GitHub user.*") ~= nil
     end
 
-    vim.wait(30000, function()
+    vim.wait(5000, function()
       return has_passed()
     end, 50)
   ]])
@@ -74,7 +74,7 @@ T["auth()"]["auth issue replication"] = function()
       return string.find(messages, ".*Online.*Enabled.*") ~= nil
     end
 
-    vim.wait(30000, function()
+    vim.wait(5000, function()
       return has_passed()
     end, 50)
 
@@ -107,7 +107,7 @@ T["auth()"]["is_authenticated when authed returns true"] = function()
       return string.find(messages, ".*Authenticated as GitHub user.*") ~= nil
     end
 
-    vim.wait(30000, function()
+    vim.wait(5000, function()
       return has_passed()
     end, 50)
   ]])
@@ -119,7 +119,7 @@ T["auth()"]["is_authenticated when authed returns true"] = function()
       return auth_result == true
     end
 
-    vim.wait(30000, function()
+    vim.wait(5000, function()
       return has_passed()
     end, 50)
 
