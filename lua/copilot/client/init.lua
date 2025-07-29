@@ -64,14 +64,17 @@ function M.buf_attach(force)
 
   logger.trace("attaching to buffer")
 
+  if not M.id then
+    M.ensure_client_started()
+  end
+
+  if not M.id then
+    logger.trace("failed to start copilot client")
+    return
+  end
+
   -- This could cause slowdowns when going into Insert mode
   if not vim.lsp.buf_is_attached(bufnr, M.id) then
-    M.ensure_client_started()
-
-    if not M.id then
-      return
-    end
-
     vim.lsp.buf_attach_client(bufnr, M.id)
     logger.trace("explicitly attached client to buffer")
   end
@@ -156,7 +159,7 @@ function M.setup()
     end),
   })
 
-  M.ensure_client_started()
+  vim.schedule(M.ensure_client_started)
 end
 
 function M.teardown()
