@@ -171,4 +171,18 @@ T["client()"]["suggestions work when attaching to second buffer in a row"] = fun
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
+T["client()"]["will not attach to buffer due to filetype exclusion"] = function()
+  child.config.filetypes = [[
+    ["*"] = false,
+  ]]
+
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
+
+  child.configure_copilot()
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
+  child.wait_for_suggestion()
+
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
+end
+
 return T
