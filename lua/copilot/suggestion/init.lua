@@ -485,13 +485,14 @@ local function advance(count, ctx)
 end
 
 local function schedule(ctx)
-  -- in case we need to call the lsp API to know if we are authenticated,
-  -- we want to retry this method after the authentication check
-  local is_authenticated = auth.is_authenticated(function()
-    schedule(ctx)
-  end)
+  local function is_authenticated()
+    return auth.is_authenticated(function()
+      schedule(ctx)
+    end)
+  end
 
-  if not is_enabled() or not c.initialized or not is_authenticated then
+  -- We do not want to solve auth.is_authenticated() unless the others are true
+  if not is_enabled() or not c.initialized or not is_authenticated() then
     clear()
     return
   end
@@ -723,12 +724,14 @@ end
 local function on_insert_enter()
   if should_auto_trigger() then
     logger.trace("suggestion on insert enter")
+    c.buf_attach()
     schedule()
   end
 end
 
 local function on_buf_enter()
   if vim.fn.mode():match("^[iR]") then
+    logger.trace("suggestion on buf enter")
     on_insert_enter()
   end
 end
