@@ -39,6 +39,8 @@ end
 
 ---@param force? boolean
 function M.buf_attach(force)
+  local bufnr = vim.api.nvim_get_current_buf()
+
   if lsp.initialization_failed() then
     logger.error("copilot-language-server failed to initialize")
     M.startup_error = "initialization of copilot-language-server failed"
@@ -60,21 +62,14 @@ function M.buf_attach(force)
     return
   end
 
-  -- In case it has changed, we update it
-  M.config.root_dir = utils.get_root_dir(config.root_dir)
-
   logger.trace("attaching to buffer")
-  local ok, client_id_or_err = pcall(vim.lsp.start, M.config)
-  if not ok then
-    logger.error(string.format("failed to start LSP client: %s", client_id_or_err))
-    return
+
+  -- This could cause slowdowns when going into Insert mode
+  if not vim.lsp.buf_is_attached(bufnr, M.id) then
+    vim.lsp.buf_attach_client(bufnr, M.id)
+    logger.trace("explicitly attached client to buffer")
   end
 
-  if client_id_or_err then
-    store_client_id(client_id_or_err)
-  else
-    logger.error("LSP client failed to start (no client ID returned)")
-  end
   logger.trace("buffer attached")
 end
 
@@ -89,43 +84,45 @@ function M.get()
   return vim.lsp.get_client_by_id(M.id)
 end
 
+---@return boolean
 function M.is_disabled()
   return is_disabled
 end
 
----@param callback fun(client:table):nil
-function M.use_client(callback)
+function M.ensure_client_started()
+  if M.id then
+    return
+  end
+
   if is_disabled then
     logger.notify("copilot is offline")
     return
   end
 
+  if not M.config then
+    M.config = client_config.create(config)
+  end
+
+  if not M.config then
+    logger.error("copilot.setup is not called yet")
+    return
+  end
+
+  M.config.root_dir = utils.get_root_dir(config.root_dir)
+  local client_id, err = vim.lsp.start(M.config)
+
+  if not client_id then
+    logger.error(string.format("error starting LSP client: %s", err))
+    return
+  end
+
+  store_client_id(client_id)
+end
+
+---@param callback fun(client:table):nil
+function M.use_client(callback)
   local client = M.get()
-
-  if not client then
-    if not M.config then
-      logger.error("copilot.setup is not called yet")
-      return
-    end
-
-    client_config.add_callback(callback)
-
-    if not util.should_attach() then
-      logger.debug("not attaching to buffer based on should_attach criteria")
-      return
-    end
-
-    local client_id, err = vim.lsp.start(M.config)
-
-    if not client_id then
-      logger.error(string.format("error starting LSP client: %s", err))
-      return
-    end
-
-    store_client_id(client_id)
-  elseif not client.initialized then
-    client_config.add_callback(callback)
-  else
+  if client then
     callback(client)
   end
 end
@@ -153,9 +150,7 @@ function M.setup()
     end),
   })
 
-  vim.schedule(function()
-    M.buf_attach()
-  end)
+  M.ensure_client_started()
 end
 
 function M.teardown()

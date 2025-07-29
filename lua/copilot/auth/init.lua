@@ -210,7 +210,7 @@ local function check_status(client, callback)
 
     if not err and status and status.user then
       auth_cache.authenticated = true
-    else
+    elseif not err then
       auth_cache.authenticated = false
     end
 
@@ -224,6 +224,10 @@ end
 function M.is_authenticated(callback)
   local current_time = vim.loop.now()
 
+  if not c.initialized then
+    return false
+  end
+
   if auth_cache.authenticated ~= nil then
     local ttl = get_cache_ttl(auth_cache.authenticated)
     if (current_time - auth_cache.timestamp) < ttl then
@@ -233,8 +237,6 @@ function M.is_authenticated(callback)
 
   local client = c.get()
   if not client then
-    auth_cache.authenticated = false
-    auth_cache.timestamp = current_time
     return false
   end
 

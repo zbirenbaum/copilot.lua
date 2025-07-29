@@ -1,7 +1,6 @@
 local eq = MiniTest.expect.equality
 local child_helper = require("tests.child_helper")
 local child = child_helper.new_child_neovim("test_panel")
--- local reference_screenshot = MiniTest.expect.reference_screenshot
 local utils = require("copilot.panel.utils")
 
 local T = MiniTest.new_set({
