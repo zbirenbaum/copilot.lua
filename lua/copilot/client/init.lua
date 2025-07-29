@@ -66,6 +66,12 @@ function M.buf_attach(force)
 
   -- This could cause slowdowns when going into Insert mode
   if not vim.lsp.buf_is_attached(bufnr, M.id) then
+    M.ensure_client_started()
+
+    if not M.id then
+      return
+    end
+
     vim.lsp.buf_attach_client(bufnr, M.id)
     logger.trace("explicitly attached client to buffer")
   end
