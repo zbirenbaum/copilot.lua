@@ -118,7 +118,7 @@ function M.ensure_client_started()
   end
 
   M.config.root_dir = utils.get_root_dir(config.root_dir)
-  local client_id, err = vim.lsp.start(M.config)
+  local client_id, err = vim.lsp.start(M.config, { attach = false })
 
   if not client_id then
     logger.error(string.format("error starting LSP client: %s", err))
