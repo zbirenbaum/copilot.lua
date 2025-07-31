@@ -17,9 +17,13 @@ function M.get_node_version()
     local cmd_output_table = vim.fn.executable(M.node_command) == 1 and vim.fn.systemlist(cmd, nil, 0) or { "" }
     local cmd_output = cmd_output_table[#cmd_output_table]
     local cmd_exit_code = vim.v.shell_error
+    local node_version_major = 0
+    local node_version = ""
 
-    local node_version = string.match(cmd_output, "^v(%S+)") or ""
-    local node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or 0
+    if cmd_output then
+      node_version = string.match(cmd_output, "^v(%S+)") or node_version
+      node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or node_version_major
+    end
 
     if node_version_major == 0 then
       M.node_version_error = table.concat({
@@ -33,7 +37,7 @@ function M.get_node_version()
       M.node_version_error = string.format("Node.js version 20 or newer required but found %s", node_version)
     end
 
-    M.node_version = node_version or ""
+    M.node_version = node_version
   end
 
   return M.node_version, M.node_version_error
