@@ -23,6 +23,8 @@ function M.get_node_version()
     if cmd_output then
       node_version = string.match(cmd_output, "^v(%S+)") or node_version
       node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or node_version_major
+    else
+      cmd_output = "[no output]"
     end
 
     if node_version_major == 0 then
