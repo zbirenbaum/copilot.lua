@@ -2,7 +2,6 @@ local M = { setup_done = false }
 local highlight = require("copilot.highlight")
 local logger = require("copilot.logger")
 local client = require("copilot.client")
-local auth = require("copilot.auth")
 local config = require("copilot.config")
 
 M.setup = function(opts)
@@ -12,9 +11,8 @@ M.setup = function(opts)
 
   highlight.setup()
   config.merge_with_user_configs(opts)
-
-  require("copilot.command").enable()
   logger.setup(config.logger)
+  require("copilot.command").enable()
 
   logger.debug("active plugin config:", config)
   -- logged here to ensure the logger is setup
