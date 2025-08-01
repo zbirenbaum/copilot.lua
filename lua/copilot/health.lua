@@ -1,6 +1,5 @@
 local M = {}
 
-local api = require("copilot.api")
 local auth = require("copilot.auth")
 local c = require("copilot.client")
 local config = require("copilot.config")
@@ -87,6 +86,11 @@ function M.check()
   else
     info("Panel disabled in configuration")
     info("Enable with `panel = { enabled = true }` in setup()")
+  end
+
+  local logger_config = config.logger
+  if logger_config then
+    info("Log file: " .. (logger_config.file or "not set"))
   end
 end
 
