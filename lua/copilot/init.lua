@@ -12,9 +12,8 @@ M.setup = function(opts)
   highlight.setup()
   config.merge_with_user_configs(opts)
   logger.setup(config.logger)
-  require("copilot.command").enable()
-
   logger.debug("active plugin config:", config)
+  require("copilot.command").enable()
   -- logged here to ensure the logger is setup
   logger.debug("active LSP config (may change runtime):", client.config)
 
