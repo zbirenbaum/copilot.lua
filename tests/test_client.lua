@@ -171,6 +171,29 @@ T["client()"]["suggestions work when attaching to second buffer in a row"] = fun
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
+T["client()"]["suggestions work when lazy is set to false"] = function()
+  child.config.should_attach = [[function(bufnr, bufname)
+    local buffername = bufname:match("([^/\\]+)$") or ""
+
+    if buffername == "file3.txt" then
+      return true
+    end
+
+    return false
+  end]]
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
+
+  child.configure_copilot()
+  child.cmd("e tests/files/file1.txt")
+  child.cmd("e tests/files/file2.txt")
+  child.type_keys("i123", "<Esc>")
+  child.cmd("e tests/files/file3.txt")
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
+  child.wait_for_suggestion()
+
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
+end
+
 T["client()"]["will not attach to buffer due to filetype exclusion"] = function()
   child.config.filetypes = [[
     ["*"] = false,
