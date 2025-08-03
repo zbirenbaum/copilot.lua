@@ -132,6 +132,7 @@ function M.signout()
   end)
 end
 
+---@return string|nil
 function M.find_config_path()
   local config = vim.fn.expand("$XDG_CONFIG_HOME")
   if config and vim.fn.isdirectory(config) > 0 then
@@ -151,6 +152,7 @@ function M.find_config_path()
   logger.error("could not find config path")
 end
 
+---@return table|nil
 M.get_creds = function()
   local filename = M.find_config_path() .. "/github-copilot/apps.json"
 
@@ -178,6 +180,69 @@ function M.info()
   end
 
   logger.notify("GitHub Copilot token information: ", info)
+end
+
+---@class copilot_auth_cache
+---@field authenticated boolean|nil
+---@field timestamp number
+
+---@type copilot_auth_cache
+local auth_cache = {
+  authenticated = nil,
+  timestamp = 0,
+}
+
+---@param authenticated boolean
+---@return number
+local function get_cache_ttl(authenticated)
+  if authenticated then
+    return 300000 -- 5 minutes for true status
+  else
+    return 30000 -- 30 seconds for false status
+  end
+end
+
+---@param client vim.lsp.Client
+---@param callback? fun()
+local function check_status(client, callback)
+  api.check_status(client, {}, function(err, status)
+    auth_cache.timestamp = vim.loop.now()
+
+    if not err and status and status.user then
+      auth_cache.authenticated = true
+    elseif not err then
+      auth_cache.authenticated = false
+    end
+
+    if callback then
+      callback()
+    end
+  end)
+end
+
+---@param callback? fun()
+function M.is_authenticated(callback)
+  local current_time = vim.loop.now()
+
+  if not c.initialized then
+    return false
+  end
+
+  if auth_cache.authenticated ~= nil then
+    local ttl = get_cache_ttl(auth_cache.authenticated)
+    if (current_time - auth_cache.timestamp) < ttl then
+      return auth_cache.authenticated
+    end
+  end
+
+  local client = c.get()
+  if not client then
+    return false
+  end
+
+  check_status(client, callback)
+
+  return auth_cache.authenticated or false
 end
 
 return M

@@ -21,8 +21,15 @@ function M.get_node_version()
     local cmd_output = result.stdout or ""
     local cmd_exit_code = result.code
 
-    local node_version = string.match(cmd_output, "^v(%S+)") or ""
-    local node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or 0
+    local node_version_major = 0
+    local node_version = ""
+
+    if cmd_output then
+      node_version = string.match(cmd_output, "^v(%S+)") or node_version
+      node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or node_version_major
+    else
+      cmd_output = "[no output]"
+    end
 
     if node_version_major == 0 then
       M.node_version_error = table.concat({
@@ -36,7 +43,7 @@ function M.get_node_version()
       M.node_version_error = string.format("Node.js version 20 or newer required but found %s", node_version)
     end
 
-    M.node_version = node_version or ""
+    M.node_version = node_version
   end
 
   return M.node_version, M.node_version_error

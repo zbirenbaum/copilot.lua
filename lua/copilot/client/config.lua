@@ -116,6 +116,12 @@ function M.prepare_client_config(overrides, client)
         for _, callback in ipairs(callbacks) do
           callback(lsp_client)
         end
+
+        local token_env_set = (os.getenv("GITHUB_COPILOT_TOKEN") ~= nil) or (os.getenv("GH_COPILOT_TOKEN") ~= nil)
+
+        if token_env_set then
+          require("copilot.auth").signin()
+        end
       end)
     end,
     on_exit = function(code, _, client_id)

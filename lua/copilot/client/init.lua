@@ -8,13 +8,14 @@ local client_config = require("copilot.client.config")
 local is_disabled = false
 
 ---@class CopilotClient
+---@field augroup string|nil
 ---@field id integer|nil
 ---@field capabilities lsp.ClientCapabilities | nil
 ---@field config vim.lsp.ClientConfig | nil
 ---@field startup_error string | nil
 ---@field initialized boolean
 local M = {
-  augroup = "copilot.client",
+  augroup = nil,
   id = nil,
   capabilities = nil,
   config = nil,
@@ -39,6 +40,8 @@ end
 
 ---@param force? boolean
 function M.buf_attach(force)
+  local bufnr = vim.api.nvim_get_current_buf()
+
   if lsp.initialization_failed() then
     logger.error("copilot-language-server failed to initialize")
     M.startup_error = "initialization of copilot-language-server failed"
@@ -60,21 +63,23 @@ function M.buf_attach(force)
     return
   end
 
-  -- In case it has changed, we update it
-  M.config.root_dir = utils.get_root_dir(config.root_dir)
-
   logger.trace("attaching to buffer")
-  local ok, client_id_or_err = pcall(vim.lsp.start, M.config)
-  if not ok then
-    logger.error(string.format("failed to start LSP client: %s", client_id_or_err))
+
+  if not M.id then
+    M.ensure_client_started()
+  end
+
+  if not M.id then
+    logger.trace("failed to start copilot client")
     return
   end
 
-  if client_id_or_err then
-    store_client_id(client_id_or_err)
-  else
-    logger.error("LSP client failed to start (no client ID returned)")
+  -- This could cause slowdowns when going into Insert mode
+  if not vim.lsp.buf_is_attached(bufnr, M.id) then
+    vim.lsp.buf_attach_client(bufnr, M.id)
+    logger.trace("explicitly attached client to buffer")
   end
+
   logger.trace("buffer attached")
 end
 
@@ -89,43 +94,45 @@ function M.get()
   return vim.lsp.get_client_by_id(M.id)
 end
 
+---@return boolean
 function M.is_disabled()
   return is_disabled
 end
 
----@param callback fun(client:table):nil
-function M.use_client(callback)
+function M.ensure_client_started()
+  if M.id then
+    return
+  end
+
   if is_disabled then
     logger.notify("copilot is offline")
     return
   end
 
+  if not M.config then
+    M.config = client_config.create(config)
+  end
+
+  if not M.config then
+    logger.error("copilot.setup is not called yet")
+    return
+  end
+
+  M.config.root_dir = utils.get_root_dir(config.root_dir)
+  local client_id, err = vim.lsp.start(M.config, { attach = false })
+
+  if not client_id then
+    logger.error(string.format("error starting LSP client: %s", err))
+    return
+  end
+
+  store_client_id(client_id)
+end
+
+---@param callback fun(client:table):nil
+function M.use_client(callback)
   local client = M.get()
-
-  if not client then
-    if not M.config then
-      logger.error("copilot.setup is not called yet")
-      return
-    end
-
-    client_config.add_callback(callback)
-
-    if not util.should_attach() then
-      logger.debug("not attaching to buffer based on should_attach criteria")
-      return
-    end
-
-    local client_id, err = vim.lsp.start(M.config)
-
-    if not client_id then
-      logger.error(string.format("error starting LSP client: %s", err))
-      return
-    end
-
-    store_client_id(client_id)
-  elseif not client.initialized then
-    client_config.add_callback(callback)
-  else
+  if client then
     callback(client)
   end
 end
@@ -144,7 +151,11 @@ function M.setup()
   is_disabled = false
 
   M.id = nil
-  vim.api.nvim_create_augroup(M.augroup, { clear = true })
+
+  -- nvim_clear_autocmds throws an error if the group does not exist
+  local augroup = "copilot.client"
+  vim.api.nvim_create_augroup(augroup, { clear = true })
+  M.augroup = augroup
 
   vim.api.nvim_create_autocmd("FileType", {
     group = M.augroup,
@@ -153,15 +164,16 @@ function M.setup()
     end),
   })
 
-  vim.schedule(function()
-    M.buf_attach()
-  end)
+  vim.schedule(M.ensure_client_started)
 end
 
 function M.teardown()
   is_disabled = true
 
-  vim.api.nvim_clear_autocmds({ group = M.augroup })
+  -- nvim_clear_autocmds throws an error if the group does not exist
+  if M.augroup then
+    vim.api.nvim_clear_autocmds({ group = M.augroup })
+  end
 
   if M.id then
     vim.lsp.stop_client(M.id)

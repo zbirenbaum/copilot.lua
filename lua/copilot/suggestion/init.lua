@@ -1,4 +1,5 @@
 local api = require("copilot.api")
+local auth = require("copilot.auth")
 local c = require("copilot.client")
 local config = require("copilot.config")
 local hl_group = require("copilot.highlight").group
@@ -484,10 +485,18 @@ local function advance(count, ctx)
 end
 
 local function schedule(ctx)
-  if not is_enabled() or not c.initialized then
+  local function is_authenticated()
+    return auth.is_authenticated(function()
+      schedule(ctx)
+    end)
+  end
+
+  -- We do not want to solve auth.is_authenticated() unless the others are true
+  if not is_enabled() or not c.initialized or not is_authenticated() then
     clear()
     return
   end
+
   logger.trace("suggestion schedule", ctx)
 
   if copilot._copilot_timer then
@@ -715,12 +724,14 @@ end
 local function on_insert_enter()
   if should_auto_trigger() then
     logger.trace("suggestion on insert enter")
+    c.buf_attach()
     schedule()
   end
 end
 
 local function on_buf_enter()
   if vim.fn.mode():match("^[iR]") then
+    logger.trace("suggestion on buf enter")
     on_insert_enter()
   end
 end
