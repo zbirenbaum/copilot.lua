@@ -30,6 +30,7 @@ local M = {
   server_opts_overrides = {},
   copilot_model = nil,
   copilot_node_command = "node",
+  disable_limit_reached_message = false,
 }
 
 ---@param user_configs CopilotConfig
