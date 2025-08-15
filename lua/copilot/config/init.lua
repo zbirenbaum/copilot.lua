@@ -13,6 +13,7 @@ local logger = require("copilot.logger")
 ---@field root_dir RootDirFuncOrString Root directory for the project, defaults to the nearest .git directory
 ---@field should_attach ShouldAttachFunc Function to determine if Copilot should attach to the buffer
 ---@field copilot_node_command string Path to the Node.js executable, defaults to "node"
+---@field disable_limit_reached_message boolean Disable the limit reached message, defaults to false
 
 local initialized = false
 
@@ -30,6 +31,7 @@ local M = {
   server_opts_overrides = {},
   copilot_model = nil,
   copilot_node_command = "node",
+  disable_limit_reached_message = false,
 }
 
 ---@param user_configs CopilotConfig

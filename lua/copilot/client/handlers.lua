@@ -35,6 +35,19 @@ function M.get_handlers()
     })
   end
 
+  if config.disable_limit_reached_message then
+    handlers["window/showMessageRequest"] = (function(overridden)
+      return function(err, params, ctx)
+        if params.message:match([[^You've reached.*limit.*Upgrade.*$]]) then
+          -- ignore
+          logger.trace("API limited:", params.message)
+          return vim.NIL
+        end
+        return overridden(err, params, ctx)
+      end
+    end)(vim.lsp.handlers["window/showMessageRequest"])
+  end
+
   return handlers
 end
 

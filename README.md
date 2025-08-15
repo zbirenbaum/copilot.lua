@@ -159,6 +159,7 @@ require('copilot').setup({
   copilot_node_command = 'node', -- Node.js version must be > 20
   workspace_folders = {},
   copilot_model = "",
+  disable_limit_reached_message = false,  -- Set to `true` to suppress completion limit reached popup
   root_dir = function()
     return vim.fs.dirname(vim.fs.find(".git", { upward = true })[1])
   end,
