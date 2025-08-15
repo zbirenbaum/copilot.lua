@@ -16,19 +16,21 @@ function M.get_node_version()
     local version_cmd = vim.split(M.node_command, " ")
     table.insert(version_cmd, "--version")
 
-    local process = vim.system(version_cmd)
-    local result = process:wait()
-    local cmd_output = result.stdout or ""
-    local cmd_exit_code = result.code
-
     local node_version_major = 0
     local node_version = ""
+    local cmd_exit_code = -1
+    local cmd_output = "[no output]"
+    local ok, process = pcall(vim.system, version_cmd)
 
-    if cmd_output then
-      node_version = string.match(cmd_output, "^v(%S+)") or node_version
-      node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or node_version_major
-    else
-      cmd_output = "[no output]"
+    if ok and process then
+      local result = process:wait()
+      cmd_output = result.stdout or cmd_output
+      cmd_exit_code = result.code
+
+      if cmd_output and cmd_output ~= "[no output]" then
+        node_version = string.match(cmd_output, "^v(%S+)") or node_version
+        node_version_major = tonumber(string.match(node_version, "^(%d+)%.")) or node_version_major
+      end
     end
 
     if node_version_major == 0 then
