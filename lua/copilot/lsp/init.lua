@@ -54,20 +54,25 @@ end
 
 ---@param server_config ServerConfig
 ---@param copilot_node_command string
+---@return boolean
 function M.setup(server_config, copilot_node_command)
+  local result = true
+
   if not server_config then
     logger.error("server_config is required")
   end
 
   if server_config.type == "nodejs" then
-    M.nodejs.setup(copilot_node_command, server_config.custom_server_filepath)
+    result = M.nodejs.setup(copilot_node_command, server_config.custom_server_filepath)
   elseif server_config.type == "binary" then
     M.binary.setup(server_config.custom_server_filepath)
   else
     logger.error("invalid server_config.type")
+    result = false
   end
 
   M.config = server_config
+  return result
 end
 
 return M

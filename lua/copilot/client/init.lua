@@ -140,7 +140,11 @@ end
 function M.setup()
   logger.trace("setting up client")
   local node_command = config.copilot_node_command
-  lsp.setup(config.server, node_command)
+  if not lsp.setup(config.server, node_command) then
+    is_disabled = true
+    return
+  end
+
   M.config = require("copilot.client.config").prepare_client_config(config.server_opts_overrides, M)
 
   if not M.config then
