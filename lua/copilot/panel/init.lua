@@ -44,8 +44,11 @@ local panel = {
     ratio = 0.4,
   },
 
+  ---@type boolean
   auto_refresh = false,
   keymap = {},
+  ---@type boolean
+  keymaps_set = false,
 }
 
 ---@param text string
