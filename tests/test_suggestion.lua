@@ -167,4 +167,18 @@ T["suggestion()"]["accept_line, 1 line, then accept"] = function()
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 49, 50 }, ignore_attr = { 49, 50 } })
 end
 
+T["suggestion()"]["duplicated keymap yields correct error message"] = function()
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true," .. "keymap = { accept = '<M-CR>' },"
+  child.configure_copilot()
+  child.type_keys("i1, 2, 3,", "<Esc>", "o4, 5, 6,", "<Esc>", "o7, ")
+  child.wait_for_suggestion()
+  child.type_keys("<M-CR>", "<Tab>")
+  child.cmd_capture("Copilot disable")
+  local mess = child.cmd_capture("messages")
+  assert(mess:match("E31") == nil, "Error E31 should have been handled")
+  assert(mess:match("please review your configuration") ~= nil, "Should have logged a message about keymap conflict")
+
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 49, 50 }, ignore_attr = { 49, 50 } })
+end
+
 return T
