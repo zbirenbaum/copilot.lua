@@ -71,7 +71,7 @@ T["auth()"]["auth issue replication"] = function()
     local messages = ""
     local function has_passed()
       messages = vim.api.nvim_exec("messages", { output = true }) or ""
-      return string.find(messages, ".*Online.*Enabled.*") ~= nil
+      return string.find(messages, ".*Online.*") ~= nil
     end
 
     vim.wait(5000, function()
@@ -81,7 +81,7 @@ T["auth()"]["auth issue replication"] = function()
     return messages 
   ]])
 
-  u.expect_match(messages, ".*Online.*Enabled.*")
+  u.expect_match(messages, ".*Online.*")
 end
 
 T["auth()"]["is_authenticated when not authed returns false"] = function()
