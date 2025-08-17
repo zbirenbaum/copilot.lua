@@ -60,20 +60,20 @@ T["suggestion()"]["accept_word, 1 word, works"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true," .. "keymap = { accept_word = '<C-e>' },"
   child.configure_copilot()
-  child.type_keys("i1, 2, 3,", "<Esc>", "o4, 5, 6,", "<Esc>", "o7, ")
+  child.type_keys("i1 2 3", "<Esc>", "o4 5 6", "<Esc>", "o7 ")
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<Esc>")
 
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
-T["suggestion()"]["accept_word, 3 words, works"] = function()
+T["suggestion()"]["accept_word, 2 words, works"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true," .. "keymap = { accept_word = '<C-e>' },"
   child.configure_copilot()
-  child.type_keys("i1, 2, 3,", "<Esc>", "o4, 5, 6,", "<Esc>", "o7, ")
+  child.type_keys("i1 2 3", "<Esc>", "o4 5 6", "<Esc>", "o7 ")
   child.wait_for_suggestion()
-  child.type_keys("<C-e>", "<C-e>", "<C-e>", "<Esc>")
+  child.type_keys("<C-e>", "<C-e>", "<Esc>")
 
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
@@ -87,7 +87,7 @@ T["suggestion()"]["accept_word, 1 word, then dismiss"] = function()
     .. "auto_trigger = true,"
     .. "keymap = { accept_word = '<C-e>', dismiss = '<Tab>' },"
   child.configure_copilot()
-  child.type_keys("i1, 2, 3,", "<Esc>", "o4, 5, 6,", "<Esc>", "o7, ")
+  child.type_keys("i1 2 3", "<Esc>", "o4 5 6", "<Esc>", "o7 ")
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<Tab>")
 
@@ -100,7 +100,7 @@ T["suggestion()"]["accept_word, 1 word, then accept"] = function()
     .. "auto_trigger = true,"
     .. "keymap = { accept_word = '<C-e>', accept = '<Tab>' },"
   child.configure_copilot()
-  child.type_keys("i1, 2, 3,", "<Esc>", "o4, 5, 6,", "<Esc>", "o7, ")
+  child.type_keys("i1 2 3", "<Esc>", "o4 5 6", "<Esc>", "o7 ")
   child.wait_for_suggestion()
   child.type_keys("<C-e>", "<Tab>")
 
@@ -170,7 +170,7 @@ end
 T["suggestion()"]["duplicated keymap yields correct error message"] = function()
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true," .. "keymap = { accept = '<M-CR>' },"
   child.configure_copilot()
-  child.type_keys("i1, 2, 3,", "<Esc>", "o4, 5, 6,", "<Esc>", "o7, ")
+  child.type_keys("i1 2 3", "<Esc>", "o4 5 6", "<Esc>", "o7 ")
   child.wait_for_suggestion()
   child.type_keys("<M-CR>", "<Tab>")
   child.cmd_capture("Copilot disable")
