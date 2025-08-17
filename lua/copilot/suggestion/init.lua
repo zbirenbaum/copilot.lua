@@ -121,7 +121,6 @@ local function set_keymap(keymap)
   if keymap.accept then
     vim.keymap.set("i", keymap.accept, function()
       local ctx = get_ctx()
-      -- If we trigger on accept but the suggestion has not been triggered yet, we let it go through so it does
       if (config.suggestion.trigger_on_accept and not ctx.first) or M.is_visible() then
         M.accept()
       else
