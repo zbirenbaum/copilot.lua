@@ -179,29 +179,12 @@ local function set_keymap(keymap)
 end
 
 local function unset_keymap(keymap)
-  if keymap.accept then
-    vim.keymap.del("i", keymap.accept)
-  end
-
-  if keymap.accept_word then
-    vim.keymap.del("i", keymap.accept_word)
-  end
-
-  if keymap.accept_line then
-    vim.keymap.del("i", keymap.accept_line)
-  end
-
-  if keymap.next then
-    vim.keymap.del("i", keymap.next)
-  end
-
-  if keymap.prev then
-    vim.keymap.del("i", keymap.prev)
-  end
-
-  if keymap.dismiss then
-    vim.keymap.del("i", keymap.dismiss)
-  end
+  util.unset_keymap_if_exists("i", keymap.accept)
+  util.unset_keymap_if_exists("i", keymap.accept_word)
+  util.unset_keymap_if_exists("i", keymap.accept_line)
+  util.unset_keymap_if_exists("i", keymap.next)
+  util.unset_keymap_if_exists("i", keymap.prev)
+  util.unset_keymap_if_exists("i", keymap.dismiss)
 end
 
 local function stop_timer()

@@ -243,7 +243,7 @@ function panel:close()
   end
 end
 
-local function set_keymap(bufnr)
+function M.set_keymap(bufnr)
   if panel.keymap.accept then
     vim.keymap.set("n", panel.keymap.accept, M.accept, {
       buffer = bufnr,
@@ -275,6 +275,8 @@ local function set_keymap(bufnr)
       silent = true,
     })
   end
+
+  M.keymaps_set = true
 end
 
 function panel:ensure_bufnr()
@@ -293,7 +295,7 @@ function panel:ensure_bufnr()
       vim.api.nvim_set_option_value(name, value, { buf = self.bufnr })
     end
 
-    set_keymap(self.bufnr)
+    M.set_keymap(self.bufnr)
   end
 
   vim.api.nvim_buf_set_name(self.bufnr, self.panel_uri)
@@ -581,12 +583,16 @@ function M.teardown()
     return
   end
 
-  if panel.keymap.open then
-    vim.keymap.del("i", panel.keymap.open)
+  util.unset_keymap_if_exists("i", panel.keymap.open)
+
+  if M.keymaps_set then
+    M.unset_keymap_if_exists("n", panel.keymap.accept)
+    M.unset_keymap_if_exists("n", panel.keymap.jump_prev)
+    M.unset_keymap_if_exists("n", panel.keymap.jump_next)
+    M.unset_keymap_if_exists("n", panel.keymap.refresh)
   end
 
   panel:close()
-
   panel.setup_done = false
 end
 
