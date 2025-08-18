@@ -453,6 +453,17 @@ local function get_suggestions_cycling(callback, ctx)
   end
 end
 
+function M.has_next()
+  local ctx = get_ctx()
+
+  -- no completions at all
+  if not ctx.suggestions or #ctx.suggestions == 0 then
+    return false
+  end
+
+  return (ctx.choice < #ctx.suggestions or not ctx.cycling)
+end
+
 local function advance(count, ctx)
   if ctx ~= get_ctx() then
     return
