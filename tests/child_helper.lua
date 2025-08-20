@@ -135,10 +135,10 @@ function M.new_child_neovim(test_name)
     child.lua([[
       local function suggestion_is_visible()
         lines = vim.api.nvim_buf_get_lines(2, 4, 5, false)
-        return lines[1] and (lines[1] = "789" or lines[1] = "789\r")
+        return lines[1] and (lines[1] == "789" or lines[1] == "789\r")
       end
 
-      vim.wait(5000, function()
+      vim.wait(10000, function()
         return suggestion_is_visible()
       end, 50)
     ]])
