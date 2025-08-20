@@ -29,13 +29,13 @@ function M.version()
   end)()
 end
 
----@param opts? { force?: boolean }
+---@param opts? { force?: boolean, bufnr?: integer}
 function M.attach(opts)
   logger.trace("attaching to buffer")
   opts = opts or {}
 
   if not opts.force then
-    local should_attach, no_attach_reason = u.should_attach()
+    local should_attach, no_attach_reason = u.should_attach(opts.bufnr)
 
     if not should_attach then
       logger.notify(no_attach_reason .. "\nto force attach, run ':Copilot! attach'")
@@ -45,7 +45,7 @@ function M.attach(opts)
     opts.force = true
   end
 
-  c.buf_attach(opts.force)
+  c.buf_attach(opts.force, opts.bufnr)
 end
 
 function M.detach()
