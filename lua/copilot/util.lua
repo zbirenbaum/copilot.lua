@@ -13,7 +13,7 @@ function M.get_editor_info()
     editorPluginInfo = {
       name = "copilot.lua",
       -- reflects version of github/copilot-language-server-release
-      version = "1.357.0",
+      version = "1.360.0",
     },
   }
   return info
@@ -34,15 +34,23 @@ end
 
 ---@return boolean should_attach
 ---@return string? no_attach_reason
-function M.should_attach()
+function M.should_attach(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  if bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return false, "Invalid buffer"
+  end
+
   local ft = config.filetypes
-  local ft_disabled, ft_disabled_reason = require("copilot.client.filetypes").is_ft_disabled(vim.bo.filetype, ft)
+  local ft_disabled, ft_disabled_reason = require("copilot.client.filetypes").is_ft_disabled(vim.bo[bufnr].filetype, ft)
 
   if ft_disabled then
     return not ft_disabled, ft_disabled_reason
   end
 
-  local bufnr = vim.api.nvim_get_current_buf()
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local conf_attach = config.should_attach(bufnr, bufname)
 

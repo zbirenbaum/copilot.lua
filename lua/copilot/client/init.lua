@@ -39,8 +39,12 @@ function M.buf_is_attached(bufnr)
 end
 
 ---@param force? boolean
-function M.buf_attach(force)
-  local bufnr = vim.api.nvim_get_current_buf()
+---@param bufnr? integer The buffer number of which will be attached. 0 or nil for current buffer
+function M.buf_attach(force, bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  if bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
 
   if lsp.initialization_failed() then
     logger.error("copilot-language-server failed to initialize")
@@ -53,7 +57,7 @@ function M.buf_attach(force)
     return
   end
 
-  if not (force or util.should_attach()) then
+  if not (force or util.should_attach(bufnr)) then
     logger.debug("not attaching to buffer based on force and should_attach criteria")
     return
   end
@@ -163,9 +167,11 @@ function M.setup()
 
   vim.api.nvim_create_autocmd("FileType", {
     group = M.augroup,
-    callback = vim.schedule_wrap(function()
-      M.buf_attach()
-    end),
+    callback = function(ev)
+      vim.schedule(function()
+        M.buf_attach(nil, ev.buf)
+      end)
+    end,
   })
 
   vim.schedule(M.ensure_client_started)
