@@ -13,8 +13,7 @@ local M = {
 ---@return nil|string node_version_error
 function M.get_node_version()
   if not M.node_version then
-    local version_cmd = vim.split(M.node_command, " ")
-    table.insert(version_cmd, "--version")
+    local version_cmd = { M.node_command, "--version" }
 
     local node_version_major = 0
     local node_version = ""
