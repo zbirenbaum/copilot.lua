@@ -8,14 +8,12 @@ local client_config = require("copilot.client.config")
 local is_disabled = false
 
 ---@class CopilotClient
----@field augroup string|nil
 ---@field id integer|nil
 ---@field capabilities lsp.ClientCapabilities | nil
 ---@field config vim.lsp.ClientConfig | nil
 ---@field startup_error string | nil
 ---@field initialized boolean
 local M = {
-  augroup = nil,
   id = nil,
   capabilities = nil,
   config = nil,
@@ -41,6 +39,11 @@ end
 ---@param force? boolean
 function M.buf_attach(force)
   local bufnr = vim.api.nvim_get_current_buf()
+
+  if M.buf_is_attached(bufnr) then
+    logger.trace("buffer already attached")
+    return
+  end
 
   if lsp.initialization_failed() then
     logger.error("copilot-language-server failed to initialize")
@@ -153,31 +156,12 @@ function M.setup()
   end
 
   is_disabled = false
-
   M.id = nil
-
-  -- nvim_clear_autocmds throws an error if the group does not exist
-  local augroup = "copilot.client"
-  vim.api.nvim_create_augroup(augroup, { clear = true })
-  M.augroup = augroup
-
-  vim.api.nvim_create_autocmd("FileType", {
-    group = M.augroup,
-    callback = vim.schedule_wrap(function()
-      M.buf_attach()
-    end),
-  })
-
   vim.schedule(M.ensure_client_started)
 end
 
 function M.teardown()
   is_disabled = true
-
-  -- nvim_clear_autocmds throws an error if the group does not exist
-  if M.augroup then
-    vim.api.nvim_clear_autocmds({ group = M.augroup })
-  end
 
   if M.id then
     vim.lsp.stop_client(M.id)
