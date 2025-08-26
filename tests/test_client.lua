@@ -35,7 +35,7 @@ T["client()"]["status info"] = function()
     local messages = ""
     local function has_passed()
       messages = vim.api.nvim_exec("messages", { output = true }) or ""
-      if messages:find(".*Online.*Enabled.*") then
+      if messages:find(".*Online.*not yet requested.*") then
         return true
       end
     end
@@ -47,10 +47,8 @@ T["client()"]["status info"] = function()
     return messages
   ]])
 
-  u.expect_match(messages, ".*Online.*Enabled.*")
+  u.expect_match(messages, ".*Online.*not yet requested.*")
 end
-
-T["client()"] = MiniTest.new_set()
 
 T["client()"]["suggestions work when multiple files open with should_attach logic"] = function()
   child.config.should_attach = [[function(bufnr, bufname)
@@ -218,7 +216,7 @@ T["client()"]["auto_trigger off - will not attach automatically"] = function()
     local messages = ""
     local function has_passed()
       messages = vim.api.nvim_exec("messages", { output = true }) or ""
-      if messages:find(".*Online.*Enabled.*") then
+      if messages:find(".*Online.*attached.*") then
         return true
       end
     end
@@ -230,7 +228,7 @@ T["client()"]["auto_trigger off - will not attach automatically"] = function()
     return messages
   ]])
 
-  u.expect_no_match(messages, ".*Online.*Enabled.*")
+  u.expect_no_match(messages, ".*Online.*attached.*")
 end
 
 T["client()"]["auto_trigger off - will attach when requesting suggestion"] = function()
@@ -242,7 +240,7 @@ T["client()"]["auto_trigger off - will attach when requesting suggestion"] = fun
     local messages = ""
     local function has_passed()
       messages = vim.api.nvim_exec("messages", { output = true }) or ""
-      if messages:find(".*Online.*Enabled.*") then
+      if messages:find(".*Online.*attached.*") then
         return true
       end
     end
@@ -254,7 +252,7 @@ T["client()"]["auto_trigger off - will attach when requesting suggestion"] = fun
     return messages
   ]])
 
-  u.expect_match(messages, ".*Online.*Enabled.*")
+  u.expect_match(messages, ".*Online.*attached.*")
 end
 
 return T

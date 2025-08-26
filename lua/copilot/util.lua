@@ -47,7 +47,7 @@ function M.should_attach()
   local conf_attach = config.should_attach(bufnr, bufname)
 
   if not conf_attach then
-    return false, "copilot is disabled"
+    return false, "should_attach config"
   end
 
   return true
