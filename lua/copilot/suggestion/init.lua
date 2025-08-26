@@ -52,12 +52,13 @@ end
 local function get_ctx(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   local ctx = copilot.context[bufnr]
-  logger.trace("suggestion context", ctx)
+
   if not ctx then
     ctx = {}
     copilot.context[bufnr] = ctx
-    logger.trace("suggestion new context", ctx)
+    logger.trace("suggestion new context")
   end
+
   return ctx
 end
 
@@ -526,7 +527,7 @@ end
 ---@return boolean
 function M.first_request_scheduled(ctx, caller_context)
   if not ctx.first then
-    logger.trace("suggestion " .. caller_context .. ", no first request", ctx)
+    logger.trace("suggestion " .. caller_context .. ", no first request")
     request_suggestion(caller_context)
     return true
   end
