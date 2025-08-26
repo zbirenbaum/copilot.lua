@@ -13,12 +13,15 @@ local is_disabled = false
 ---@field config vim.lsp.ClientConfig | nil
 ---@field startup_error string | nil
 ---@field initialized boolean
+-- Only for informational purposes, use Vim API to check actual status
+---@field buffer_statuses table<integer, string>
 local M = {
   id = nil,
   capabilities = nil,
   config = nil,
   startup_error = nil,
   initialized = false,
+  buffer_statuses = {},
 }
 
 ---@param id integer
@@ -56,8 +59,11 @@ function M.buf_attach(force)
     return
   end
 
-  if not (force or util.should_attach()) then
-    logger.debug("not attaching to buffer based on force and should_attach criteria")
+  local should_attach, reason = util.should_attach()
+
+  if not (force or should_attach) then
+    logger.debug("not attaching to buffer based should_attach criteria: " .. reason)
+    M.buffer_statuses[bufnr] = "not attached based on " .. reason
     return
   end
 
@@ -73,22 +79,25 @@ function M.buf_attach(force)
   end
 
   if not M.id then
-    logger.trace("failed to start copilot client")
+    logger.error("failed to start copilot client")
     return
   end
 
-  -- This could cause slowdowns when going into Insert mode
-  if not vim.lsp.buf_is_attached(bufnr, M.id) then
-    vim.lsp.buf_attach_client(bufnr, M.id)
-    logger.trace("explicitly attached client to buffer")
+  vim.lsp.buf_attach_client(bufnr, M.id)
+  if force then
+    logger.debug("force attached to buffer")
+    M.buffer_statuses[bufnr] = "force attached"
+  else
+    logger.trace("buffer attached")
+    M.buffer_statuses[bufnr] = "attached"
   end
-
-  logger.trace("buffer attached")
 end
 
 function M.buf_detach()
   if M.buf_is_attached(0) then
     vim.lsp.buf_detach_client(0, M.id)
+    logger.trace("buffer detached")
+    M.buffer_statuses[vim.api.nvim_get_current_buf()] = "manually detached"
   end
 end
 

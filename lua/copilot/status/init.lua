@@ -1,4 +1,3 @@
-local u = require("copilot.util")
 local logger = require("copilot.logger")
 ---@alias copilot_status_notification_data { status: ''|'Normal'|'InProgress'|'Warning', message: string }
 
@@ -98,26 +97,11 @@ function M.status()
       return
     end
 
-    local should_attach, no_attach_reason = u.should_attach()
-    local is_attached = c.buf_is_attached()
-    if is_attached then
-      if not should_attach then
-        add_line("Enabled manually (" .. no_attach_reason .. ")")
-      elseif vim.bo.filetype and vim.bo.filetype ~= "" then
-        add_line("Enabled for " .. vim.bo.filetype)
-      else
-        add_line("Enabled")
-      end
-    elseif not is_attached then
-      if should_attach then
-        if vim.bo.filetype and vim.bo.filetype ~= "" then
-          add_line("Disabled manually for " .. vim.bo.filetype)
-        else
-          add_line("Disabled manually")
-        end
-      else
-        add_line("Disabled (" .. no_attach_reason .. ")")
-      end
+    local buffer_status = c.buffer_statuses[vim.api.nvim_get_current_buf()]
+    if buffer_status then
+      add_line("Buffer status: " .. c.buffer_statuses[vim.api.nvim_get_current_buf()])
+    else
+      add_line("Buffer status: Attach not yet requested")
     end
 
     if string.lower(M.data.status) == "error" then
