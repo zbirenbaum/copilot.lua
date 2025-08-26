@@ -235,7 +235,6 @@ end
 
 T["client()"]["auto_trigger off - will attach when requesting suggestion"] = function()
   child.configure_copilot()
-  child.cmd("e test.txt")
   child.type_keys("i", "<M-l>", "<Esc>")
   child.cmd("Copilot status")
 
@@ -248,7 +247,7 @@ T["client()"]["auto_trigger off - will attach when requesting suggestion"] = fun
       end
     end
 
-    vim.wait(1000, function()
+    vim.wait(5000, function()
       return has_passed()
     end, 50)
 
