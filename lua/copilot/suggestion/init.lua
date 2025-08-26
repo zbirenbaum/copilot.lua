@@ -505,6 +505,20 @@ local function schedule(ctx)
   end)
 end
 
+---@param ctx copilot_suggestion_context
+---@param caller_context string
+---@return boolean
+function M.first_request_scheduled(ctx, caller_context)
+  if not ctx.first then
+    logger.trace("suggestion " .. caller_context .. ", no first request", ctx)
+    c.buf_attach()
+    schedule(ctx)
+    return true
+  end
+
+  return false
+end
+
 function M.next()
   local ctx = get_ctx()
   logger.trace("suggestion next", ctx)
@@ -513,10 +527,7 @@ function M.next()
     reset_ctx(ctx)
   end
 
-  -- no suggestion request yet
-  if not ctx.first then
-    logger.trace("suggestion next, no first request")
-    schedule(ctx)
+  if M.first_request_scheduled(ctx, "next") then
     return
   end
 
@@ -533,10 +544,7 @@ function M.prev()
     reset_ctx(ctx)
   end
 
-  -- no suggestion request yet
-  if not ctx.first then
-    logger.trace("suggestion prev, no first request", ctx)
-    schedule(ctx)
+  if M.first_request_scheduled(ctx, "prev") then
     return
   end
 
@@ -550,10 +558,7 @@ function M.accept(modifier)
   local ctx = get_ctx()
   logger.trace("suggestion accept", ctx)
 
-  -- no suggestion request yet
-  if (not ctx.first) and config.suggestion.trigger_on_accept then
-    logger.trace("suggestion accept, not first request", ctx)
-    schedule(ctx)
+  if config.suggestion.trigger_on_accept and M.first_request_scheduled(ctx, "suggestion accept") then
     return
   end
 
@@ -722,6 +727,11 @@ local function on_insert_enter()
   end
 end
 
+local function on_filetype()
+  logger.trace("suggestion on file type")
+  on_insert_enter()
+end
+
 local function on_buf_enter()
   if vim.fn.mode():match("^[iR]") then
     logger.trace("suggestion on buf enter")
@@ -738,6 +748,7 @@ local function on_cursor_moved_i()
   local ctx = get_ctx()
   if copilot._copilot_timer or ctx.params or should_auto_trigger() then
     logger.trace("suggestion on cursor moved insert")
+    c.buf_attach()
     schedule(ctx)
   end
 end
@@ -746,6 +757,7 @@ local function on_text_changed_p()
   local ctx = get_ctx()
   if not copilot.hide_during_completion and (copilot._copilot_timer or ctx.params or should_auto_trigger()) then
     logger.trace("suggestion on text changed pum")
+    c.buf_attach()
     schedule(ctx)
   end
 end
@@ -783,6 +795,12 @@ local function create_autocmds()
     group = copilot.augroup,
     callback = on_insert_enter,
     desc = "[copilot] (suggestion) insert enter",
+  })
+
+  vim.api.nvim_create_autocmd("FileType", {
+    group = M.augroup,
+    callback = on_filetype,
+    desc = "[copilot] (suggestion) file type",
   })
 
   vim.api.nvim_create_autocmd("BufEnter", {
