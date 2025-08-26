@@ -1,19 +1,21 @@
 local logger = require("copilot.logger")
+local util = require("copilot.util")
 
 local M = {
   ---@class copilot_nodejs_server_info
-  ---@type string
+  ---@type string|string[]
   node_command = nil,
   ---@type string
   server_path = nil,
   initialization_failed = false,
 }
 
+
 ---@return string node_version
 ---@return nil|string node_version_error
 function M.get_node_version()
   if not M.node_version then
-    local version_cmd = { M.node_command, "--version" }
+    local version_cmd = util.append_command(M.node_command, "--version")
 
     local node_version_major = 0
     local node_version = ""
@@ -95,14 +97,20 @@ end
 
 ---@return table
 function M.get_execute_command()
-  return {
-    M.node_command,
-    M.server_path or M.get_server_path(),
-    "--stdio",
-  }
+  if type(M.node_command) == "string" then
+    return {
+      M.node_command,
+      M.server_path or M.get_server_path(),
+      "--stdio",
+    }
+  elseif type(M.node_command) == "table" then
+    return util.append_command(M.node_command, { M.server_path or M.get_server_path(), "--stdio" })
+  else
+    error(string.format("failed to build node command from %s (type %s)", M.node_command, type(M.node_command)))
+  end
 end
 
----@param node_command? string
+---@param node_command? string|string[]
 ---@param custom_server_path? string
 ---@return boolean
 function M.setup(node_command, custom_server_path)

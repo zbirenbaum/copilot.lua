@@ -73,6 +73,19 @@ T["get_node_version()"]["custom node command as string with spaces"] = function(
   eq(captured_args, { "/path to/node", "--version" })
 end
 
+T["get_node_version()"]["custom node command as table"] = function()
+  local captured_args = stub_process("v20.10.0", 0, false, function()
+    local nodejs = require("copilot.lsp.nodejs")
+    nodejs.setup({ "mise", "x", "node@lts", "--", "node" })
+
+    local version, error = nodejs.get_node_version()
+
+    eq(version, "20.10.0")
+    eq(error, nil)
+  end)
+  eq(captured_args, { "mise", "x", "node@lts", "--", "node", "--version" })
+end
+
 T["get_node_version()"]["handles vim.system failure"] = function()
   local captured_args = stub_process("", -1, true, function()
     local nodejs = require("copilot.lsp.nodejs")
@@ -142,6 +155,13 @@ T["get_execute_command()"]["custom node command as string with spaces"] = functi
   nodejs.setup("/path to/node")
   local cmd = nodejs.get_execute_command()
   eq(cmd, { "/path to/node", nodejs.server_path, "--stdio" })
+end
+
+T["get_execute_command()"]["custom node command as table"] = function()
+  local nodejs = require("copilot.lsp.nodejs")
+  nodejs.setup({ "mise", "x", "node@lts", "--", "node" })
+  local cmd = nodejs.get_execute_command()
+  eq(cmd, { "mise", "x", "node@lts", "--", "node", nodejs.server_path, "--stdio" })
 end
 
 return T
