@@ -186,4 +186,31 @@ function M.get_buffer_previous_ft(bufnr)
   return (ok and result) or ""
 end
 
+---@param cmd string|string[]
+---@param append string|string[]
+---@return string[]
+M.append_command = function(cmd, append)
+  local full_cmd = {}
+
+  -- first append the base command
+  if type(cmd) == "string" then
+    table.insert(full_cmd, cmd)
+  elseif type(cmd) == "table" then
+    for _, part in ipairs(cmd) do
+      table.insert(full_cmd, part)
+    end
+  end
+
+  -- then append the additional parts
+  if type(append) == "string" then
+    table.insert(full_cmd, append)
+  elseif type(append) == "table" then
+    for _, part in ipairs(append) do
+      table.insert(full_cmd, part)
+    end
+  end
+
+  return full_cmd
+end
+
 return M
