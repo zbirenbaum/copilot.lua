@@ -35,16 +35,35 @@ T["suggestion()"]["auto_trigger is false, will not show ghost test"] = function(
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
--- Disabled until I can figure out why it is now failing, my theory is that it is a testing issue with async triggers
+-- Tests for Issue #551
 -- T["suggestion()"]["accept keymap to trigger sugestion"] = function()
+--   child.o.lines, child.o.columns = 10, 15
+--   child.config.suggestion = child.config.suggestion .. "keymap = { accept = '<C-p>' },"
+--   child.configure_copilot()
+--   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<C-p>")
+--   child.wait_for_suggestion()
+--
+--   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
+-- end
+--
+-- T["suggestion()"]["accept keymap to trigger suggestion (TAB)"] = function()
 --   child.o.lines, child.o.columns = 10, 15
 --   child.config.suggestion = child.config.suggestion .. "keymap = { accept = '<Tab>' },"
 --   child.configure_copilot()
 --   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<Tab>")
 --   child.wait_for_suggestion()
---
 --   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 -- end
+
+T["suggestion()"]["accept keymap to trigger suggestion - manual attach"] = function()
+  child.o.lines, child.o.columns = 10, 15
+  child.config.suggestion = child.config.suggestion .. "keymap = { accept = '<C-p>' },"
+  child.configure_copilot()
+  child.cmd("Copilot attach")
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<C-p>")
+  child.wait_for_suggestion()
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
+end
 
 T["suggestion()"]["accept keymap, no suggestion, execute normal keystroke"] = function()
   child.o.lines, child.o.columns = 10, 15
