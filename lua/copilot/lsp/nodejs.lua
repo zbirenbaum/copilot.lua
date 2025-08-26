@@ -95,10 +95,11 @@ end
 
 ---@return table
 function M.get_execute_command()
-  local cmd = { M.node_command }
-  table.insert(cmd, M.server_path or M.get_server_path())
-  table.insert(cmd, "--stdio")
-  return cmd
+  return {
+    M.node_command,
+    M.server_path or M.get_server_path(),
+    "--stdio",
+  }
 end
 
 ---@param node_command? string
