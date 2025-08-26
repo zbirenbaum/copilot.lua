@@ -453,30 +453,6 @@ local function get_suggestions_cycling(callback, ctx)
   end
 end
 
-function M.has_next()
-  local ctx = get_ctx()
-
-  -- no completions at all
-  if not ctx.suggestions or #ctx.suggestions == 0 then
-    return false
-  end
-
-  return (ctx.choice < #ctx.suggestions or not ctx.cycling)
-end
-
-local function advance(count, ctx)
-  if ctx ~= get_ctx() then
-    return
-  end
-
-  ctx.choice = (ctx.choice + count) % #ctx.suggestions
-  if ctx.choice < 1 then
-    ctx.choice = #ctx.suggestions
-  end
-
-  update_preview(ctx)
-end
-
 local function schedule(ctx)
   local function is_authenticated()
     return auth.is_authenticated(function()
@@ -505,14 +481,53 @@ local function schedule(ctx)
   end)
 end
 
+---@param context string
+local function request_suggestion(context)
+  logger.trace("suggestion on " .. context)
+  c.buf_attach()
+  schedule()
+end
+
+---@param context string
+local function request_suggestion_when_auto_trigger(context)
+  if not should_auto_trigger() then
+    return
+  end
+
+  request_suggestion(context)
+end
+
+function M.has_next()
+  local ctx = get_ctx()
+
+  -- no completions at all
+  if not ctx.suggestions or #ctx.suggestions == 0 then
+    return false
+  end
+
+  return (ctx.choice < #ctx.suggestions or not ctx.cycling)
+end
+
+local function advance(count, ctx)
+  if ctx ~= get_ctx() then
+    return
+  end
+
+  ctx.choice = (ctx.choice + count) % #ctx.suggestions
+  if ctx.choice < 1 then
+    ctx.choice = #ctx.suggestions
+  end
+
+  update_preview(ctx)
+end
+
 ---@param ctx copilot_suggestion_context
 ---@param caller_context string
 ---@return boolean
 function M.first_request_scheduled(ctx, caller_context)
   if not ctx.first then
     logger.trace("suggestion " .. caller_context .. ", no first request", ctx)
-    c.buf_attach()
-    schedule(ctx)
+    request_suggestion(caller_context)
     return true
   end
 
@@ -720,22 +735,16 @@ local function on_buf_leave()
 end
 
 local function on_insert_enter()
-  if should_auto_trigger() then
-    logger.trace("suggestion on insert enter")
-    c.buf_attach()
-    schedule()
-  end
+  request_suggestion_when_auto_trigger("insert enter")
 end
 
 local function on_filetype()
-  logger.trace("suggestion on file type")
-  on_insert_enter()
+  request_suggestion_when_auto_trigger("file type")
 end
 
 local function on_buf_enter()
   if vim.fn.mode():match("^[iR]") then
-    logger.trace("suggestion on buf enter")
-    on_insert_enter()
+    request_suggestion_when_auto_trigger("buf enter")
   end
 end
 
@@ -747,18 +756,15 @@ local function on_cursor_moved_i()
 
   local ctx = get_ctx()
   if copilot._copilot_timer or ctx.params or should_auto_trigger() then
-    logger.trace("suggestion on cursor moved insert")
-    c.buf_attach()
-    schedule(ctx)
+    request_suggestion("cursor moved insert")
   end
 end
 
 local function on_text_changed_p()
   local ctx = get_ctx()
+
   if not copilot.hide_during_completion and (copilot._copilot_timer or ctx.params or should_auto_trigger()) then
-    logger.trace("suggestion on text changed pum")
-    c.buf_attach()
-    schedule(ctx)
+    request_suggestion("text changed pum")
   end
 end
 
