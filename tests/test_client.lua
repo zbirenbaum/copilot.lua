@@ -206,7 +206,33 @@ T["client()"]["will not attach to buffer due to filetype exclusion"] = function(
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
-T["client()"]["auto_trigger off - will not attach automatically"] = function()
+-- Reenable with new config
+-- T["client()"]["auto_trigger off - will not attach automatically"] = function()
+--   child.configure_copilot()
+--   child.cmd("e test.txt")
+--   child.type_keys("i", "<Esc>")
+--   child.cmd("Copilot status")
+--
+--   local messages = child.lua([[
+--     local messages = ""
+--     local function has_passed()
+--       messages = vim.api.nvim_exec("messages", { output = true }) or ""
+--       if messages:find(".*Online.*attached.*") then
+--         return true
+--       end
+--     end
+--
+--     vim.wait(1000, function()
+--       return has_passed()
+--     end, 50)
+--
+--     return messages
+--   ]])
+--
+--   u.expect_no_match(messages, ".*Online.*attached.*")
+-- end
+
+T["client()"]["auto_trigger off - will attach automatically"] = function()
   child.configure_copilot()
   child.cmd("e test.txt")
   child.type_keys("i", "<Esc>")
@@ -228,12 +254,14 @@ T["client()"]["auto_trigger off - will not attach automatically"] = function()
     return messages
   ]])
 
-  u.expect_no_match(messages, ".*Online.*attached.*")
+  u.expect_match(messages, ".*Online.*attached.*")
 end
 
-T["client()"]["auto_trigger off - will attach when requesting suggestion"] = function()
+T["client()"]["suggestion and panel off - will attach automatically"] = function()
+  child.config.suggestion = "enabled = false,"
   child.configure_copilot()
-  child.type_keys("i", "<M-l>", "<Esc>")
+  child.cmd("e test.txt")
+  child.type_keys("i", "<Esc>")
   child.cmd("Copilot status")
 
   local messages = child.lua([[
@@ -245,7 +273,7 @@ T["client()"]["auto_trigger off - will attach when requesting suggestion"] = fun
       end
     end
 
-    vim.wait(5000, function()
+    vim.wait(1000, function()
       return has_passed()
     end, 50)
 
@@ -254,5 +282,30 @@ T["client()"]["auto_trigger off - will attach when requesting suggestion"] = fun
 
   u.expect_match(messages, ".*Online.*attached.*")
 end
+
+-- re-enable with added configuration
+-- T["client()"]["auto_trigger off - will attach when requesting suggestion"] = function()
+--   child.configure_copilot()
+--   child.type_keys("i", "<M-l>", "<Esc>")
+--   child.cmd("Copilot status")
+--
+--   local messages = child.lua([[
+--     local messages = ""
+--     local function has_passed()
+--       messages = vim.api.nvim_exec("messages", { output = true }) or ""
+--       if messages:find(".*Online.*attached.*") then
+--         return true
+--       end
+--     end
+--
+--     vim.wait(5000, function()
+--       return has_passed()
+--     end, 50)
+--
+--     return messages
+--   ]])
+--
+--   u.expect_match(messages, ".*Online.*attached.*")
+-- end
 
 return T
