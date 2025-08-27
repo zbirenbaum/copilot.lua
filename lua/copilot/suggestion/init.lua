@@ -740,10 +740,6 @@ local function on_insert_enter()
   request_suggestion_when_auto_trigger("insert enter")
 end
 
-local function on_filetype()
-  request_suggestion_when_auto_trigger("file type")
-end
-
 local function on_buf_enter()
   if vim.fn.mode():match("^[iR]") then
     request_suggestion_when_auto_trigger("buf enter")
@@ -803,12 +799,6 @@ local function create_autocmds()
     group = copilot.augroup,
     callback = on_insert_enter,
     desc = "[copilot] (suggestion) insert enter",
-  })
-
-  vim.api.nvim_create_autocmd("FileType", {
-    group = M.augroup,
-    callback = on_filetype,
-    desc = "[copilot] (suggestion) file type",
   })
 
   vim.api.nvim_create_autocmd("BufEnter", {
