@@ -47,7 +47,7 @@ T["client()"]["status info"] = function()
     return messages
   ]])
 
-  u.expect_match(messages, ".*Online.*not yet requested.*")
+  u.expect_match(messages, ".*Online.*attached.*")
 end
 
 T["client()"]["suggestions work when multiple files open with should_attach logic"] = function()
