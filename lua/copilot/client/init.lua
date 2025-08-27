@@ -60,6 +60,11 @@ function M.buf_attach(force, bufnr)
     return
   end
 
+  if (not force) and util.get_buffer_attach_status(bufnr) == ATTACH_STATUS_MANUALLY_DETACHED then
+    logger.trace("buffer not attaching as it was manually detached")
+    return
+  end
+
   if lsp.initialization_failed() then
     logger.error("copilot-language-server failed to initialize")
     M.startup_error = "initialization of copilot-language-server failed"
