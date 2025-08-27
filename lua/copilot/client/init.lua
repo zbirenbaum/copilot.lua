@@ -101,6 +101,7 @@ function M.buf_attach(force, bufnr)
   end
 
   vim.lsp.buf_attach_client(bufnr, M.id)
+  util.set_buffer_previous_ft(bufnr, vim.bo[bufnr].filetype)
   if force then
     logger.debug("force attached to buffer")
     util.set_buffer_attach_status(bufnr, ATTACH_STATUS_FORCE_ATTACHED)
@@ -110,11 +111,12 @@ function M.buf_attach(force, bufnr)
   end
 end
 
-function M.buf_detach()
-  if M.buf_is_attached(0) then
-    vim.lsp.buf_detach_client(0, M.id)
-    logger.trace("buffer manuall detached")
-    util.set_buffer_attach_status(vim.api.nvim_get_current_buf(), ATTACH_STATUS_MANUALLY_DETACHED)
+---@param bufnr? integer
+function M.buf_detach_if_attached(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  if M.buf_is_attached(bufnr) then
+    vim.lsp.buf_detach_client(bufnr, M.id)
+    util.set_buffer_attach_status(bufnr, ATTACH_STATUS_NOT_ATTACHED_PREFIX .. "detached")
   end
 end
 
@@ -166,6 +168,23 @@ function M.use_client(callback)
   end
 end
 
+---@param bufnr integer
+local function on_filetype(bufnr)
+  logger.trace("filetype autocmd called")
+  vim.schedule(function()
+    -- todo: when we do lazy/late attaching this needs changing
+
+    -- This is to handle the case where the filetype changes after the buffer is already attached,
+    -- causing the LSP to raise an error
+    if util.get_buffer_previous_ft(bufnr) ~= vim.bo[bufnr].filetype then
+      logger.trace("filetype changed, detaching and re-attaching")
+      M.buf_detach_if_attached(bufnr)
+    end
+
+    M.buf_attach(false, bufnr)
+  end)
+end
+
 function M.setup()
   logger.trace("setting up client")
   local node_command = config.copilot_node_command
@@ -193,11 +212,7 @@ function M.setup()
     group = M.augroup,
     callback = function(args)
       local bufnr = (args and args.buf) or nil
-      logger.trace("filetype autocmd called")
-      vim.schedule(function()
-        -- todo: when we do lazy/late attaching this needs changing
-        M.buf_attach(false, bufnr)
-      end)
+      on_filetype(bufnr)
     end,
     desc = "[copilot] (suggestion) file type",
   })

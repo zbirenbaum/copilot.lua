@@ -3,6 +3,7 @@ local logger = require("copilot.logger")
 
 local M = {}
 VAR_ATTACH_STATUS = "copilot_lua_attach_status"
+VAR_PREVIOUS_FT = "copilot_lua_previous_ft"
 ATTACH_STATUS_MANUALLY_DETACHED = "manually detached"
 ATTACH_STATUS_FORCE_ATTACHED = "force attached"
 ATTACH_STATUS_ATTACHED = "attached"
@@ -170,6 +171,19 @@ end
 function M.get_buffer_attach_status(bufnr)
   local ok, result = pcall(vim.api.nvim_buf_get_var, bufnr, VAR_ATTACH_STATUS)
   return (ok and result) or ATTACH_STATUS_NOT_YET_REQUESTED
+end
+
+---@param bufnr integer
+---@param filetype string
+function M.set_buffer_previous_ft(bufnr, filetype)
+  vim.api.nvim_buf_set_var(bufnr, VAR_PREVIOUS_FT, filetype)
+end
+
+---@param bufnr integer
+---@return string
+function M.get_buffer_previous_ft(bufnr)
+  local ok, result = pcall(vim.api.nvim_buf_get_var, bufnr, VAR_PREVIOUS_FT)
+  return (ok and result) or ""
 end
 
 return M
