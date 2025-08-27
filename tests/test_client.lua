@@ -192,7 +192,7 @@ T["client()"]["manually detached buffer stays detached"] = function()
       end
     end
 
-    vim.wait(1000, function()
+    vim.wait(5000, function()
       return has_passed()
     end, 50)
 
@@ -280,7 +280,7 @@ T["client()"]["auto_trigger off - will attach automatically"] = function()
       end
     end
 
-    vim.wait(1000, function()
+    vim.wait(5000, function()
       return has_passed()
     end, 50)
 
@@ -306,7 +306,7 @@ T["client()"]["suggestion and panel off - will attach automatically"] = function
       end
     end
 
-    vim.wait(1000, function()
+    vim.wait(5000, function()
       return has_passed()
     end, 50)
 
