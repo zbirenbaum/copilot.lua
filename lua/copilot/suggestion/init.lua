@@ -485,12 +485,13 @@ end
 ---@param context string
 local function request_suggestion(context)
   logger.trace("suggestion on " .. context)
-  c.buf_attach()
   schedule()
 end
 
 ---@param context string
 local function request_suggestion_when_auto_trigger(context)
+  c.buf_attach()
+
   if not should_auto_trigger() then
     return
   end
