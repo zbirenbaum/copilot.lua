@@ -341,4 +341,19 @@ end
 --   u.expect_match(messages, ".*Online.*attached.*")
 -- end
 
+T["client()"]["saving file - will not yield URI not found error"] = function()
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
+  child.configure_copilot()
+  child.type_keys("i", "123", "<Esc>", "o456", "<Esc>", "o7")
+  child.wait_for_suggestion()
+  child.type_keys("<Esc>")
+  child.lua("M.suggested = false")
+  child.cmd("w! tests/files/test.txt")
+  child.type_keys("a8")
+  child.wait_for_suggestion()
+  local messages = child.cmd_capture("messages")
+
+  u.expect_no_match(messages, "RPC.*Document for URI could not be found")
+end
+
 return T

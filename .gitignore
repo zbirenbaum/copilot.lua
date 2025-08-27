@@ -1,3 +1,5 @@
 tests/logs
 tests/env.lua
 deps/
+
+tests/files/test.txt
