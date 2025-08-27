@@ -1,3 +1,4 @@
+local u = require("copilot.util")
 local logger = require("copilot.logger")
 ---@alias copilot_status_notification_data { status: ''|'Normal'|'InProgress'|'Warning', message: string }
 
@@ -97,12 +98,8 @@ function M.status()
       return
     end
 
-    local buffer_status = c.buffer_statuses[vim.api.nvim_get_current_buf()]
-    if buffer_status then
-      add_line("Buffer status: " .. c.buffer_statuses[vim.api.nvim_get_current_buf()])
-    else
-      add_line("Buffer status: Attach not yet requested")
-    end
+    local buffer_status = u.get_buffer_attach_status(vim.api.nvim_get_current_buf())
+    add_line("Buffer status: " .. buffer_status)
 
     if string.lower(M.data.status) == "error" then
       add_line(M.data.message)

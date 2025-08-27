@@ -221,6 +221,7 @@ local function check_status(client, callback)
 end
 
 ---@param callback? fun()
+---@return boolean
 function M.is_authenticated(callback)
   local current_time = vim.loop.now()
 
