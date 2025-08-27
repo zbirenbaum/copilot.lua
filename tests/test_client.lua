@@ -169,6 +169,39 @@ T["client()"]["suggestions work when attaching to second buffer in a row"] = fun
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
+T["client()"]["manually detached buffer stays detached"] = function()
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
+
+  child.configure_copilot()
+  child.type_keys("i123", "<Esc>")
+  child.cmd("Copilot detach")
+  child.cmd("e tests/files/file1.txt")
+  child.type_keys("i123", "<Esc>")
+  child.cmd("bp")
+  child.type_keys("i123", "<Esc>")
+  local filename = child.cmd_capture("echo expand('%:t')")
+  u.expect_match("", filename)
+  child.cmd("Copilot status")
+
+  local messages = child.lua([[
+    local messages = ""
+    local function has_passed()
+      messages = vim.api.nvim_exec("messages", { output = true }) or ""
+      if messages:find(".*Online.*attached.*") then
+        return true
+      end
+    end
+
+    vim.wait(1000, function()
+      return has_passed()
+    end, 50)
+
+    return messages
+  ]])
+
+  u.expect_match(messages, ".*Online.*manually detached.*")
+end
+
 T["client()"]["suggestions work when lazy is set to false"] = function()
   child.config.should_attach = [[function(bufnr, bufname)
     local buffername = bufname:match("([^/\\]+)$") or ""

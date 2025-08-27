@@ -2,6 +2,12 @@ local config = require("copilot.config")
 local logger = require("copilot.logger")
 
 local M = {}
+VAR_ATTACH_STATUS = "copilot_lua_attach_status"
+ATTACH_STATUS_MANUALLY_DETACHED = "manually detached"
+ATTACH_STATUS_FORCE_ATTACHED = "force attached"
+ATTACH_STATUS_ATTACHED = "attached"
+ATTACH_STATUS_NOT_ATTACHED_PREFIX = "not attached based on "
+ATTACH_STATUS_NOT_YET_REQUESTED = "attach not yet requested"
 
 ---@return { editorInfo: copilot_editor_info, editorPluginInfo: copilot_editor_plugin_info }
 function M.get_editor_info()
@@ -32,17 +38,26 @@ function M.get_copilot_lua_version()
   return copilot_lua_version
 end
 
+---@param bufnr? integer
 ---@return boolean should_attach
 ---@return string? no_attach_reason
-function M.should_attach()
+function M.should_attach(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  if bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return false, "Invalid buffer"
+  end
+
   local ft = config.filetypes
-  local ft_disabled, ft_disabled_reason = require("copilot.client.filetypes").is_ft_disabled(vim.bo.filetype, ft)
+  local ft_disabled, ft_disabled_reason = require("copilot.client.filetypes").is_ft_disabled(vim.bo[bufnr].filetype, ft)
 
   if ft_disabled then
     return not ft_disabled, ft_disabled_reason
   end
 
-  local bufnr = vim.api.nvim_get_current_buf()
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local conf_attach = config.should_attach(bufnr, bufname)
 
@@ -142,6 +157,19 @@ function M.unset_keymap_if_exists(mode, key)
 
     logger.error("Could not unset keymap for " .. mode .. " " .. key .. ": " .. err)
   end
+end
+
+---@param bufnr integer
+---@param status string
+function M.set_buffer_attach_status(bufnr, status)
+  vim.api.nvim_buf_set_var(bufnr, VAR_ATTACH_STATUS, status)
+end
+
+---@param bufnr integer
+---@return string
+function M.get_buffer_attach_status(bufnr)
+  local ok, result = pcall(vim.api.nvim_buf_get_var, bufnr, VAR_ATTACH_STATUS)
+  return (ok and result) or ATTACH_STATUS_NOT_YET_REQUESTED
 end
 
 return M

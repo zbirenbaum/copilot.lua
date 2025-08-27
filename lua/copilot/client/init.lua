@@ -14,8 +14,6 @@ local is_disabled = false
 ---@field config vim.lsp.ClientConfig | nil
 ---@field startup_error string | nil
 ---@field initialized boolean
--- Only for informational purposes, use Vim API to check actual status
----@field buffer_statuses table<integer, string>
 local M = {
   augroup = nil,
   id = nil,
@@ -23,7 +21,6 @@ local M = {
   config = nil,
   startup_error = nil,
   initialized = false,
-  buffer_statuses = {},
 }
 
 ---@param id integer
@@ -42,8 +39,21 @@ function M.buf_is_attached(bufnr)
 end
 
 ---@param force? boolean
-function M.buf_attach(force)
-  local bufnr = vim.api.nvim_get_current_buf()
+---@param bufnr? integer The buffer number of which will be attached. 0 or nil for current buffer
+function M.buf_attach(force, bufnr)
+  if bufnr then
+    logger.trace("request to attach buffer #" .. tostring(bufnr))
+  end
+
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  if bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    logger.trace("buffer is invalid")
+    return
+  end
 
   if M.buf_is_attached(bufnr) then
     logger.trace("buffer already attached")
@@ -61,11 +71,11 @@ function M.buf_attach(force)
     return
   end
 
-  local should_attach, reason = util.should_attach()
+  local should_attach, reason = util.should_attach(bufnr)
 
   if not (force or should_attach) then
     logger.debug("not attaching to buffer based should_attach criteria: " .. reason)
-    M.buffer_statuses[bufnr] = "not attached based on " .. reason
+    util.set_buffer_attach_status(bufnr, ATTACH_STATUS_NOT_ATTACHED_PREFIX .. reason)
     return
   end
 
@@ -88,18 +98,18 @@ function M.buf_attach(force)
   vim.lsp.buf_attach_client(bufnr, M.id)
   if force then
     logger.debug("force attached to buffer")
-    M.buffer_statuses[bufnr] = "force attached"
+    util.set_buffer_attach_status(bufnr, ATTACH_STATUS_FORCE_ATTACHED)
   else
     logger.trace("buffer attached")
-    M.buffer_statuses[bufnr] = "attached"
+    util.set_buffer_attach_status(bufnr, ATTACH_STATUS_ATTACHED)
   end
 end
 
 function M.buf_detach()
   if M.buf_is_attached(0) then
     vim.lsp.buf_detach_client(0, M.id)
-    logger.trace("buffer detached")
-    M.buffer_statuses[vim.api.nvim_get_current_buf()] = "manually detached"
+    logger.trace("buffer manuall detached")
+    util.set_buffer_attach_status(vim.api.nvim_get_current_buf(), ATTACH_STATUS_MANUALLY_DETACHED)
   end
 end
 
@@ -176,19 +186,23 @@ function M.setup()
 
   vim.api.nvim_create_autocmd("FileType", {
     group = M.augroup,
-    callback = function()
+    callback = function(args)
+      local bufnr = (args and args.buf) or nil
       logger.trace("filetype autocmd called")
       vim.schedule(function()
         -- todo: when we do lazy/late attaching this needs changing
-        M.buf_attach()
+        M.buf_attach(false, bufnr)
       end)
     end,
     desc = "[copilot] (suggestion) file type",
   })
 
   vim.schedule(M.ensure_client_started)
-  -- FileType is likely already triggered for shown buffer
-  vim.schedule(M.buf_attach)
+  -- FileType is likely already triggered for shown buffer, so we trigger it manually
+  local bufnr = vim.api.nvim_get_current_buf()
+  vim.schedule(function()
+    M.buf_attach(false, bufnr)
+  end)
 end
 
 function M.teardown()
