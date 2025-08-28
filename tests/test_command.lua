@@ -36,4 +36,30 @@ T["command()"]["panel toggle - close works"] = function()
   reference_screenshot(child.get_screenshot())
 end
 
+T["command()"]["panel open - it works"] = function()
+  child.configure_copilot()
+  child.cmd("Copilot panel open")
+  reference_screenshot(child.get_screenshot())
+end
+
+T["command()"]["panel close - it works"] = function()
+  child.configure_copilot()
+  child.cmd("Copilot panel open")
+  child.cmd("Copilot panel close")
+  reference_screenshot(child.get_screenshot())
+end
+
+T["command()"]["panel is_open - is opened - returns true"] = function()
+  child.configure_copilot()
+  child.cmd("Copilot panel open")
+  local is_open = child.cmd_capture("Copilot panel is_open")
+  u.expect_match(is_open, "true")
+end
+
+T["command()"]["panel is_open - is closed - returns false"] = function()
+  child.configure_copilot()
+  local is_open = child.cmd_capture("Copilot panel is_open")
+  u.expect_match(is_open, "false")
+end
+
 return T
