@@ -1,5 +1,5 @@
 local eq = MiniTest.expect.equality
-local stub = require("tests.test_nodejs_stubs")
+local stub = require("tests.stubs.nodejs")
 
 local T = MiniTest.new_set({
   hooks = {
@@ -71,6 +71,7 @@ T["get_node_version()"]["handles vim.system failure"] = function()
     nodejs.setup("node")
 
     local _, error = nodejs.get_node_version()
+    error = error or ""
 
     eq(error:find("Could not determine Node.js version") ~= nil, true)
   end)
@@ -83,6 +84,7 @@ T["get_node_version()"]["handles process with non-zero exit code"] = function()
     nodejs.setup("nonexistent-node")
 
     local _, error = nodejs.get_node_version()
+    error = error or ""
 
     eq(error:find("Could not determine Node.js version") ~= nil, true)
   end)
@@ -95,6 +97,7 @@ T["get_node_version()"]["validates node version requirement"] = function()
     nodejs.setup("node")
 
     local _, error = nodejs.get_node_version()
+    error = error or ""
 
     eq(error:find("Node.js version 20 or newer required") ~= nil, true)
   end)

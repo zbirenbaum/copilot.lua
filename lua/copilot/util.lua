@@ -110,7 +110,7 @@ function M.get_doc_params(overrides)
   return params
 end
 
-M.get_plugin_path = function()
+function M.get_plugin_path()
   local copilot_path = vim.api.nvim_get_runtime_file("lua/copilot/init.lua", false)[1]
   if vim.fn.filereadable(copilot_path) ~= 0 then
     return vim.fn.fnamemodify(copilot_path, ":h:h:h")
@@ -189,7 +189,7 @@ end
 ---@param cmd string|string[]
 ---@param append string|string[]
 ---@return string[]
-M.append_command = function(cmd, append)
+function M.append_command(cmd, append)
   local full_cmd = {}
 
   -- first append the base command
