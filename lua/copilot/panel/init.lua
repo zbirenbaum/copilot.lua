@@ -529,6 +529,16 @@ function M.toggle()
   end
 end
 
+function M.close()
+  if panel.winid and vim.api.nvim_win_is_valid(panel.winid) then
+    panel:close()
+  end
+end
+
+function M.is_open()
+  return (panel.winid and vim.api.nvim_win_is_valid(panel.winid)) or false
+end
+
 function M.refresh()
   vim.api.nvim_buf_call(vim.uri_to_bufnr(utils.panel_uri_to_doc_uri(panel.panel_uri)), function()
     panel:refresh()
