@@ -153,7 +153,7 @@ function M.find_config_path()
 end
 
 ---@return table|nil
-M.get_creds = function()
+function M.get_creds()
   local filename = M.find_config_path() .. "/github-copilot/apps.json"
 
   if vim.fn.filereadable(filename) == 0 then
