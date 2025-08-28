@@ -172,6 +172,9 @@ end
 local function on_filetype(bufnr)
   logger.trace("filetype autocmd called")
   vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
     -- todo: when we do lazy/late attaching this needs changing
 
     -- This is to handle the case where the filetype changes after the buffer is already attached,
