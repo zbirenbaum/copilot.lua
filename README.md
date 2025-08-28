@@ -200,9 +200,12 @@ require("copilot.panel").accept()
 require("copilot.panel").jump_next()
 require("copilot.panel").jump_prev()
 require("copilot.panel").open({position, ratio})
+require("copilot.panel").close()
 require("copilot.panel").toggle()
 require("copilot.panel").refresh()
+require("copilot.panel").is_open()
 ```
+These can also be accessed through the `:Copilot panel <function>` command (eg. `:Copilot panel accept`).
 
 ### suggestion
 
@@ -265,6 +268,7 @@ require("copilot.suggestion").prev()
 require("copilot.suggestion").dismiss()
 require("copilot.suggestion").toggle_auto_trigger()
 ```
+These can also be accessed through the `:Copilot suggestion <function>` command (eg. `:Copilot suggestion accept`).
 
 ### filetypes
 
