@@ -197,7 +197,9 @@ M.append_command = function(cmd, append)
     table.insert(full_cmd, cmd)
   elseif type(cmd) == "table" then
     for _, part in ipairs(cmd) do
-      table.insert(full_cmd, part)
+      if part ~= nil then
+        table.insert(full_cmd, part)
+      end
     end
   end
 
@@ -206,7 +208,9 @@ M.append_command = function(cmd, append)
     table.insert(full_cmd, append)
   elseif type(append) == "table" then
     for _, part in ipairs(append) do
-      table.insert(full_cmd, part)
+      if part ~= nil then
+        table.insert(full_cmd, part)
+      end
     end
   end
 
