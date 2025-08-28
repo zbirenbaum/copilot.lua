@@ -97,17 +97,7 @@ end
 
 ---@return table
 function M.get_execute_command()
-  if type(M.node_command) == "string" then
-    return {
-      M.node_command,
-      M.server_path or M.get_server_path(),
-      "--stdio",
-    }
-  elseif type(M.node_command) == "table" then
-    return util.append_command(M.node_command, { M.server_path or M.get_server_path(), "--stdio" })
-  else
-    error(string.format("failed to build node command from %s (type %s)", M.node_command, type(M.node_command)))
-  end
+  return util.append_command(M.node_command, { M.server_path or M.get_server_path(), "--stdio" })
 end
 
 ---@param node_command? string|string[]
