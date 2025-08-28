@@ -111,7 +111,7 @@ T["get_execute_command()"]["default node command, default server path"] = functi
     local nodejs = require("copilot.lsp.nodejs")
     eq(nodejs.setup(), true)
     local cmd = nodejs.get_execute_command()
-    eq(cmd, { "node", stub.default_server_path, "--stdio" })
+    eq(cmd, { "node", vim.fn.expand(stub.default_server_path), "--stdio" })
   end)
   eq(captured_path, stub.default_server_path)
 end
@@ -119,9 +119,9 @@ end
 T["get_execute_command()"]["default node command, custom server path"] = function()
   stub.get_runtime_server_path(function()
     local nodejs = require("copilot.lsp.nodejs")
-    eq(nodejs.setup(nil, stub.custom_server_path), true)
+    eq(nodejs.setup(nil, vim.fn.expand(stub.custom_server_path)), true)
     local cmd = nodejs.get_execute_command()
-    eq(cmd, { "node", stub.custom_server_path, "--stdio" })
+    eq(cmd, { "node", vim.fn.expand(stub.custom_server_path), "--stdio" })
   end)
 end
 
@@ -130,7 +130,7 @@ T["get_execute_command()"]["custom node command as string, default server path"]
     local nodejs = require("copilot.lsp.nodejs")
     eq(nodejs.setup("/usr/local/bin/node"), true)
     local cmd = nodejs.get_execute_command()
-    eq(cmd, { "/usr/local/bin/node", stub.default_server_path, "--stdio" })
+    eq(cmd, { "/usr/local/bin/node", vim.fn.expand(stub.default_server_path), "--stdio" })
   end)
   eq(captured_path, stub.default_server_path)
 end
@@ -149,7 +149,7 @@ T["get_execute_command()"]["custom node command as string with spaces, default s
     local nodejs = require("copilot.lsp.nodejs")
     nodejs.setup("/path to/node")
     local cmd = nodejs.get_execute_command()
-    eq(cmd, { "/path to/node", stub.default_server_path, "--stdio" })
+    eq(cmd, { "/path to/node", vim.fn.expand(stub.default_server_path), "--stdio" })
   end)
   eq(captured_path, stub.default_server_path)
 end
@@ -168,7 +168,7 @@ T["get_execute_command()"]["custom node command as table, default server path"] 
     local nodejs = require("copilot.lsp.nodejs")
     nodejs.setup({ "mise", "x", "node@lts", "--", "node" })
     local cmd = nodejs.get_execute_command()
-    eq(cmd, { "mise", "x", "node@lts", "--", "node", stub.default_server_path, "--stdio" })
+    eq(cmd, { "mise", "x", "node@lts", "--", "node", vim.fn.expand(stub.default_server_path), "--stdio" })
   end)
   eq(captured_path, stub.default_server_path)
 end
