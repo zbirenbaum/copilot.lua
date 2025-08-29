@@ -67,6 +67,10 @@ function M.new_child_neovim(test_name)
     child.lua("M = require('copilot')")
   end
 
+  function child.reset_suggested()
+    child.lua("M.suggested = false")
+  end
+
   function child.configure_copilot()
     local script = ""
     for k, v in pairs(child.config) do
