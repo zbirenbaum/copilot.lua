@@ -305,10 +305,13 @@ local function update_preview(ctx)
     set_ctx_suggestion_text(ctx.choice, suggest_text)
   end
 
+  local has_control_chars = string.find(suggestion_line1, "%c") ~= nil or #displayLines > 1
+
   local extmark = {
     id = copilot.extmark_id,
     virt_text = { { suggestion_line1, hl_group.CopilotSuggestion } },
-    virt_text_pos = "inline",
+    -- inline does not support system control characters
+    virt_text_pos = has_control_chars and "eol" or "inline",
   }
 
   if #displayLines > 1 then
