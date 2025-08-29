@@ -107,7 +107,7 @@ end
 
 ---@param ctx copilot_suggestion_context
 local function reset_ctx(ctx)
-  logger.trace("suggestion reset context", ctx)
+  logger.trace("suggestion reset context")
   ctx.first = nil
   ctx.cycling = nil
   ctx.cycling_callbacks = nil
@@ -213,7 +213,7 @@ end
 
 ---@param ctx? copilot_suggestion_context
 local function cancel_inflight_requests(ctx)
-  logger.trace("suggestion cancel inflight requests", ctx)
+  logger.trace("suggestion cancel inflight requests")
   ctx = ctx or get_ctx()
 
   with_client(function(client)
@@ -238,9 +238,9 @@ end
 ---@param ctx? copilot_suggestion_context
 ---@return copilot_get_completions_data_completion?
 local function get_current_suggestion(ctx)
-  logger.trace("suggestion get current suggestion", ctx)
+  logger.trace("suggestion get current suggestion")
   ctx = ctx or get_ctx()
-  logger.trace("suggestion current suggestion", ctx)
+  logger.trace("suggestion current suggestion")
 
   local ok, choice = pcall(function()
     if
@@ -346,7 +346,7 @@ end
 
 ---@param ctx? copilot_suggestion_context
 local function clear(ctx)
-  logger.trace("suggestion clear", ctx)
+  logger.trace("suggestion clear")
   ctx = ctx or get_ctx()
   stop_timer()
   cancel_inflight_requests(ctx)
