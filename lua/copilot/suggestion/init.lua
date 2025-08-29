@@ -312,7 +312,12 @@ local function update_preview(ctx)
     virt_text = { { suggestion_line1, hl_group.CopilotSuggestion } },
     -- inline does not support system control characters
     virt_text_pos = has_control_chars and "eol" or "inline",
+    hl_mode = "replace",
   }
+
+  if has_control_chars then
+    extmark.virt_text_win_col = vim.fn.virtcol(".") - 1
+  end
 
   if #displayLines > 1 then
     extmark.virt_lines = {}
@@ -327,7 +332,6 @@ local function update_preview(ctx)
     extmark.virt_text[3] = { annot, hl_group.CopilotAnnotation }
   end
 
-  extmark.hl_mode = "replace"
   vim.api.nvim_buf_set_extmark(0, copilot.ns_id, vim.fn.line(".") - 1, cursor_col - 1, extmark)
 
   if config.suggestion.suggestion_notification then
