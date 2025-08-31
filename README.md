@@ -1,6 +1,7 @@
 # copilot.lua
 
 This plugin is the pure lua replacement for [github/copilot.vim](https://github.com/github/copilot.vim).
+A huge thank you to @tris203 for the code behind the nes functionality ([copilot-lsp](https://github.com/copilotlsp-nvim/copilot-lsp)).
 
 <details>
 <summary>Motivation behind `copilot.lua`</summary>
@@ -48,7 +49,11 @@ Install the plugin with your preferred plugin manager.
 For example, with [packer.nvim](https://github.com/wbthomason/packer.nvim):
 
 ```lua
-use { "zbirenbaum/copilot.lua" }
+use { "zbirenbaum/copilot.lua" 
+  requires = {
+    "copilotlsp-nvim/copilot-lsp", -- (optional) for NES functionality
+  },
+}
 ```
 
 ### Authentication
@@ -93,6 +98,9 @@ For example:
 ```lua
 use {
   "zbirenbaum/copilot.lua",
+  requires = {
+    "copilotlsp-nvim/copilot-lsp", -- (optional) for NES functionality
+  },
   cmd = "Copilot",
   event = "InsertEnter",
   config = function()
@@ -136,16 +144,8 @@ require('copilot').setup({
       dismiss = "<C-]>",
     },
   },
-  filetypes = {
-    yaml = false,
-    markdown = false,
-    help = false,
-    gitcommit = false,
-    gitrebase = false,
-    hgcommit = false,
-    svn = false,
-    cvs = false,
-    ["."] = false,
+  nes = {
+    enabled = false, -- requires copilot-lsp as a dependency
   },
   auth_provider_url = nil, -- URL to authentication provider, if not "https://github.com/"
   logger = {
@@ -269,6 +269,30 @@ require("copilot.suggestion").dismiss()
 require("copilot.suggestion").toggle_auto_trigger()
 ```
 These can also be accessed through the `:Copilot suggestion <function>` command (eg. `:Copilot suggestion accept`).
+
+### nes (next edit suggestion)
+
+When `enabled` is `true`, copilot will provide suggestions based on the next edit you are likely to make, through [copilot-lsp](https://github.com/copilotlsp-nvim/copilot-lsp).
+For additional configurations, please refer to the [copilot-lsp documentation](https://github.com/copilotlsp-nvim/copilot-lsp/blob/main/README.md).
+
+Configurations are better placed inside the require/dependency definition as such:
+
+```lua
+use {
+  "zbirenbaum/copilot.lua",
+  requires = {
+    "copilotlsp-nvim/copilot-lsp",
+    init = function()
+      vim.g.copilot_nes_debounce = 500
+    end,
+  },
+  cmd = "Copilot",
+  event = "InsertEnter",
+  config = function()
+    require("copilot").setup({})
+  end,
+}
+```
 
 ### filetypes
 

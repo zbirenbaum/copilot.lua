@@ -1,3 +1,6 @@
+local logger = require("copilot.logger")
+local config = require("copilot.config")
+
 local M = {
   group = {
     CopilotAnnotation = "CopilotAnnotation",
@@ -17,6 +20,16 @@ function M.setup()
       local ok, existing = pcall(vim.api.nvim_get_hl, 0, { name = from_group })
       if not ok or vim.tbl_isempty(existing) then
         vim.api.nvim_set_hl(0, from_group, { link = to_group })
+      end
+    end
+
+    if config.nes.enabled then
+      local ok, err = pcall(function()
+        require("copilot-lsp.api").set_hl()
+      end)
+
+      if not ok then
+        logger.error("Error setting copilot-lsp highlights: ", err)
       end
     end
   end)
