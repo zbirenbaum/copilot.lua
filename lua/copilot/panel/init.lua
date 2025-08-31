@@ -5,6 +5,7 @@ local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
 local logger = require("copilot.logger")
 local utils = require("copilot.panel.utils")
+local keymaps = require("copilot.keymaps")
 
 local M = {
   handlers = require("copilot.panel.handlers"),
@@ -597,13 +598,13 @@ function M.teardown()
     return
   end
 
-  util.unset_keymap_if_exists("i", panel.keymap.open)
+  keymaps.unset_keymap_if_exists("i", panel.keymap.open)
 
   if M.keymaps_set then
-    M.unset_keymap_if_exists("n", panel.keymap.accept)
-    M.unset_keymap_if_exists("n", panel.keymap.jump_prev)
-    M.unset_keymap_if_exists("n", panel.keymap.jump_next)
-    M.unset_keymap_if_exists("n", panel.keymap.refresh)
+    keymaps.unset_keymap_if_exists("n", panel.keymap.accept)
+    keymaps.unset_keymap_if_exists("n", panel.keymap.jump_prev)
+    keymaps.unset_keymap_if_exists("n", panel.keymap.jump_next)
+    keymaps.unset_keymap_if_exists("n", panel.keymap.refresh)
   end
 
   panel:close()

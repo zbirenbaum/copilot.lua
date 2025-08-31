@@ -171,6 +171,20 @@ function M.handle_lsp_progress(_, result, _)
   M.trace(string.format("LSP progress - token %s", result.token), result.value)
 end
 
+-- Known noisy errors that we do not want to show as they seem to be out of our control
+---@param msg string
+---@return boolean
+local function force_log_to_trace(msg)
+  if
+    msg:match(".*Request textDocument/copilotInlineEdit: AbortError: The operation was aborted.*")
+    or msg:match(".*AsyncCompletionManager.*Request errored with AbortError: The operation was aborted.*")
+  then
+    return true
+  end
+
+  return false
+end
+
 function M.handle_log_lsp_messages(_, result, _)
   if not result then
     return
@@ -179,7 +193,7 @@ function M.handle_log_lsp_messages(_, result, _)
   local message = string.format("LSP message: %s", result.message)
   local message_type = result.type --[[@as integer]]
 
-  if message_type == 1 then
+  if message_type == 1 and not force_log_to_trace(message) then
     M.error(message)
   elseif message_type == 2 then
     M.warn(message)
