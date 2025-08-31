@@ -130,37 +130,6 @@ function M.strutf16len(str)
   end
 end
 
----@param mode string
----@param key string|false
-function M.unset_keymap_if_exists(mode, key)
-  if not key then
-    return
-  end
-
-  local ok, err = pcall(vim.api.nvim_del_keymap, mode, key)
-
-  if not ok then
-    local suggestion_keymaps = config.suggestion.keymap or {}
-    local panel_keymaps = config.panel.keymap or {}
-    local found = false
-
-    for _, tbl in ipairs({ suggestion_keymaps, panel_keymaps }) do
-      for _, v in pairs(tbl) do
-        if v == key then
-          if found then
-            logger.error("Keymap " .. key .. " is used for two different actions, please review your configuration.")
-            return
-          else
-            found = true
-          end
-        end
-      end
-    end
-
-    logger.error("Could not unset keymap for " .. mode .. " " .. key .. ": " .. err)
-  end
-end
-
 ---@param bufnr integer
 ---@param status string
 function M.set_buffer_attach_status(bufnr, status)

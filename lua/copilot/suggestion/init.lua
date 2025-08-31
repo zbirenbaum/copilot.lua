@@ -7,6 +7,7 @@ local util = require("copilot.util")
 local logger = require("copilot.logger")
 local suggestion_util = require("copilot.suggestion.utils")
 local utils = require("copilot.client.utils")
+local keymaps = require("copilot.keymaps")
 
 local M = {}
 
@@ -119,72 +120,38 @@ local function reset_ctx(ctx)
 end
 
 local function set_keymap(keymap)
-  if keymap.accept then
-    vim.keymap.set("i", keymap.accept, function()
-      local ctx = get_ctx()
-      if (config.suggestion.trigger_on_accept and not ctx.first) or M.is_visible() then
-        M.accept()
-      else
-        local termcode = vim.api.nvim_replace_termcodes(keymap.accept, true, false, true)
-        vim.api.nvim_feedkeys(termcode, "n", true)
-      end
-    end, {
-      desc = "[copilot] accept suggestion",
-      silent = true,
-    })
-  end
+  keymaps.register_keymap_with_passthrough("i", keymap.accept, function()
+    local ctx = get_ctx()
+    if (config.suggestion.trigger_on_accept and not ctx.first) or M.is_visible() then
+      M.accept()
+      return true
+    end
 
-  if keymap.accept_word then
-    vim.keymap.set("i", keymap.accept_word, M.accept_word, {
-      desc = "[copilot] accept suggestion (word)",
-      silent = true,
-    })
-  end
+    return false
+  end, "[copilot] accept suggestion")
 
-  if keymap.accept_line then
-    vim.keymap.set("i", keymap.accept_line, M.accept_line, {
-      desc = "[copilot] accept suggestion (line)",
-      silent = true,
-    })
-  end
+  keymaps.register_keymap("i", keymap.accept_word, M.accept_word, "[copilot] accept suggestion (word)")
+  keymaps.register_keymap("i", keymap.accept_line, M.accept_line, "[copilot] accept suggestion (line)")
+  keymaps.register_keymap("i", keymap.next, M.next, "[copilot] next suggestion")
+  keymaps.register_keymap("i", keymap.prev, M.prev, "[copilot] prev suggestion")
 
-  if keymap.next then
-    vim.keymap.set("i", keymap.next, M.next, {
-      desc = "[copilot] next suggestion",
-      silent = true,
-    })
-  end
+  keymaps.register_keymap_with_passthrough("i", keymap.dismiss, function()
+    if M.is_visible() then
+      M.dismiss()
+      return true
+    end
 
-  if keymap.prev then
-    vim.keymap.set("i", keymap.prev, M.prev, {
-      desc = "[copilot] prev suggestion",
-      silent = true,
-    })
-  end
-
-  if keymap.dismiss then
-    vim.keymap.set("i", keymap.dismiss, function()
-      if M.is_visible() then
-        M.dismiss()
-        return "<Ignore>"
-      else
-        return keymap.dismiss
-      end
-    end, {
-      desc = "[copilot] dismiss suggestion",
-      expr = true,
-      silent = true,
-    })
-  end
+    return false
+  end, "[copilot] dismiss suggestion")
 end
 
 local function unset_keymap(keymap)
-  util.unset_keymap_if_exists("i", keymap.accept)
-  util.unset_keymap_if_exists("i", keymap.accept_word)
-  util.unset_keymap_if_exists("i", keymap.accept_line)
-  util.unset_keymap_if_exists("i", keymap.next)
-  util.unset_keymap_if_exists("i", keymap.prev)
-  util.unset_keymap_if_exists("i", keymap.dismiss)
+  keymaps.unset_keymap_if_exists("i", keymap.accept)
+  keymaps.unset_keymap_if_exists("i", keymap.accept_word)
+  keymaps.unset_keymap_if_exists("i", keymap.accept_line)
+  keymaps.unset_keymap_if_exists("i", keymap.next)
+  keymaps.unset_keymap_if_exists("i", keymap.prev)
+  keymaps.unset_keymap_if_exists("i", keymap.dismiss)
 end
 
 local function stop_timer()

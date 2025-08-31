@@ -5,6 +5,7 @@ local logger = require("copilot.logger")
 ---@field suggestion SuggestionConfig
 ---@field logger LoggerConfig
 ---@field server ServerConfig
+---@field nes NesConfig
 ---@field filetypes table<string, boolean> Filetypes to enable Copilot for
 ---@field auth_provider_url string|nil URL for the authentication provider
 ---@field workspace_folders string[] Workspace folders to enable Copilot for
@@ -23,6 +24,7 @@ local M = {
   suggestion = require("copilot.config.suggestion").default,
   logger = require("copilot.config.logger").default,
   server = require("copilot.config.server").default,
+  nes = require("copilot.config.nes").default,
   root_dir = require("copilot.config.root_dir").default,
   should_attach = require("copilot.config.should_attach").default,
   filetypes = {},
@@ -59,6 +61,7 @@ end
 function M.validate(config)
   vim.validate("panel", config.panel, "table")
   vim.validate("suggestion", config.suggestion, "table")
+  vim.validate("nes", config.nes, "table")
   vim.validate("logger", config.logger, "table")
   vim.validate("server", config.server, "table")
   vim.validate("filetypes", config.filetypes, "table")
@@ -76,6 +79,7 @@ function M.validate(config)
   require("copilot.config.server").validate(config.server)
   require("copilot.config.root_dir").validate(config.root_dir)
   require("copilot.config.should_attach").validate(config.should_attach)
+  require("copilot.config.nes").validate(config.nes)
 end
 
 return M
