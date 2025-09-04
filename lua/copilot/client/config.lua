@@ -12,7 +12,7 @@ local callbacks = {}
 ---@param overrides table<string, any>
 ---@param client CopilotClient
 function M.prepare_client_config(overrides, client)
-  if lsp.binary.initialization_failed then
+  if lsp.initialization_failed() then
     client.startup_error = "initialization of copilot-language-server failed"
     return
   end
