@@ -29,7 +29,7 @@ T["suggestion()"]["auto_trigger is false, will not show ghost test"] = function(
   child.o.lines, child.o.columns = 10, 15
   child.configure_copilot()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
-  vim.loop.sleep(50)
+  child.wait_for_suggestion()
 
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end

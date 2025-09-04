@@ -111,7 +111,15 @@ function M.server()
     -- }
     -- handler(nil, empty_response)
     elseif method == "checkStatus" then
-      handler(nil, { user = "someUser", status = "OK" })
+      vim.defer_fn(function()
+        handler(nil, { user = "someUser", status = "OK" })
+        local handlers = require("copilot.status").handlers
+        handlers.statusNotification(
+          nil,
+          { busy = false, kind = "Normal", message = "", status = "Normal" },
+          { client_id = 1, method = "statusNotification" }
+        )
+      end, 10)
     elseif method == "notifyAccepted" or method == "notifyRejected" or method == "notifyShown" then
       handler(nil, {})
     elseif method == "getPanelCompletions" then

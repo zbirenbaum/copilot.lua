@@ -7,7 +7,7 @@ local T = MiniTest.new_set({
   hooks = {
     pre_once = function() end,
     pre_case = function()
-      child.run_pre_case()
+      child.run_pre_case(true)
       child.lua("s = require('copilot.status')")
       child.lua("c = require('copilot.client')")
     end,
@@ -40,7 +40,7 @@ T["client()"]["status info"] = function()
       end
     end
 
-    vim.wait(5000, function()
+    vim.wait(500, function()
       return has_passed()
     end, 50)
 
@@ -192,7 +192,7 @@ T["client()"]["manually detached buffer stays detached"] = function()
       end
     end
 
-    vim.wait(5000, function()
+    vim.wait(500, function()
       return has_passed()
     end, 50)
 
@@ -255,7 +255,7 @@ end
 --       end
 --     end
 --
---     vim.wait(1000, function()
+--     vim.wait(500, function()
 --       return has_passed()
 --     end, 50)
 --
@@ -280,7 +280,7 @@ T["client()"]["auto_trigger off - will attach automatically"] = function()
       end
     end
 
-    vim.wait(5000, function()
+    vim.wait(500, function()
       return has_passed()
     end, 50)
 
@@ -306,7 +306,7 @@ T["client()"]["suggestion and panel off - will attach automatically"] = function
       end
     end
 
-    vim.wait(5000, function()
+    vim.wait(500, function()
       return has_passed()
     end, 50)
 
@@ -331,7 +331,7 @@ end
 --       end
 --     end
 --
---     vim.wait(5000, function()
+--     vim.wait(500, function()
 --       return has_passed()
 --     end, 50)
 --

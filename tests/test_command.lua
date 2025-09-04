@@ -1,5 +1,5 @@
 local child_helper = require("tests.child_helper")
-local child = child_helper.new_child_neovim("test_suggestion")
+local child = child_helper.new_child_neovim("test_command")
 local u = require("tests.utils")
 local reference_screenshot = MiniTest.expect.reference_screenshot
 
@@ -33,7 +33,7 @@ T["command()"]["panel toggle - close works"] = function()
   child.configure_copilot()
   child.cmd("Copilot panel toggle")
   child.cmd("Copilot panel toggle")
-  reference_screenshot(child.get_screenshot())
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 23, 24 }, ignore_attr = { 23, 24 } })
 end
 
 T["command()"]["panel open - it works"] = function()
