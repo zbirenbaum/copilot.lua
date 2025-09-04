@@ -10,7 +10,6 @@ local M = {
   initialization_failed = false,
 }
 
-
 ---@return string node_version
 ---@return nil|string node_version_error
 function M.get_node_version()

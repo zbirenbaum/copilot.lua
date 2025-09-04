@@ -53,7 +53,7 @@ function M.detach()
   if c.buf_is_attached(bufnr) then
     c.buf_detach_if_attached(bufnr)
     logger.trace("buffer manually detached")
-    u.set_buffer_attach_status(bufnr, ATTACH_STATUS_MANUALLY_DETACHED)
+    u.set_buffer_attach_status(bufnr, u.ATTACH_STATUS_MANUALLY_DETACHED)
   end
 end
 
