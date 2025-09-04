@@ -10,6 +10,7 @@ end
 ---@param test_name string
 function M.new_child_neovim(test_name)
   ---@class MiniTest.child
+  ---@field [any] any don't bother type checking this one
   local child = MiniTest.new_child_neovim()
   local logfile = string.format("./tests/logs/%s.log", test_name)
   child.config = nil

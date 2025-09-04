@@ -60,7 +60,7 @@ function M.buf_attach(force, bufnr)
     return
   end
 
-  if (not force) and util.get_buffer_attach_status(bufnr) == ATTACH_STATUS_MANUALLY_DETACHED then
+  if (not force) and util.get_buffer_attach_status(bufnr) == util.ATTACH_STATUS_MANUALLY_DETACHED then
     logger.trace("buffer not attaching as it was manually detached")
     return
   end
@@ -80,7 +80,7 @@ function M.buf_attach(force, bufnr)
 
   if not (force or should_attach) then
     logger.debug("not attaching to buffer based should_attach criteria: " .. reason)
-    util.set_buffer_attach_status(bufnr, ATTACH_STATUS_NOT_ATTACHED_PREFIX .. reason)
+    util.set_buffer_attach_status(bufnr, util.ATTACH_STATUS_NOT_ATTACHED_PREFIX .. reason)
     return
   end
 
@@ -104,10 +104,10 @@ function M.buf_attach(force, bufnr)
   util.set_buffer_previous_ft(bufnr, vim.bo[bufnr].filetype)
   if force then
     logger.debug("force attached to buffer")
-    util.set_buffer_attach_status(bufnr, ATTACH_STATUS_FORCE_ATTACHED)
+    util.set_buffer_attach_status(bufnr, util.ATTACH_STATUS_FORCE_ATTACHED)
   else
     logger.trace("buffer attached")
-    util.set_buffer_attach_status(bufnr, ATTACH_STATUS_ATTACHED)
+    util.set_buffer_attach_status(bufnr, util.ATTACH_STATUS_ATTACHED)
   end
 end
 
@@ -116,7 +116,7 @@ function M.buf_detach_if_attached(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   if M.buf_is_attached(bufnr) then
     vim.lsp.buf_detach_client(bufnr, M.id)
-    util.set_buffer_attach_status(bufnr, ATTACH_STATUS_NOT_ATTACHED_PREFIX .. "detached")
+    util.set_buffer_attach_status(bufnr, util.ATTACH_STATUS_NOT_ATTACHED_PREFIX .. "detached")
   end
 end
 

@@ -462,7 +462,8 @@ function panel:refresh()
       utf16_index = vim.str_utfindex(self.state.line, "utf-16")
     else
       ---@diagnostic disable-next-line: missing-parameter
-      _, utf16_index = vim.str_utfindex(self.state.line)
+      local _, this_utf16_index = vim.str_utfindex(self.state.line)
+      utf16_index = this_utf16_index
     end
     params.doc.position.character = utf16_index
     params.position.character = params.doc.position.character

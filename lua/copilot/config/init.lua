@@ -68,7 +68,7 @@ function M.validate(config)
   vim.validate("copilot_model", config.copilot_model, { "string", "nil" })
   vim.validate("root_dir", config.root_dir, { "string", "function" })
   vim.validate("should_attach", config.should_attach, "function")
-  vim.validate("copilot_node_command", config.copilot_node_command, {"string", "table"})
+  vim.validate("copilot_node_command", config.copilot_node_command, { "string", "table" })
 
   require("copilot.config.panel").validate(config.panel)
   require("copilot.config.suggestion").validate(config.suggestion)

@@ -1,4 +1,4 @@
-name: lua_ls-typecheck
+name: Typecheck
 
 on: [push, pull_request]
 

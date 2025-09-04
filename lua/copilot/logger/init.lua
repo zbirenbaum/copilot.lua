@@ -84,7 +84,7 @@ local function write_log(log_level, log_file, msg, ...)
   local log_msg = format_log(log_level, msg, ...) .. "\n"
 
   uv.fs_open(log_file, "a", tonumber("644", 8), function(err, fd)
-    if err then
+    if err or not fd then
       notify_log(vim.log.levels.ERROR, "Failed to open log file: " .. err)
       return
     end
