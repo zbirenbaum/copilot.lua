@@ -1,0 +1,15 @@
+name: lua_ls-typecheck
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Type Check Code Base
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: stevearc/nvim-typecheck-action@v2
+        with:
+          level: Warning
+          configpath: ".luarc.json"
