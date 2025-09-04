@@ -6,7 +6,7 @@ local T = MiniTest.new_set({
   hooks = {
     pre_once = function() end,
     pre_case = function()
-      child.run_pre_case()
+      child.run_pre_case(true)
       child.bo.readonly = false
     end,
     post_once = child.stop,
@@ -29,8 +29,7 @@ T["suggestion()"]["auto_trigger is false, will not show ghost test"] = function(
   child.o.lines, child.o.columns = 10, 15
   child.configure_copilot()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
-  vim.loop.sleep(3000)
-  child.lua("vim.wait(0)")
+  vim.loop.sleep(50)
 
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
@@ -78,6 +77,7 @@ end
 T["suggestion()"]["accept_word, 1 word, works"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true," .. "keymap = { accept_word = '<C-e>' },"
+  child.cmd("e numbers_with_spaces.txt")
   child.configure_copilot()
   child.type_keys("i1 2 3", "<Esc>", "o4 5 6", "<Esc>", "o7 ")
   child.wait_for_suggestion()
@@ -89,6 +89,7 @@ end
 T["suggestion()"]["accept_word, 2 words, works"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true," .. "keymap = { accept_word = '<C-e>' },"
+  child.cmd("e numbers_with_spaces.txt")
   child.configure_copilot()
   child.type_keys("i1 2 3", "<Esc>", "o4 5 6", "<Esc>", "o7 ")
   child.wait_for_suggestion()
@@ -105,6 +106,7 @@ T["suggestion()"]["accept_word, 1 word, then dismiss"] = function()
   child.config.suggestion = child.config.suggestion
     .. "auto_trigger = true,"
     .. "keymap = { accept_word = '<C-e>', dismiss = '<Tab>' },"
+  child.cmd("e numbers_with_spaces.txt")
   child.configure_copilot()
   child.type_keys("i1 2 3", "<Esc>", "o4 5 6", "<Esc>", "o7 ")
   child.wait_for_suggestion()
@@ -118,6 +120,7 @@ T["suggestion()"]["accept_word, 1 word, then accept"] = function()
   child.config.suggestion = child.config.suggestion
     .. "auto_trigger = true,"
     .. "keymap = { accept_word = '<C-e>', accept = '<Tab>' },"
+  child.cmd("e numbers_with_spaces.txt")
   child.configure_copilot()
   child.type_keys("i1 2 3", "<Esc>", "o4 5 6", "<Esc>", "o7 ")
   child.wait_for_suggestion()
@@ -129,6 +132,7 @@ end
 T["suggestion()"]["accept_line, 1 line, works"] = function()
   child.o.lines, child.o.columns = 30, 15
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true," .. "keymap = { accept_line = '<C-e>' },"
+  child.cmd("e numbers_as_arrays.txt")
   child.configure_copilot()
   child.type_keys("i{", "<Esc>o", "  1,2,3", "<Esc>o", "4,5,6", "<Esc>o", "7,8,9", "<Esc>o<bs>", "}", "<Esc>")
   child.type_keys("o{", "<Esc>o", "  10,11,12", "<Esc>", "o13,14,15", "<Esc>", "o16,17,18", "<Esc>o<bs>", "}", "<Esc>")
@@ -142,6 +146,7 @@ end
 T["suggestion()"]["accept_line, 3 lines, works"] = function()
   child.o.lines, child.o.columns = 50, 15
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true," .. "keymap = { accept_line = '<C-e>' },"
+  child.cmd("e numbers_as_arrays.txt")
   child.configure_copilot()
   child.type_keys("i{", "<Esc>o", "  1,2,3", "<Esc>o", "4,5,6", "<Esc>o", "7,8,9", "<Esc>o<bs>", "}", "<Esc>")
   child.type_keys("o{", "<Esc>o", "  10,11,12", "<Esc>", "o13,14,15", "<Esc>", "o16,17,18", "<Esc>o<bs>", "}", "<Esc>")
@@ -160,6 +165,7 @@ T["suggestion()"]["accept_line, 1 line, then dismiss"] = function()
   child.config.suggestion = child.config.suggestion
     .. "auto_trigger = true,"
     .. "keymap = { accept_line = '<C-e>', dismiss = '<Tab>' },"
+  child.cmd("e numbers_as_arrays.txt")
   child.configure_copilot()
   child.type_keys("i{", "<Esc>o", "  1,2,3", "<Esc>o", "4,5,6", "<Esc>o", "7,8,9", "<Esc>o<bs>", "}", "<Esc>")
   child.type_keys("o{", "<Esc>o", "  10,11,12", "<Esc>", "o13,14,15", "<Esc>", "o16,17,18", "<Esc>o<bs>", "}", "<Esc>")
@@ -175,9 +181,9 @@ T["suggestion()"]["accept_line, 1 line, then accept"] = function()
   child.config.suggestion = child.config.suggestion
     .. "auto_trigger = true,"
     .. "keymap = { accept_line = '<C-e>', accept = '<Tab>' },"
+  child.cmd("e numbers_as_arrays.txt")
   child.configure_copilot()
-  child.type_keys("i# Numbers in a 3x3 grid, up to 63", "<Esc>")
-  child.type_keys("o{", "<Esc>o", "  1,2,3", "<Esc>o", "4,5,6", "<Esc>o", "7,8,9", "<Esc>o<bs>", "}", "<Esc>")
+  child.type_keys("i{", "<Esc>o", "  1,2,3", "<Esc>o", "4,5,6", "<Esc>o", "7,8,9", "<Esc>o<bs>", "}", "<Esc>")
   child.type_keys("o{", "<Esc>o", "  10,11,12", "<Esc>", "o13,14,15", "<Esc>", "o16,17,18", "<Esc>o<bs>", "}", "<Esc>")
   child.type_keys("o{", "<Esc>o")
   child.wait_for_suggestion()
@@ -188,6 +194,7 @@ end
 
 T["suggestion()"]["duplicated keymap yields correct error message"] = function()
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true," .. "keymap = { accept = '<M-CR>' },"
+  child.cmd("e numbers_with_spaces.txt")
   child.configure_copilot()
   child.type_keys("i1 2 3", "<Esc>", "o4 5 6", "<Esc>", "o7 ")
   child.wait_for_suggestion()
