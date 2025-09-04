@@ -57,9 +57,15 @@ function M.new_child_neovim(test_name)
     ]])
   end
 
-  function child.run_pre_case()
+  ---@param mock_lsp_server? boolean
+  function child.run_pre_case(mock_lsp_server)
     child.reset_config()
     child.restart({ "-u", "tests/scripts/minimal_init.lua" })
+
+    if mock_lsp_server then
+      child.lua('package.loaded["copilot.lsp"] = require("tests.stubs.lsp_init")')
+    end
+
     if env.COPILOT_TOKEN and env.COPILOT_TOKEN ~= "" then
       child.fn.setenv("GITHUB_COPILOT_TOKEN", env.COPILOT_TOKEN)
     end

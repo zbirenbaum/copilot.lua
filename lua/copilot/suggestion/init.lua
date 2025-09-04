@@ -581,7 +581,7 @@ function M.accept(modifier)
   local ctx = get_ctx()
   logger.trace("suggestion accept", ctx)
 
-  if config.suggestion.trigger_on_accept and M.first_request_scheduled(ctx) then
+  if config.suggestion.trigger_on_accept and not get_current_suggestion(ctx) and M.first_request_scheduled(ctx) then
     return
   end
 

@@ -7,7 +7,7 @@ local T = MiniTest.new_set({
   hooks = {
     pre_once = function() end,
     pre_case = function()
-      child.run_pre_case()
+      child.run_pre_case(true)
       child.bo.readonly = false
       child.lua("p = require('copilot.panel')")
     end,
