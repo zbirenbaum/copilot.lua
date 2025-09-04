@@ -105,7 +105,9 @@ function M.server()
       -- if not seen_files[params.textDocument.uri] then
       -- seen_files[params.textDocument.uri] = true
       local response = get_lsp_responses(params.textDocument)
-      handler(nil, response)
+      vim.defer_fn(function()
+        handler(nil, response)
+      end, 10)
     -- local empty_response = {
     --   edits = {},
     -- }
@@ -126,11 +128,10 @@ function M.server()
       local params_panel = params or {}
       local panelId = params_panel.panelId or (params_panel.doc and params_panel.doc.panelId) or "test-panel-id"
 
-      handler(nil, {
-        solutionCountTarget = 10,
-      })
-
       vim.defer_fn(function()
+        handler(nil, {
+          solutionCountTarget = 10,
+        })
         local handlers = require("copilot.panel.handlers")
 
         handlers.handlers.PanelSolution(nil, {

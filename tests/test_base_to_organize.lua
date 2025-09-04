@@ -5,7 +5,7 @@ local child = child_helper.new_child_neovim("test_base_to_organize")
 local T = MiniTest.new_set({
   hooks = {
     pre_case = function()
-      child.run_pre_case()
+      child.run_pre_case(true)
       child.lua([[s = require('copilot.status')]])
       child.lua([[a = require('copilot.api')]])
     end,
