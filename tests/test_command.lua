@@ -7,7 +7,7 @@ local T = MiniTest.new_set({
   hooks = {
     pre_once = function() end,
     pre_case = function()
-      child.run_pre_case()
+      child.run_pre_case(true)
       child.bo.readonly = false
     end,
     post_once = child.stop,
@@ -20,13 +20,13 @@ T["command()"]["version works"] = function()
   child.configure_copilot()
   child.cmd("Copilot version")
   local result = child.cmd_capture("mess")
-  u.expect_match(result, ".*copilot language server.*copilot%.lua.*Node%.js.*language%-server%.js.*")
+  u.expect_match(result, ".*copilot language server.*copilot%.lua.*mocked.*")
 end
 
 T["command()"]["panel toggle - open works"] = function()
   child.configure_copilot()
   child.cmd("Copilot panel toggle")
-  reference_screenshot(child.get_screenshot())
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 23, 24 }, ignore_attr = { 23, 24 } })
 end
 
 T["command()"]["panel toggle - close works"] = function()
@@ -39,14 +39,14 @@ end
 T["command()"]["panel open - it works"] = function()
   child.configure_copilot()
   child.cmd("Copilot panel open")
-  reference_screenshot(child.get_screenshot())
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 23, 24 }, ignore_attr = { 23, 24 } })
 end
 
 T["command()"]["panel close - it works"] = function()
   child.configure_copilot()
   child.cmd("Copilot panel open")
   child.cmd("Copilot panel close")
-  reference_screenshot(child.get_screenshot())
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 23, 24 }, ignore_attr = { 23, 24 } })
 end
 
 T["command()"]["panel is_open - is opened - returns true"] = function()

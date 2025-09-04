@@ -2,26 +2,14 @@ local child_helper = require("tests.child_helper")
 local child = child_helper.new_child_neovim("test_auth")
 local u = require("tests.utils")
 
-local config_path = require("copilot.auth").find_config_path() .. "/github-copilot"
-local config_path_renamed = config_path .. "_temp_renamed"
-
---TODO: find a way to not mess with folders
 local T = MiniTest.new_set({
   hooks = {
-    pre_once = function()
-      if vim.fn.isdirectory(config_path) == 1 then
-        vim.fn.rename(config_path, config_path_renamed)
-      end
-    end,
+    pre_once = function() end,
     pre_case = function()
-      child.run_pre_case()
+      child.run_pre_case(true)
     end,
     post_once = function()
       child.stop()
-
-      if vim.fn.isdirectory(config_path_renamed) == 1 then
-        vim.fn.rename(config_path_renamed, config_path)
-      end
     end,
   },
 })
