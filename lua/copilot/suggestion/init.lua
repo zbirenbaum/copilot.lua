@@ -602,7 +602,7 @@ function M.accept(modifier)
   end
 
   with_client(function(client)
-    local ok, _ = pcall(function()
+    local ok, err = pcall(function()
       api.notify_accepted(
         client,
         { uuid = suggestion.uuid, acceptedLength = util.strutf16len(suggestion.text) },
@@ -610,7 +610,7 @@ function M.accept(modifier)
       )
     end)
     if not ok then
-      logger.error(string.format("failed to notify_accepted for: %s, Error: %s", suggestion.text))
+      logger.error(string.format("failed to notify_accepted for: %s, Error: %s", suggestion.text, err))
     end
   end)
 
