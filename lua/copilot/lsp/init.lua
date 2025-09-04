@@ -1,8 +1,8 @@
 local logger = require("copilot.logger")
 
 local M = {
-  binary = require("copilot/lsp/binary"),
-  nodejs = require("copilot/lsp/nodejs"),
+  binary = require("copilot.lsp.binary"),
+  nodejs = require("copilot.lsp.nodejs"),
   ---@type ServerConfig
   config = nil,
 }
