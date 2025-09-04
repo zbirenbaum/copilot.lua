@@ -1,5 +1,7 @@
 local env = require("tests.env")
-local M = {}
+local M = {
+  mock_lsp_server = false,
+}
 
 if not _G.attach_debugger then
   _G.attach_debugger = false
@@ -59,6 +61,7 @@ function M.new_child_neovim(test_name)
 
   ---@param mock_lsp_server? boolean
   function child.run_pre_case(mock_lsp_server)
+    M.mock_lsp_server = mock_lsp_server or false
     child.reset_config()
     child.restart({ "-u", "tests/scripts/minimal_init.lua" })
 
@@ -124,15 +127,35 @@ function M.new_child_neovim(test_name)
   end
 
   function child.wait_for_suggestion()
-    child.lua([[
+    if M.mock_lsp_server then
+      child.lua([[
+      vim.wait(500, function()
+        return M.suggested
+      end, 10)
+    ]])
+    else
+      child.lua([[
       vim.wait(5000, function()
         return M.suggested
       end, 10)
     ]])
+    end
   end
 
   function child.wait_for_panel_suggestion()
-    child.lua([[
+    if M.mock_lsp_server then
+      child.lua([[
+      local function suggestion_is_visible()
+        lines = vim.api.nvim_buf_get_lines(2, 4, 5, false)
+        return lines[1] and (lines[1] == "789" or lines[1] == "789\r")
+      end
+
+      vim.wait(500, function()
+        return suggestion_is_visible()
+      end, 50)
+    ]])
+    else
+      child.lua([[
       local function suggestion_is_visible()
         lines = vim.api.nvim_buf_get_lines(2, 4, 5, false)
         return lines[1] and (lines[1] == "789" or lines[1] == "789\r")
@@ -142,6 +165,7 @@ function M.new_child_neovim(test_name)
         return suggestion_is_visible()
       end, 50)
     ]])
+    end
   end
 
   return child
