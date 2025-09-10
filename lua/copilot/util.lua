@@ -21,7 +21,7 @@ function M.get_editor_info()
     editorPluginInfo = {
       name = "copilot.lua",
       -- reflects version of github/copilot-language-server-release
-      version = "1.367.0",
+      version = "1.368.0",
     },
   }
   return info
