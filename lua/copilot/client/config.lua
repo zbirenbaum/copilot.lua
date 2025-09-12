@@ -122,6 +122,8 @@ function M.prepare_client_config(overrides, client)
         if token_env_set then
           require("copilot.auth").signin()
         end
+
+        require("copilot.nes").setup(lsp_client)
       end)
     end,
     on_exit = function(code, _, client_id)
