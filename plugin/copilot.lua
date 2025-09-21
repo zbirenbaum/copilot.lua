@@ -2,7 +2,7 @@ local completion_store = {
   [""] = { "auth", "attach", "detach", "disable", "enable", "panel", "status", "suggestion", "toggle", "version" },
   auth = { "signin", "signout", "info" },
   panel = { "accept", "jump_next", "jump_prev", "open", "refresh", "toggle", "close", "is_open" },
-  suggestion = { "accept", "accept_line", "accept_word", "dismiss", "next", "prev", "toggle_auto_trigger" },
+  suggestion = { "accept", "accept_line", "accept_word", "dismiss", "next", "prev", "toggle_auto_trigger", "clear_preview", "update_preview" },
   workspace = { "add" },
 }
 
@@ -50,10 +50,15 @@ vim.api.nvim_create_user_command("Copilot", function(opts)
   end
 
   require("copilot.client").use_client(function()
-    local result = mod[action_name]({
-      force = opts.bang,
-      args = remaining_args,
-    })
+    local result
+    if mod_name == "suggestion" and action_name == "update_preview" then
+      result = mod[action_name]()
+    else
+      result = mod[action_name]({
+        force = opts.bang,
+        args = remaining_args,
+      })
+    end
 
     if result ~= nil then
       print(tostring(result))
