@@ -43,9 +43,17 @@ function M.register_keymap_with_passthrough(mode, key, action, desc)
   local keymap_key = mode .. ":" .. key
   -- Save any existing mapping for this key
   local existing = vim.fn.maparg(key, mode, false, true)
-  if existing and existing.rhs and existing.rhs ~= "" then
-    previous_keymaps[keymap_key] = existing.rhs
-    logger.trace("Saved existing keymap for " .. keymap_key .. ": " .. existing.rhs)
+  if existing then
+    if existing.rhs and existing.rhs ~= "" then
+      previous_keymaps[keymap_key] = { type = "rhs", value = existing.rhs }
+      logger.trace("Saved existing keymap for " .. keymap_key .. ": " .. existing.rhs)
+    elseif existing.callback then
+      previous_keymaps[keymap_key] = { type = "callback", value = existing.callback }
+      logger.trace("Saved existing keymap callback for " .. keymap_key)
+    else
+      previous_keymaps[keymap_key] = nil
+      logger.trace("No existing keymap for " .. keymap_key)
+    end
   else
     previous_keymaps[keymap_key] = nil
     logger.trace("No existing keymap for " .. keymap_key)
@@ -61,8 +69,13 @@ function M.register_keymap_with_passthrough(mode, key, action, desc)
       local prev = previous_keymaps[keymap_key]
 
       if prev then
-        logger.trace("Passing through to previous keymap for " .. keymap_key .. ": " .. prev)
-        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(prev, true, false, true), mode, true)
+        if prev.type == "rhs" then
+          logger.trace("Passing through to previous keymap for " .. keymap_key .. ": " .. prev.value)
+          vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(prev.value, true, false, true), mode, true)
+        elseif prev.type == "callback" then
+          logger.trace("Passing through to previous keymap callback for " .. keymap_key)
+          prev.value()
+        end
         return "<Ignore>"
       end
       logger.trace("No previous keymap to pass through for " .. keymap_key)
