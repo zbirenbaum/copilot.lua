@@ -29,6 +29,23 @@ T["keymaps()"]["passthrough Esc - base test setting highlight"] = function()
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
+T["keymaps()"]["passthrough Esc with func - return false, will remove hl"] = function()
+  child.o.lines, child.o.columns = 10, 15
+  child.lua(
+    [[vim.keymap.set("n", "<Esc>", function() vim.cmd.nohlsearch() end, { desc = "general clear highlights" })]]
+  )
+  child.lua([[
+    require("copilot.keymaps").register_keymap_with_passthrough("n", "<esc>", function()
+      return false
+    end, "Passthrough Esc")
+  ]])
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>")
+  child.type_keys("/123", "<CR>")
+  child.type_keys("<Esc>")
+
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
+end
+
 T["keymaps()"]["passthrough Esc - return false, will remove hl"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.lua([[vim.keymap.set("n", "<Esc>", "<cmd>noh<CR>", { desc = "general clear highlights" })]])
