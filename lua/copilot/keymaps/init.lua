@@ -2,7 +2,6 @@ local logger = require("copilot.logger")
 local config = require("copilot.config")
 
 local M = {}
-
 local previous_keymaps = {}
 
 ---@param mode string
@@ -10,7 +9,12 @@ local previous_keymaps = {}
 ---@param action function
 ---@param desc string
 function M.register_keymap(mode, key, action, desc)
-  if not mode or not key or not action then
+  if not key then
+    return
+  end
+
+  if not mode or not action then
+    logger.error("Invalid parameters to register_keymap" .. vim.inspect({ mode, key, action, desc }))
     return
   end
 
@@ -27,7 +31,12 @@ end
 ---@param action function: boolean
 ---@param desc string
 function M.register_keymap_with_passthrough(mode, key, action, desc)
-  if not mode or not key or not action then
+  if not key then
+    return
+  end
+
+  if not mode or not action then
+    logger.error("Invalid parameters to register_keymap_with_passthrough" .. vim.inspect({ mode, key, action, desc }))
     return
   end
 
@@ -41,16 +50,21 @@ function M.register_keymap_with_passthrough(mode, key, action, desc)
   end
 
   vim.keymap.set(mode, key, function()
-    local action_ran = action()
-    if not action_ran then
-      -- If there was a previous mapping, execute it
+    if action() then
+      return "<Ignore>"
+    else
       local prev = previous_keymaps[keymap_key]
+
       if prev then
         vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(prev, true, false, true), mode, true)
+        return "<Ignore>"
       end
+
+      return key
     end
   end, {
     desc = desc,
+    expr = true,
     silent = true,
   })
 end

@@ -12,7 +12,7 @@ local M = {
 local function accept_suggestion(goto_end)
   local result = nes_api.nes_apply_pending_nes()
 
-  if goto_end then
+  if goto_end and result then
     nes_api.nes_walk_cursor_end_edit()
   end
 
