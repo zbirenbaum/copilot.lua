@@ -603,7 +603,7 @@ function M.accept(modifier)
     ctx.accepted_partial = true
     ignore_next_cursor_moved = true
   else
-  M.clear_preview()
+    M.clear_preview()
     newText = suggestion.text
   end
 
