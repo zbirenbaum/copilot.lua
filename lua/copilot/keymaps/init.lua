@@ -45,20 +45,27 @@ function M.register_keymap_with_passthrough(mode, key, action, desc)
   local existing = vim.fn.maparg(key, mode, false, true)
   if existing and existing.rhs and existing.rhs ~= "" then
     previous_keymaps[keymap_key] = existing.rhs
+    logger.trace("Saved existing keymap for " .. keymap_key .. ": " .. existing.rhs)
   else
     previous_keymaps[keymap_key] = nil
+    logger.trace("No existing keymap for " .. keymap_key)
   end
 
   vim.keymap.set(mode, key, function()
+    logger.trace("Keymap triggered for " .. keymap_key)
+
     if action() then
+      logger.trace("Action handled the keymap for " .. keymap_key)
       return "<Ignore>"
     else
       local prev = previous_keymaps[keymap_key]
 
       if prev then
+        logger.trace("Passing through to previous keymap for " .. keymap_key .. ": " .. prev)
         vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(prev, true, false, true), mode, true)
         return "<Ignore>"
       end
+      logger.trace("No previous keymap to pass through for " .. keymap_key)
 
       return key
     end
