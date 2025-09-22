@@ -115,6 +115,20 @@ T["suggestion()"]["accept_word, 1 word, then dismiss"] = function()
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
+T["suggestion()"]["accept_word, 1 word, then dismiss with Esc"] = function()
+  child.o.lines, child.o.columns = 10, 15
+  child.config.suggestion = child.config.suggestion
+    .. "auto_trigger = true,"
+    .. "keymap = { accept_word = '<C-e>', dismiss = '<Esc>' },"
+  child.cmd("e numbers_with_spaces.txt")
+  child.configure_copilot()
+  child.type_keys("i1 2 3", "<Esc>", "o4 5 6", "<Esc>", "o7 ")
+  child.wait_for_suggestion()
+  child.type_keys("<C-e>", "<Esc>")
+
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
+end
+
 T["suggestion()"]["accept_word, 1 word, then accept"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.config.suggestion = child.config.suggestion
