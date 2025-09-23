@@ -4,6 +4,9 @@ local config = require("copilot.config")
 local M = {}
 local previous_keymaps = {}
 
+local function get_keymap_key(bufnr, mode, key)
+  return bufnr .. ":" .. mode .. ":" .. key
+end
 ---@param mode string
 ---@param key string
 ---@param action function
@@ -26,6 +29,8 @@ function M.register_keymap(mode, key, action, desc, bufnr)
     silent = true,
     buffer = bufnr,
   })
+
+  previous_keymaps[get_keymap_key(bufnr, mode, key)] = { type = "none", value = nil }
 end
 
 ---@param mode string
@@ -43,7 +48,13 @@ function M.register_keymap_with_passthrough(mode, key, action, desc, bufnr)
     return
   end
 
-  local keymap_key = bufnr .. ":" .. mode .. ":" .. key
+  local keymap_key = get_keymap_key(bufnr, mode, key)
+
+  if previous_keymaps[keymap_key] then
+    logger.trace("Keymap already registered for " .. keymap_key)
+    return
+  end
+
   -- Save any existing mapping for this key
   local existing = vim.fn.maparg(key, mode, false, true)
   if existing then
@@ -54,11 +65,11 @@ function M.register_keymap_with_passthrough(mode, key, action, desc, bufnr)
       previous_keymaps[keymap_key] = { type = "callback", value = existing.callback }
       logger.trace("Saved existing keymap callback for " .. keymap_key)
     else
-      previous_keymaps[keymap_key] = nil
+      previous_keymaps[keymap_key] = { type = "none", value = nil }
       logger.trace("No existing keymap for " .. keymap_key)
     end
   else
-    previous_keymaps[keymap_key] = nil
+    previous_keymaps[keymap_key] = { type = "none", value = nil }
     logger.trace("No existing keymap for " .. keymap_key)
   end
 
@@ -102,6 +113,7 @@ function M.unset_keymap_if_exists(mode, key, bufnr)
   end
 
   local ok, err = pcall(vim.api.nvim_buf_del_keymap, bufnr, mode, key)
+  previous_keymaps[get_keymap_key(bufnr, mode, key)] = nil
 
   if not ok then
     local suggestion_keymaps = config.suggestion.keymap or {}
