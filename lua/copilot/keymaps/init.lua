@@ -8,13 +8,14 @@ local previous_keymaps = {}
 ---@param key string
 ---@param action function
 ---@param desc string
-function M.register_keymap(mode, key, action, desc)
+---@param bufnr integer
+function M.register_keymap(mode, key, action, desc, bufnr)
   if not key then
     return
   end
 
   if not mode or not action then
-    logger.error("Invalid parameters to register_keymap" .. vim.inspect({ mode, key, action, desc }))
+    logger.error("Invalid parameters to register_keymap" .. vim.inspect({ mode, key, action, desc, bufnr }))
     return
   end
 
@@ -23,6 +24,7 @@ function M.register_keymap(mode, key, action, desc)
   end, {
     desc = desc,
     silent = true,
+    buffer = bufnr,
   })
 end
 
@@ -99,14 +101,15 @@ function M.unset_keymap_if_exists(mode, key, bufnr)
     return
   end
 
-  local ok, err = pcall(vim.api.nvim_del_buf_keymap, bufnr, mode, key)
+  local ok, err = pcall(vim.api.nvim_buf_del_keymap, bufnr, mode, key)
 
   if not ok then
     local suggestion_keymaps = config.suggestion.keymap or {}
+    local nes_keymaps = config.nes.keymap or {}
     local panel_keymaps = config.panel.keymap or {}
     local found = false
 
-    for _, tbl in ipairs({ suggestion_keymaps, panel_keymaps }) do
+    for _, tbl in ipairs({ suggestion_keymaps, nes_keymaps, panel_keymaps }) do
       for _, v in pairs(tbl) do
         if v == key then
           if found then
@@ -119,7 +122,7 @@ function M.unset_keymap_if_exists(mode, key, bufnr)
       end
     end
 
-    logger.error("Could not unset keymap for " .. mode .. " " .. key .. ": " .. err)
+    logger.error("Could not unset keymap for " .. mode .. " " .. key .. ", bufnr " .. bufnr .. ": " .. err)
   end
 end
 
