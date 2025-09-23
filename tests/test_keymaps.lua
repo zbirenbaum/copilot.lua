@@ -21,7 +21,7 @@ T["keymaps()"]["passthrough Esc - base test setting highlight"] = function()
   child.lua([[
     require("copilot.keymaps").register_keymap_with_passthrough("n", "<Esc>", function()
       return true
-    end, "Passthrough Esc")
+    end, "Passthrough Esc", vim.api.nvim_get_current_buf())
   ]])
   child.type_keys("i123", "<Esc>", "o456", "<Esc>")
   child.type_keys("/123", "<CR>")
@@ -37,7 +37,7 @@ T["keymaps()"]["passthrough Esc with func - return false, will remove hl"] = fun
   child.lua([[
     require("copilot.keymaps").register_keymap_with_passthrough("n", "<esc>", function()
       return false
-    end, "Passthrough Esc")
+    end, "Passthrough Esc", vim.api.nvim_get_current_buf())
   ]])
   child.type_keys("i123", "<Esc>", "o456", "<Esc>")
   child.type_keys("/123", "<CR>")
@@ -50,9 +50,9 @@ T["keymaps()"]["passthrough Esc - return false, will remove hl"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.lua([[vim.keymap.set("n", "<Esc>", "<cmd>noh<CR>", { desc = "general clear highlights" })]])
   child.lua([[
-    require("copilot.keymaps").register_keymap_with_passthrough("n", "<Esc>", function()
+    require("copilot.keymaps").register_keymap_with_passthrough("n", "<esc>", function()
       return false
-    end, "Passthrough Esc")
+    end, "Passthrough Esc", vim.api.nvim_get_current_buf())
   ]])
   child.type_keys("i123", "<Esc>", "o456", "<Esc>")
   child.type_keys("/123", "<CR>")
@@ -67,7 +67,7 @@ T["keymaps()"]["passthrough Esc - return true, will not remove hl"] = function()
   child.lua([[
     require("copilot.keymaps").register_keymap_with_passthrough("n", "<Esc>", function()
       return true
-    end, "Passthrough Esc")
+    end, "Passthrough Esc", vim.api.nvim_get_current_buf())
   ]])
   child.type_keys("i123", "<Esc>", "o456", "<Esc>")
   child.type_keys("/123", "<CR>")
