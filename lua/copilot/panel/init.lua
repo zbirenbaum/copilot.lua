@@ -254,38 +254,10 @@ function panel:close()
 end
 
 function M.set_keymap(bufnr)
-  if panel.keymap.accept then
-    vim.keymap.set("n", panel.keymap.accept, M.accept, {
-      buffer = bufnr,
-      desc = "[copilot] (panel) accept",
-      silent = true,
-    })
-  end
-
-  if panel.keymap.jump_prev then
-    vim.keymap.set("n", panel.keymap.jump_prev, M.jump_prev, {
-      buffer = bufnr,
-      desc = "[copilot] (panel) jump prev",
-      silent = true,
-    })
-  end
-
-  if panel.keymap.jump_next then
-    vim.keymap.set("n", panel.keymap.jump_next, M.jump_next, {
-      buffer = bufnr,
-      desc = "[copilot] (panel) jump next",
-      silent = true,
-    })
-  end
-
-  if panel.keymap.refresh then
-    vim.keymap.set("n", panel.keymap.refresh, M.refresh, {
-      buffer = bufnr,
-      desc = "[copilot] (panel) refresh",
-      silent = true,
-    })
-  end
-
+  keymaps.register_keymap("n", panel.keymap.accept, M.accept, "[copilot] (panel) accept", bufnr)
+  keymaps.register_keymap("n", panel.keymap.jump_prev, M.jump_prev, "[copilot] (panel) jump prev", bufnr)
+  keymaps.register_keymap("n", panel.keymap.jump_next, M.jump_next, "[copilot] (panel) jump next", bufnr)
+  keymaps.register_keymap("n", panel.keymap.refresh, M.refresh, "[copilot] (panel) refresh", bufnr)
   M.keymaps_set = true
 end
 
@@ -580,10 +552,10 @@ function M.setup()
   end
 
   panel.auto_refresh = opts.auto_refresh or false
-
   panel.keymap = opts.keymap or {}
   panel.layout = vim.tbl_deep_extend("force", panel.layout, opts.layout or {})
 
+  -- not buffer specific
   if panel.keymap.open then
     vim.keymap.set("i", panel.keymap.open, M.open, {
       desc = "[copilot] (panel) open",
