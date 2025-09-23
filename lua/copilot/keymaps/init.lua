@@ -1,10 +1,17 @@
 local logger = require("copilot.logger")
-local config = require("copilot.config")
 
 local M = {}
 local previous_keymaps = {}
 
+---@param bufnr integer
+---@param mode string
+---@param key string
 local function get_keymap_key(bufnr, mode, key)
+  if not bufnr or not mode or not key then
+    logger.error("Invalid parameters to get_keymap_key" .. vim.inspect({ bufnr, mode, key }))
+    return "invalid"
+  end
+
   return bufnr .. ":" .. mode .. ":" .. key
 end
 ---@param mode string
@@ -22,6 +29,12 @@ function M.register_keymap(mode, key, action, desc, bufnr)
     return
   end
 
+  local keymap_key = get_keymap_key(bufnr, mode, key)
+  if previous_keymaps[keymap_key] then
+    logger.trace("Keymap already registered for " .. keymap_key)
+    return
+  end
+
   vim.keymap.set(mode, key, function()
     action()
   end, {
@@ -30,7 +43,7 @@ function M.register_keymap(mode, key, action, desc, bufnr)
     buffer = bufnr,
   })
 
-  previous_keymaps[get_keymap_key(bufnr, mode, key)] = { type = "none", value = nil }
+  previous_keymaps[keymap_key] = { type = "none", value = nil }
 end
 
 ---@param mode string
@@ -109,7 +122,7 @@ end
 ---@param key string|false
 ---@param bufnr integer
 function M.unset_keymap_if_exists(mode, key, bufnr)
-  if not key then
+  if not key or not bufnr then
     return
   end
 
@@ -117,25 +130,40 @@ function M.unset_keymap_if_exists(mode, key, bufnr)
   previous_keymaps[get_keymap_key(bufnr, mode, key)] = nil
 
   if not ok then
-    local suggestion_keymaps = config.suggestion.keymap or {}
-    local nes_keymaps = config.nes.keymap or {}
-    local panel_keymaps = config.panel.keymap or {}
-    local found = false
+    logger.error("Could not unset keymap for " .. (mode or "nil") .. " " .. key .. ", bufnr " .. bufnr .. ": " .. err)
+  end
+end
 
-    for _, tbl in ipairs({ suggestion_keymaps, nes_keymaps, panel_keymaps }) do
-      for _, v in pairs(tbl) do
-        if v == key then
-          if found then
-            logger.error("Keymap " .. key .. " is used for two different actions, please review your configuration.")
-            return
-          else
-            found = true
-          end
-        end
+---@param config CopilotConfig
+function M.validate(config)
+  local suggestion_keymaps = config.suggestion.keymap or {}
+  local nes_keymaps = config.nes.keymap or {}
+  local panel_keymaps = config.panel.keymap or {}
+  local seen = {}
+  local duplicates = {}
+
+  for _, cfg in ipairs({ suggestion_keymaps, nes_keymaps, panel_keymaps }) do
+    for action, km in pairs(cfg) do
+      if not km then
+        goto continue
       end
-    end
 
-    logger.error("Could not unset keymap for " .. mode .. " " .. key .. ", bufnr " .. bufnr .. ": " .. err)
+      -- TODO: find a better way to determine mode, this is prone to maintenance bugs
+      -- TODO: Not sure how to validate keymaps, since some COULD be duplicates and valid
+      local mode = (action == config.panel.keymap.open or vim.tbl_contains(config.nes.keymap, action)) and "n" or "i"
+      local keymap_key = get_keymap_key(0, mode, km)
+      if seen[keymap_key] then
+        duplicates[keymap_key] = (duplicates[keymap_key] or 1) + 1
+      else
+        seen[keymap_key] = true
+      end
+
+      ::continue::
+    end
+  end
+
+  for key, count in pairs(duplicates) do
+    logger.error("Duplicate keymap detected: " .. key .. " (" .. count .. " times), please review your configuration.")
   end
 end
 

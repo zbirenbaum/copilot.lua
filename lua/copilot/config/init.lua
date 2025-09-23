@@ -80,6 +80,7 @@ function M.validate(config)
   require("copilot.config.root_dir").validate(config.root_dir)
   require("copilot.config.should_attach").validate(config.should_attach)
   require("copilot.config.nes").validate(config.nes)
+  require("copilot.keymaps").validate(config)
 end
 
 return M
