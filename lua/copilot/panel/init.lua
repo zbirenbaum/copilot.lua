@@ -238,6 +238,12 @@ function panel:accept()
 end
 
 function panel:close()
+  keymaps.unset_keymap_if_exists("i", panel.keymap.open, self.bufnr)
+  keymaps.unset_keymap_if_exists("n", panel.keymap.accept, self.bufnr)
+  keymaps.unset_keymap_if_exists("n", panel.keymap.jump_prev, self.bufnr)
+  keymaps.unset_keymap_if_exists("n", panel.keymap.jump_next, self.bufnr)
+  keymaps.unset_keymap_if_exists("n", panel.keymap.refresh, self.bufnr)
+
   if self.bufnr and vim.api.nvim_win_is_valid(self.bufnr) then
     self:unlock():clear():lock()
   end
@@ -596,15 +602,6 @@ function M.teardown()
 
   if not panel.setup_done then
     return
-  end
-
-  keymaps.unset_keymap_if_exists("i", panel.keymap.open)
-
-  if M.keymaps_set then
-    keymaps.unset_keymap_if_exists("n", panel.keymap.accept)
-    keymaps.unset_keymap_if_exists("n", panel.keymap.jump_prev)
-    keymaps.unset_keymap_if_exists("n", panel.keymap.jump_next)
-    keymaps.unset_keymap_if_exists("n", panel.keymap.refresh)
   end
 
   panel:close()

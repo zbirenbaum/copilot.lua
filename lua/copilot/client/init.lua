@@ -101,6 +101,9 @@ function M.buf_attach(force, bufnr)
   end
 
   vim.lsp.buf_attach_client(bufnr, M.id)
+  require("copilot.suggestion").set_keymap(bufnr)
+  require("copilot.nes").set_keymap(bufnr)
+
   util.set_buffer_previous_ft(bufnr, vim.bo[bufnr].filetype)
   if force then
     logger.debug("force attached to buffer")
@@ -116,6 +119,8 @@ function M.buf_detach_if_attached(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   if M.buf_is_attached(bufnr) then
     vim.lsp.buf_detach_client(bufnr, M.id)
+    require("copilot.suggestion").unset_keymap(bufnr)
+    require("copilot.nes").unset_keymap(bufnr)
     util.set_buffer_attach_status(bufnr, util.ATTACH_STATUS_NOT_ATTACHED_PREFIX .. "detached")
   end
 end

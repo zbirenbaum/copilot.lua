@@ -30,7 +30,8 @@ end
 ---@param key string
 ---@param action function: boolean
 ---@param desc string
-function M.register_keymap_with_passthrough(mode, key, action, desc)
+---@param bufnr integer
+function M.register_keymap_with_passthrough(mode, key, action, desc, bufnr)
   if not key then
     return
   end
@@ -86,17 +87,19 @@ function M.register_keymap_with_passthrough(mode, key, action, desc)
     desc = desc,
     expr = true,
     silent = true,
+    buffer = bufnr,
   })
 end
 
 ---@param mode string
 ---@param key string|false
-function M.unset_keymap_if_exists(mode, key)
+---@param bufnr integer
+function M.unset_keymap_if_exists(mode, key, bufnr)
   if not key then
     return
   end
 
-  local ok, err = pcall(vim.api.nvim_del_keymap, mode, key)
+  local ok, err = pcall(vim.api.nvim_del_buf_keymap, bufnr, mode, key)
 
   if not ok then
     local suggestion_keymaps = config.suggestion.keymap or {}
