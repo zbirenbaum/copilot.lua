@@ -43,7 +43,7 @@ function M.register_keymap_with_passthrough(mode, key, action, desc, bufnr)
     return
   end
 
-  local keymap_key = mode .. ":" .. key
+  local keymap_key = bufnr .. ":" .. mode .. ":" .. key
   -- Save any existing mapping for this key
   local existing = vim.fn.maparg(key, mode, false, true)
   if existing then
