@@ -86,11 +86,12 @@ function M.register_keymap_with_passthrough(mode, key, action, desc, bufnr)
         if prev.type == "rhs" then
           logger.trace("Passing through to previous keymap for " .. keymap_key .. ": " .. prev.value)
           vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(prev.value, true, false, true), mode, true)
+          return "<Ignore>"
         elseif prev.type == "callback" then
           logger.trace("Passing through to previous keymap callback for " .. keymap_key)
           prev.value()
+          return "<Ignore>"
         end
-        return "<Ignore>"
       end
       logger.trace("No previous keymap to pass through for " .. keymap_key)
 
