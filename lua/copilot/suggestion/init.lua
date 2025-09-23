@@ -119,7 +119,14 @@ local function reset_ctx(ctx)
   ctx.accepted_partial = nil
 end
 
-local function set_keymap(keymap)
+---@param bufnr integer
+function M.set_keymap(bufnr)
+  if not config.suggestion.enabled then
+    return
+  end
+
+  local keymap = config.suggestion.keymap or {}
+
   keymaps.register_keymap_with_passthrough("i", keymap.accept, function()
     local ctx = get_ctx()
     if (config.suggestion.trigger_on_accept and not ctx.first) or M.is_visible() then
@@ -128,12 +135,12 @@ local function set_keymap(keymap)
     end
 
     return false
-  end, "[copilot] accept suggestion")
+  end, "[copilot] accept suggestion", bufnr)
 
-  keymaps.register_keymap("i", keymap.accept_word, M.accept_word, "[copilot] accept suggestion (word)")
-  keymaps.register_keymap("i", keymap.accept_line, M.accept_line, "[copilot] accept suggestion (line)")
-  keymaps.register_keymap("i", keymap.next, M.next, "[copilot] next suggestion")
-  keymaps.register_keymap("i", keymap.prev, M.prev, "[copilot] prev suggestion")
+  keymaps.register_keymap("i", keymap.accept_word, M.accept_word, "[copilot] accept suggestion (word)", bufnr)
+  keymaps.register_keymap("i", keymap.accept_line, M.accept_line, "[copilot] accept suggestion (line)", bufnr)
+  keymaps.register_keymap("i", keymap.next, M.next, "[copilot] next suggestion", bufnr)
+  keymaps.register_keymap("i", keymap.prev, M.prev, "[copilot] prev suggestion", bufnr)
 
   keymaps.register_keymap_with_passthrough("i", keymap.dismiss, function()
     if M.is_visible() then
@@ -142,16 +149,22 @@ local function set_keymap(keymap)
     end
 
     return false
-  end, "[copilot] dismiss suggestion")
+  end, "[copilot] dismiss suggestion", bufnr)
 end
 
-local function unset_keymap(keymap)
-  keymaps.unset_keymap_if_exists("i", keymap.accept)
-  keymaps.unset_keymap_if_exists("i", keymap.accept_word)
-  keymaps.unset_keymap_if_exists("i", keymap.accept_line)
-  keymaps.unset_keymap_if_exists("i", keymap.next)
-  keymaps.unset_keymap_if_exists("i", keymap.prev)
-  keymaps.unset_keymap_if_exists("i", keymap.dismiss)
+---@param bufnr integer
+function M.unset_keymap(bufnr)
+  if not config.suggestion.enabled then
+    return
+  end
+
+  local keymap = config.suggestion.keymap or {}
+  keymaps.unset_keymap_if_exists("i", keymap.accept, bufnr)
+  keymaps.unset_keymap_if_exists("i", keymap.accept_word, bufnr)
+  keymaps.unset_keymap_if_exists("i", keymap.accept_line, bufnr)
+  keymaps.unset_keymap_if_exists("i", keymap.next, bufnr)
+  keymaps.unset_keymap_if_exists("i", keymap.prev, bufnr)
+  keymaps.unset_keymap_if_exists("i", keymap.dismiss, bufnr)
 end
 
 local function stop_timer()
@@ -839,8 +852,6 @@ function M.setup()
     return
   end
 
-  set_keymap(opts.keymap or {})
-
   copilot.auto_trigger = opts.auto_trigger
   copilot.hide_during_completion = opts.hide_during_completion
 
@@ -860,10 +871,7 @@ function M.teardown()
     return
   end
 
-  unset_keymap(opts.keymap or {})
-
   vim.api.nvim_clear_autocmds({ group = copilot.augroup })
-
   copilot.setup_done = false
 end
 

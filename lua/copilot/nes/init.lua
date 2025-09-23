@@ -19,26 +19,37 @@ local function accept_suggestion(goto_end)
   return result
 end
 
----@class NesKeymap
-local function set_keymap(keymap)
+---@param bufnr integer
+function M.set_keymap(bufnr)
+  if not config.nes.enabled then
+    return
+  end
+
+  local keymap = config.nes.keymap
+
   keymaps.register_keymap_with_passthrough("n", keymap.accept_and_goto, function()
     return accept_suggestion(true)
-  end, "[copilot] (nes) accept suggestion and go to end")
+  end, "[copilot] (nes) accept suggestion and go to end", bufnr)
 
   keymaps.register_keymap_with_passthrough("n", keymap.accept, function()
     return accept_suggestion(false)
-  end, "[copilot] (nes) accept suggestion")
+  end, "[copilot] (nes) accept suggestion", bufnr)
 
   keymaps.register_keymap_with_passthrough("n", keymap.dismiss, function()
     return nes_api.nes_clear()
-  end, "[copilot] (nes) dismiss suggestion")
+  end, "[copilot] (nes) dismiss suggestion", bufnr)
 end
 
----@param keymap NesKeymap
-local function unset_keymap(keymap)
-  keymaps.unset_keymap_if_exists("n", keymap.accept_and_goto)
-  keymaps.unset_keymap_if_exists("n", keymap.accept)
-  keymaps.unset_keymap_if_exists("n", keymap.dismiss)
+---@param bufnr integer
+function M.unset_keymap(bufnr)
+  if not config.nes.enabled then
+    return
+  end
+
+  local keymap = config.nes.keymap
+  keymaps.unset_keymap_if_exists("n", keymap.accept_and_goto, bufnr)
+  keymaps.unset_keymap_if_exists("n", keymap.accept, bufnr)
+  keymaps.unset_keymap_if_exists("n", keymap.dismiss, bufnr)
 end
 
 ---@param lsp_client vim.lsp.Client
@@ -59,7 +70,6 @@ function M.setup(lsp_client)
     logger.error("copilot-lsp nes failed to load:", err)
   end
 
-  set_keymap(config.nes.keymap)
   M.initialized = true
 end
 
@@ -67,8 +77,6 @@ function M.teardown()
   if not M.initialized then
     return
   end
-
-  unset_keymap(config.nes.keymap)
 end
 
 return M
