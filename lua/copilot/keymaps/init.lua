@@ -14,6 +14,7 @@ local function get_keymap_key(bufnr, mode, key)
 
   return bufnr .. ":" .. mode .. ":" .. key
 end
+
 ---@param mode string
 ---@param key string
 ---@param action function
@@ -92,24 +93,24 @@ function M.register_keymap_with_passthrough(mode, key, action, desc, bufnr)
     if action() then
       logger.trace("Action handled the keymap for " .. keymap_key)
       return "<Ignore>"
-    else
-      local prev = previous_keymaps[keymap_key]
-
-      if prev then
-        if prev.type == "rhs" then
-          logger.trace("Passing through to previous keymap for " .. keymap_key .. ": " .. prev.value)
-          vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(prev.value, true, false, true), mode, true)
-          return "<Ignore>"
-        elseif prev.type == "callback" then
-          logger.trace("Passing through to previous keymap callback for " .. keymap_key)
-          prev.value()
-          return "<Ignore>"
-        end
-      end
-      logger.trace("No previous keymap to pass through for " .. keymap_key)
-
-      return key
     end
+
+    local prev = previous_keymaps[keymap_key]
+
+    if prev then
+      if prev.type == "rhs" then
+        logger.trace("Passing through to previous keymap for " .. keymap_key .. ": " .. prev.value)
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(prev.value, true, false, true), mode, true)
+        return "<Ignore>"
+      elseif prev.type == "callback" then
+        logger.trace("Passing through to previous keymap callback for " .. keymap_key)
+        prev.value()
+        return "<Ignore>"
+      end
+    end
+
+    logger.trace("No previous keymap to pass through for " .. keymap_key)
+    return key
   end, {
     desc = desc,
     expr = true,
