@@ -150,10 +150,10 @@ function M.set_buffer_previous_ft(bufnr, filetype)
 end
 
 ---@param bufnr integer
----@return string
+---@return string|nil
 function M.get_buffer_previous_ft(bufnr)
   local ok, result = pcall(vim.api.nvim_buf_get_var, bufnr, M.VAR_PREVIOUS_FT)
-  return (ok and result) or ""
+  return (ok and result) or nil
 end
 
 ---@param cmd string|string[]
