@@ -44,6 +44,15 @@ T["suggestion()"]["accept keymap to trigger sugestion"] = function()
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
+T["suggestion()"]["accept keymap to trigger sugestion (default)"] = function()
+  child.o.lines, child.o.columns = 10, 15
+  child.configure_copilot()
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<M-l>")
+  child.wait_for_suggestion()
+
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
+end
+
 T["suggestion()"]["accept keymap to trigger suggestion (TAB)"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.config.suggestion = child.config.suggestion .. "keymap = { accept = '<Tab>' },"
