@@ -174,14 +174,12 @@ function M.use_client(callback)
 end
 
 ---@param bufnr integer
-local function on_filetype(bufnr)
-  logger.trace("filetype autocmd called")
+local function on_buf_enter(bufnr)
+  logger.trace("on_buf_enter autocmd called")
   vim.schedule(function()
     if not vim.api.nvim_buf_is_valid(bufnr) then
       return
     end
-    -- todo: when we do lazy/late attaching this needs changing
-
     -- This is to handle the case where the filetype changes after the buffer is already attached,
     -- causing the LSP to raise an error
     local previous_ft = util.get_buffer_previous_ft(bufnr)
@@ -217,20 +215,20 @@ function M.setup()
   vim.api.nvim_create_augroup(augroup, { clear = true })
   M.augroup = augroup
 
-  vim.api.nvim_create_autocmd("FileType", {
+  vim.api.nvim_create_autocmd("BufEnter", {
     group = M.augroup,
     callback = function(args)
       local bufnr = (args and args.buf) or nil
-      on_filetype(bufnr)
+      on_buf_enter(bufnr)
     end,
-    desc = "[copilot] (suggestion) file type",
+    desc = "[copilot] (client) buf entered",
   })
 
   vim.schedule(M.ensure_client_started)
-  -- FileType is likely already triggered for shown buffer, so we trigger it manually
+  -- BufEnter is likely already triggered for shown buffer, so we trigger it manually
   local bufnr = vim.api.nvim_get_current_buf()
   vim.schedule(function()
-    M.buf_attach(false, bufnr)
+    on_buf_enter(bufnr)
   end)
 end
 
