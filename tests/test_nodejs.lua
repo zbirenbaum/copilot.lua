@@ -92,7 +92,7 @@ T["get_node_version()"]["validates node version requirement"] = function()
     local _, error = M.nodejs.get_node_version()
     error = error or ""
 
-    eq(error:find("Node.js version 20 or newer required") ~= nil, true)
+    eq(error:find("Node.js version 22 or newer required") ~= nil, true)
   end)
   eq(captured_args, { "node", "--version" })
 end
