@@ -151,21 +151,17 @@ function M.validate(config)
 
   for _, cfg in ipairs({ suggestion_keymaps, nes_keymaps, panel_keymaps }) do
     for action, km in pairs(cfg) do
-      if not km then
-        goto continue
+      if km then
+        -- TODO: find a better way to determine mode, this is prone to maintenance bugs
+        -- TODO: Not sure how to validate keymaps, since some COULD be duplicates and valid
+        local mode = (action == config.panel.keymap.open or vim.tbl_contains(config.nes.keymap, action)) and "n" or "i"
+        local keymap_key = get_keymap_key(0, mode, km)
+        if seen[keymap_key] then
+          duplicates[keymap_key] = (duplicates[keymap_key] or 1) + 1
+        else
+          seen[keymap_key] = true
+        end
       end
-
-      -- TODO: find a better way to determine mode, this is prone to maintenance bugs
-      -- TODO: Not sure how to validate keymaps, since some COULD be duplicates and valid
-      local mode = (action == config.panel.keymap.open or vim.tbl_contains(config.nes.keymap, action)) and "n" or "i"
-      local keymap_key = get_keymap_key(0, mode, km)
-      if seen[keymap_key] then
-        duplicates[keymap_key] = (duplicates[keymap_key] or 1) + 1
-      else
-        seen[keymap_key] = true
-      end
-
-      ::continue::
     end
   end
 
