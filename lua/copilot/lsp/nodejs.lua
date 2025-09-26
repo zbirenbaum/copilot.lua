@@ -41,8 +41,8 @@ function M.get_node_version()
         "   (output) " .. cmd_output,
         "-----------",
       }, "\n")
-    elseif node_version_major < 20 then
-      M.node_version_error = string.format("Node.js version 20 or newer required but found %s", node_version)
+    elseif node_version_major < 22 then
+      M.node_version_error = string.format("Node.js version 22 or newer required but found %s", node_version)
     end
 
     M.node_version = node_version

@@ -39,15 +39,15 @@ function M.process(stdout, code, fail, callback)
   return captured_args
 end
 
-M.valid_node_version = "20.0.0"
+M.valid_node_version = "22.0.0"
 M.invalid_node_version = "10.0.0"
 
----Convenience wrapper for Stub.process for a valid Node.js version (>= 20)
+---Convenience wrapper for Stub.process for a valid Node.js version (>= 22)
 function M.valid_node(callback)
   return M.process("v" .. M.valid_node_version, 0, false, callback)
 end
 
----Convenience wrapper for Stub.process for an invalid Node.js version (< 20)
+---Convenience wrapper for Stub.process for an invalid Node.js version (< 22)
 function M.invalid_node(callback)
   return M.process("v" .. M.invalid_node_version, 0, false, callback)
 end

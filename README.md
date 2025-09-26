@@ -40,8 +40,8 @@ As lua is far more efficient and makes things easier to integrate with modern pl
 ## Requirements
 
 - Curl
-- NeoVim 0.10.0 or higher
-- NodeJS v20 or higher if using the default nodejs LSP version
+- NeoVim 0.11.0 or higher
+- NodeJS v22 or higher if using the default nodejs LSP version
 
 ## Install
 
