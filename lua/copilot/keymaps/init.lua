@@ -49,6 +49,28 @@ end
 
 ---@param mode string
 ---@param key string
+---@param keymap_key string
+local function save_existing_keymap(mode, key, keymap_key)
+  local existing = vim.fn.maparg(key, mode, false, true)
+
+  if existing then
+    if existing.rhs and existing.rhs ~= "" then
+      previous_keymaps[keymap_key] = { type = "rhs", value = existing.rhs }
+      logger.trace("Saved existing keymap for " .. keymap_key .. ": " .. existing.rhs)
+      return
+    elseif existing.callback then
+      previous_keymaps[keymap_key] = { type = "callback", value = existing.callback }
+      logger.trace("Saved existing keymap callback for " .. keymap_key)
+      return
+    end
+  end
+
+  previous_keymaps[keymap_key] = { type = "none", value = nil }
+  logger.trace("No existing keymap for " .. keymap_key)
+end
+
+---@param mode string
+---@param key string
 ---@param action function: boolean
 ---@param desc string
 ---@param bufnr integer
@@ -69,23 +91,7 @@ function M.register_keymap_with_passthrough(mode, key, action, desc, bufnr)
     return
   end
 
-  -- Save any existing mapping for this key
-  local existing = vim.fn.maparg(key, mode, false, true)
-  if existing then
-    if existing.rhs and existing.rhs ~= "" then
-      previous_keymaps[keymap_key] = { type = "rhs", value = existing.rhs }
-      logger.trace("Saved existing keymap for " .. keymap_key .. ": " .. existing.rhs)
-    elseif existing.callback then
-      previous_keymaps[keymap_key] = { type = "callback", value = existing.callback }
-      logger.trace("Saved existing keymap callback for " .. keymap_key)
-    else
-      previous_keymaps[keymap_key] = { type = "none", value = nil }
-      logger.trace("No existing keymap for " .. keymap_key)
-    end
-  else
-    previous_keymaps[keymap_key] = { type = "none", value = nil }
-    logger.trace("No existing keymap for " .. keymap_key)
-  end
+  save_existing_keymap(mode, key, keymap_key)
 
   vim.keymap.set(mode, key, function()
     logger.trace("Keymap triggered for " .. keymap_key)
