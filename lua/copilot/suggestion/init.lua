@@ -212,7 +212,7 @@ local function cancel_inflight_requests(ctx)
   end)
 end
 
-local function clear_preview()
+function M.clear_preview()
   logger.trace("suggestion clear preview")
   vim.api.nvim_buf_del_extmark(0, copilot.ns_id, copilot.extmark_id)
 end
@@ -251,14 +251,14 @@ local function get_current_suggestion(ctx)
 end
 
 ---@param ctx? copilot_suggestion_context
-local function update_preview(ctx)
+function M.update_preview(ctx)
   ctx = ctx or get_ctx()
   logger.trace("suggestion update preview", ctx)
 
   local suggestion = get_current_suggestion(ctx)
   local displayLines = suggestion and vim.split(suggestion.displayText, "\n", { plain = true }) or {}
 
-  clear_preview()
+  M.clear_preview()
 
   if not suggestion or #displayLines == 0 then
     return
@@ -336,7 +336,7 @@ local function clear(ctx)
   ctx = ctx or get_ctx()
   stop_timer()
   cancel_inflight_requests(ctx)
-  update_preview(ctx)
+  M.update_preview(ctx)
   reset_ctx(ctx)
 end
 
@@ -367,7 +367,7 @@ local function handle_trigger_request(err, data)
   ctx.suggestions = data and data.completions or {}
   ctx.choice = 1
   ctx.shown_choices = {}
-  update_preview()
+  M.update_preview()
 end
 
 local function trigger(bufnr, timer)
@@ -438,7 +438,7 @@ local function get_suggestions_cycling(callback, ctx)
         get_suggestions_cycling_callback(ctx, err, data)
       end)
       ctx.cycling = id --[[@as integer]]
-      update_preview(ctx)
+      M.update_preview(ctx)
     end)
   end
 end
@@ -464,7 +464,7 @@ local function schedule(bufnr)
     stop_timer()
   end
 
-  update_preview()
+  M.update_preview()
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   copilot._copilot_timer = vim.fn.timer_start(copilot.debounce, function(timer)
     logger.trace("suggestion schedule timer", bufnr)
@@ -509,7 +509,7 @@ local function advance(count, ctx)
     ctx.choice = #ctx.suggestions
   end
 
-  update_preview(ctx)
+  M.update_preview(ctx)
 end
 
 ---@param ctx copilot_suggestion_context
@@ -603,7 +603,7 @@ function M.accept(modifier)
     ctx.accepted_partial = true
     ignore_next_cursor_moved = true
   else
-    clear_preview()
+    M.clear_preview()
     newText = suggestion.text
   end
 
@@ -656,7 +656,7 @@ function M.accept(modifier)
       end
 
       update_ctx_suggestion_position(ctx.choice, new_cursor_line - 1, last_col, bufnr)
-      update_preview(ctx)
+      M.update_preview(ctx)
     end
   end)()
 end
@@ -702,7 +702,7 @@ function M.dismiss()
   local ctx = get_ctx()
   reject()
   clear(ctx)
-  update_preview(ctx)
+  M.update_preview(ctx)
 end
 
 function M.is_visible()

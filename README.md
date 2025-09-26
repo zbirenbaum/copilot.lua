@@ -271,6 +271,8 @@ require("copilot.suggestion").accept_word()
 require("copilot.suggestion").accept_line()
 require("copilot.suggestion").next()
 require("copilot.suggestion").prev()
+require("copilot.suggestion").clear_preview()
+require("copilot.suggestion").update_preview()
 require("copilot.suggestion").dismiss()
 require("copilot.suggestion").toggle_auto_trigger()
 ```
