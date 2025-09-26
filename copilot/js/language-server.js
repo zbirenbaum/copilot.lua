@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const minNodeVersion = 20;
+const minNodeVersion = 22;
 
 function nodeVersionError() {
     const version = process.versions.node;
