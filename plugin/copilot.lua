@@ -60,15 +60,10 @@ vim.api.nvim_create_user_command("Copilot", function(opts)
   end
 
   require("copilot.client").use_client(function()
-    local result
-    if mod_name == "suggestion" and action_name == "update_preview" then
-      result = mod[action_name]()
-    else
-      result = mod[action_name]({
-        force = opts.bang,
-        args = remaining_args,
-      })
-    end
+    local result = mod[action_name]({
+      force = opts.bang,
+      args = remaining_args,
+    })
 
     if result ~= nil then
       print(tostring(result))
