@@ -37,10 +37,12 @@ local function with_client(fn)
   end
 end
 
+---@return boolean
 local function is_enabled()
   return c.buf_is_attached(0)
 end
 
+---@return boolean
 local function should_auto_trigger()
   if vim.b.copilot_suggestion_auto_trigger == nil then
     return copilot.auto_trigger
