@@ -33,7 +33,7 @@ function M.register_keymap(mode, key, action, desc, bufnr)
   local keymap_key = get_keymap_key(bufnr, mode, key)
   if previous_keymaps[keymap_key] then
     logger.trace("Keymap already registered for " .. keymap_key)
-    return
+    M.unset_keymap_if_exists(mode, key, bufnr)
   end
 
   vim.keymap.set(mode, key, function()
@@ -87,8 +87,8 @@ function M.register_keymap_with_passthrough(mode, key, action, desc, bufnr)
   local keymap_key = get_keymap_key(bufnr, mode, key)
 
   if previous_keymaps[keymap_key] then
+    M.unset_keymap_if_exists(mode, key, bufnr)
     logger.trace("Keymap already registered for " .. keymap_key)
-    return
   end
 
   save_existing_keymap(mode, key, keymap_key)
@@ -137,7 +137,7 @@ function M.unset_keymap_if_exists(mode, key, bufnr)
   previous_keymaps[get_keymap_key(bufnr, mode, key)] = nil
 
   if not ok then
-    logger.error("Could not unset keymap for " .. (mode or "nil") .. " " .. key .. ", bufnr " .. bufnr .. ": " .. err)
+    logger.trace("Could not unset keymap for " .. (mode or "nil") .. " " .. key .. ", bufnr " .. bufnr .. ": " .. err)
   end
 end
 
