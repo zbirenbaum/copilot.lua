@@ -51,7 +51,7 @@ function M.buf_attach(force, bufnr)
   end
 
   if not vim.api.nvim_buf_is_valid(bufnr) then
-    logger.trace("buffer is invalid")
+    logger.trace("buffer " .. tostring(bufnr) .. " is invalid")
     return
   end
 
@@ -79,7 +79,7 @@ function M.buf_attach(force, bufnr)
   local should_attach, reason = util.should_attach(bufnr)
 
   if not (force or should_attach) then
-    logger.debug("not attaching to buffer based should_attach criteria: " .. reason)
+    logger.debug("not attaching to buffer " .. tostring(bufnr) .. " based should_attach criteria: " .. reason)
     util.set_buffer_attach_status(bufnr, util.ATTACH_STATUS_NOT_ATTACHED_PREFIX .. reason)
     return
   end
@@ -89,7 +89,7 @@ function M.buf_attach(force, bufnr)
     return
   end
 
-  logger.trace("attaching to buffer")
+  logger.trace("attaching to buffer " .. tostring(bufnr))
 
   if not M.id then
     M.ensure_client_started()
@@ -106,10 +106,10 @@ function M.buf_attach(force, bufnr)
 
   util.set_buffer_previous_ft(bufnr, vim.bo[bufnr].filetype)
   if force then
-    logger.debug("force attached to buffer")
+    logger.debug("force attached to buffer " .. tostring(bufnr))
     util.set_buffer_attach_status(bufnr, util.ATTACH_STATUS_FORCE_ATTACHED)
   else
-    logger.trace("buffer attached")
+    logger.trace("buffer " .. tostring(bufnr) .. " attached")
     util.set_buffer_attach_status(bufnr, util.ATTACH_STATUS_ATTACHED)
   end
 end
