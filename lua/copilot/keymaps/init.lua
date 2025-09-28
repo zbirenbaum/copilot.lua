@@ -134,6 +134,26 @@ function M.unset_keymap_if_exists(mode, key, bufnr)
   end
 
   local ok, err = pcall(vim.api.nvim_buf_del_keymap, bufnr, mode, key)
+  -- restore previous keymap if it existed
+  if previous_keymaps[get_keymap_key(bufnr, mode, key)] then
+    local prev = previous_keymaps[get_keymap_key(bufnr, mode, key)]
+    if prev.type == "rhs" and prev.value then
+      vim.keymap.set(mode, key, prev.value, {
+        silent = true,
+        buffer = bufnr,
+      })
+      logger.trace("Restored previous keymap for " .. get_keymap_key(bufnr, mode, key) .. ": " .. prev.value)
+    elseif prev.type == "callback" and prev.value then
+      vim.keymap.set(mode, key, prev.value, {
+        silent = true,
+        buffer = bufnr,
+      })
+      logger.trace("Restored previous keymap callback for " .. get_keymap_key(bufnr, mode, key))
+    else
+      logger.trace("No previous keymap to restore for " .. get_keymap_key(bufnr, mode, key))
+    end
+  end
+
   previous_keymaps[get_keymap_key(bufnr, mode, key)] = nil
 
   if not ok then
