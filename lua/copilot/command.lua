@@ -31,7 +31,7 @@ end
 
 ---@param opts? { force?: boolean, bufnr?: integer}
 function M.attach(opts)
-  logger.trace("attaching to buffer")
+  logger.trace("manually attaching to buffer")
   opts = opts or {}
 
   if not opts.force then
