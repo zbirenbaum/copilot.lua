@@ -203,7 +203,7 @@ local function get_cache_ttl(authenticated)
 end
 
 ---@param client vim.lsp.Client
----@param callback? fun()
+---@param callback? fun(err: any|nil)
 local function check_status(client, callback)
   api.check_status(client, {}, function(err, status)
     auth_cache.timestamp = vim.loop.now()
@@ -215,12 +215,12 @@ local function check_status(client, callback)
     end
 
     if callback then
-      callback()
+      callback(err)
     end
   end)
 end
 
----@param callback? fun()
+---@param callback? fun(err: any|nil)
 ---@return boolean
 function M.is_authenticated(callback)
   local current_time = vim.loop.now()
