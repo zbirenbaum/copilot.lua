@@ -446,7 +446,12 @@ end
 ---@param bufnr? integer
 local function schedule(bufnr)
   local function is_authenticated()
-    return auth.is_authenticated(function()
+    return auth.is_authenticated(function(err)
+      if err then
+        logger.trace("Unable to authenticate with Copilot: " .. tostring(err))
+        return
+      end
+
       schedule(bufnr)
     end)
   end
