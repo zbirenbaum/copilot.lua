@@ -74,11 +74,31 @@ end
 
 T["suggestion()"]["accept keymap, no suggestion, execute normal keystroke"] = function()
   child.o.lines, child.o.columns = 10, 15
+  child.config.suggestion = child.config.suggestion .. "keymap = { accept = '<CR>' },\n" .. "trigger_on_accept = false,"
+  child.configure_copilot()
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<CR>", "a")
+
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
+end
+
+T["suggestion()"]["accept line keymap, no suggestion, execute normal keystroke"] = function()
+  child.o.lines, child.o.columns = 10, 15
   child.config.suggestion = child.config.suggestion
-    .. "keymap = { accept = '<Tab>' },\n"
+    .. "keymap = { accept_line = '<CR>' },\n"
     .. "trigger_on_accept = false,"
   child.configure_copilot()
-  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<Tab>")
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<CR>", "a")
+
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
+end
+
+T["suggestion()"]["accept word keymap, no suggestion, execute normal keystroke"] = function()
+  child.o.lines, child.o.columns = 10, 15
+  child.config.suggestion = child.config.suggestion
+    .. "keymap = { accept_word = '<CR>' },\n"
+    .. "trigger_on_accept = false,"
+  child.configure_copilot()
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7", "<CR>", "a")
 
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
