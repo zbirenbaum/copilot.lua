@@ -435,15 +435,8 @@ function panel:refresh()
   if not auto_refreshing and self.state.was_insert then
     vim.cmd("stopinsert")
   else
-    local utf16_index
+    local utf16_index = vim.str_utfindex(self.state.line, "utf-16")
     -- assume cursor at end of line
-    if vim.fn.has("nvim-0.11") == 1 then
-      utf16_index = vim.str_utfindex(self.state.line, "utf-16")
-    else
-      ---@diagnostic disable-next-line: missing-parameter
-      local _, this_utf16_index = vim.str_utfindex(self.state.line)
-      utf16_index = this_utf16_index
-    end
     params.doc.position.character = utf16_index
     params.position.character = params.doc.position.character
   end
