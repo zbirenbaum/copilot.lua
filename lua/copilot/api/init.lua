@@ -20,11 +20,11 @@ function M.request(client, method, params, callback)
   params.bufnr = nil
 
   if callback then
-    return utils.wrap(client):request(method, params, callback, bufnr)
+    return client:request(method, params, callback, bufnr)
   end
 
   local co = coroutine.running()
-  utils.wrap(client):request(method, params, function(err, data, ctx)
+  client:request(method, params, function(err, data, ctx)
     coroutine.resume(co, err, data, ctx)
   end, bufnr)
   return coroutine.yield()
@@ -33,7 +33,7 @@ end
 ---@return boolean sent
 function M.notify(client, method, params)
   logger.trace("api notify:", method, params)
-  return utils.wrap(client):notify(method, params)
+  return client:notify(method, params)
 end
 
 ---@alias copilot_editor_info { name: string, version: string }
