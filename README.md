@@ -162,7 +162,7 @@ require('copilot').setup({
     trace_lsp_progress = false,
     log_lsp_messages = false,
   },
-  copilot_node_command = 'node', -- Node.js version must be > 20
+  copilot_node_command = 'node', -- Node.js version must be > 22
   workspace_folders = {},
   copilot_model = "",
   disable_limit_reached_message = false,  -- Set to `true` to suppress completion limit reached popup
@@ -384,12 +384,12 @@ Careful turning on all logging features as the log files may get very large over
 
 ### copilot_node_command
 
-Use this field to provide the path to a specific node version such as one installed by nvm. Node.js version must be 20 or newer.
+Use this field to provide the path to a specific node version such as one installed by nvm. Node.js version must be 22 or newer.
 
 Example:
 
 ```lua
-copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v20.0.1/bin/node", -- Node.js version must be > 20
+copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v22.0.0/bin/node", -- Node.js version must be > 22
 ```
 
 ### server_opts_overrides
