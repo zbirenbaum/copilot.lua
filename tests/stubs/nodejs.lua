@@ -1,7 +1,7 @@
 -- these are helper functions for testing the nodejs LSP integration
 -- they stub out system interactions for verifying access to node and the LSP script
 
-M = {}
+local M = {}
 
 M.default_server_path = "copilot/js/language-server.js"
 M.custom_server_path = "custom/path/to/language-server.js"
