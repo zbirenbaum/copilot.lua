@@ -1,4 +1,3 @@
-local env = require("tests.env")
 local M = {
   mock_lsp_server = false,
 }
@@ -70,9 +69,6 @@ function M.new_child_neovim(test_name)
       child.lua('package.loaded["copilot.lsp"] = require("tests.stubs.lsp_init")')
     end
 
-    if env.COPILOT_TOKEN and env.COPILOT_TOKEN ~= "" then
-      child.fn.setenv("GITHUB_COPILOT_TOKEN", env.COPILOT_TOKEN)
-    end
     child.setup_and_wait_for_debugger()
     child.lua("M = require('copilot')")
   end
