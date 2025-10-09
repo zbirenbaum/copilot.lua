@@ -6,7 +6,6 @@ local hl_group = require("copilot.highlight").group
 local util = require("copilot.util")
 local logger = require("copilot.logger")
 local suggestion_util = require("copilot.suggestion.utils")
-local utils = require("copilot.client.utils")
 local keymaps = require("copilot.keymaps")
 
 local M = {}
@@ -729,7 +728,7 @@ function M.dismiss()
 end
 
 function M.is_visible()
-  return not not vim.api.nvim_buf_get_extmark_by_id(0, copilot.ns_id, copilot.extmark_id, { details = false })[1]
+  return vim.api.nvim_buf_get_extmark_by_id(0, copilot.ns_id, copilot.extmark_id, { details = false })[1]
 end
 
 -- toggles auto trigger for the current buffer
