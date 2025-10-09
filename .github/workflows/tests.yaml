@@ -33,11 +33,8 @@ jobs:
         run: |
           ${{ matrix.install-rg }}
           git clone --filter=blob:none https://github.com/nvim-mini/mini.nvim deps/mini.nvim
-          mv ./tests/env.lua.ci ./tests/env.lua
 
       - name: Run tests
-        env:
-          GH_COPILOT_TOKEN: ${{ secrets.GH_COPILOT_TOKEN }}
         run: |
           nvim --version
           make test
