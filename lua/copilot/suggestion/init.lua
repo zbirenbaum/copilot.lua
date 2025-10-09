@@ -159,23 +159,8 @@ function M.set_keymap(bufnr)
     return false
   end, "[copilot] accept suggestion (word)", bufnr)
 
-  keymaps.register_keymap_with_passthrough("i", keymap.next, function()
-    if M.is_visible() then
-      M.next()
-      return true
-    end
-
-    return false
-  end, "[copilot] next suggestion", bufnr)
-
-  keymaps.register_keymap_with_passthrough("i", keymap.prev, function()
-    if M.is_visible() then
-      M.prev()
-      return true
-    end
-
-    return false
-  end, "[copilot] prev suggestion", bufnr)
+  keymaps.register_keymap("i", keymap.next, M.next, "[copilot] next suggestion", bufnr)
+  keymaps.register_keymap("i", keymap.prev, M.prev, "[copilot] prev suggestion", bufnr)
 
   keymaps.register_keymap_with_passthrough("i", keymap.dismiss, function()
     if M.is_visible() then
