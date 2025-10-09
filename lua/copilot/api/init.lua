@@ -1,5 +1,5 @@
 local logger = require("copilot.logger")
-local utils = require("copilot.client.utils")
+
 ---@class CopilotApi
 local M = {
   ---@deprecated
