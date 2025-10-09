@@ -250,4 +250,22 @@ T["suggestion()"]["duplicated keymap yields correct error message"] = function()
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 49, 50 }, ignore_attr = { 49, 50 } })
 end
 
+T["suggestion()"]["is_visible works"] = function()
+  child.o.lines, child.o.columns = 10, 15
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
+  child.configure_copilot()
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
+  child.wait_for_suggestion()
+  local is_visible = child.lua('return require("copilot.suggestion").is_visible()')
+  assert(is_visible, "is_visible should be true")
+end
+
+T["suggestion()"]["next keymap triggers suggestion"] = function()
+  child.configure_copilot()
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
+  child.type_keys("<M-]>")
+  child.wait_for_suggestion()
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 49, 50 }, ignore_attr = { 49, 50 } })
+end
+
 return T
