@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Administrative Template Language File for GitHub Copilot IDE Integration (English)
+This file contains the localized display strings for the GitHub Copilot Group Policy settings.
+-->
+<policyDefinitionResources xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" revision="1.0" schemaVersion="1.0" xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
+  <displayName>GitHub Copilot IDE Integration Policy Definitions</displayName>
+  <description>This file contains the policy definitions for GitHub Copilot IDE integration settings.</description>
+  
+  <resources>
+    <stringTable>
+      <!-- Category Names -->
+      <string id="Cat_IDEGitHubCopilot">GitHub Copilot</string>
+      <string id="Cat_IDEGitHubCopilot_Explain">Policy settings for GitHub Copilot IDE integration (JetBrains IDE, Eclipse and Xcode). These settings control various aspects of GitHub Copilot functionality within IDE environments.</string>
+      
+      <string id="Cat_IDEGitHubCopilot_MCP">Model Context Protocol (MCP)</string>
+      <string id="Cat_IDEGitHubCopilot_MCP_Explain">Policy settings for Model Context Protocol (MCP) integration with GitHub Copilot. MCP allows extensions to provide additional context to Copilot for improved code suggestions.</string>
+      
+      <!-- Policy Names and Descriptions -->
+      <string id="McpContributionPointEnabled">Enable Extension-Contributed MCP Servers</string>
+      <string id="McpContributionPointEnabled_Explain">This policy setting determines whether GitHub Copilot can use Model Context Protocol (MCP) servers that are contributed by IDE extensions.
+
+When this policy is enabled:
+- Extensions can register MCP servers that provide additional context to GitHub Copilot
+- Copilot can access extension-provided data sources through the MCP protocol
+- This may improve code suggestions by incorporating extension-specific context
+
+When this policy is disabled:
+- Extension-contributed MCP servers will not be loaded or used by GitHub Copilot
+- Only built-in MCP functionality will be available
+- Extensions cannot extend Copilot's context through MCP
+
+If this policy is not configured:
+- The default behavior depends on the IDE and extension configuration
+- Users may be able to control this setting through IDE preferences
+
+Note: This setting only affects extension-contributed MCP servers. Built-in MCP functionality may still be available when this policy is disabled.
+
+Registry Location:
+- Machine: HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\IDEGitHubCopilot\mcp.contributionPoint.enabled
+- User: HKEY_CURRENT_USER\SOFTWARE\Policies\Microsoft\IDEGitHubCopilot\mcp.contributionPoint.enabled
+
+Value Type: REG_DWORD
+- 1 = Enable extension-contributed MCP servers
+- 0 = Disable extension-contributed MCP servers</string>
+    </stringTable>
+  </resources>
+</policyDefinitionResources>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>PayloadContent</key>
+        <array>
+            <dict>
+                <key>PayloadDisplayName</key>
+                <string>GitHub Copilot Policy</string>
+                <key>PayloadIdentifier</key>
+                <string>IDEGitHubCopilot</string>
+                <key>PayloadType</key>
+                <string>IDEGitHubCopilot</string>
+                <key>PayloadUUID</key>
+                <string>12345678-1234-1234-1234-123456789012</string>
+                <key>PayloadVersion</key>
+                <integer>1</integer>
+                <key>PayloadEnabled</key>
+                <true/>
+                <key>mcp.contributionPoint.enabled</key>
+                <false/>
+            </dict>
+        </array>
+
+        <key>PayloadDescription</key>
+        <string>Configures GitHub Copilot policies for IDEs</string>
+        <key>PayloadDisplayName</key>
+        <string>GitHub Copilot Policy</string>
+        <key>PayloadIdentifier</key>
+        <string>IDEGitHubCopilot</string>
+        <key>PayloadOrganization</key>
+        <string>Microsoft Corporation</string>
+        <key>PayloadRemovalDisallowed</key>
+        <false/>
+        <key>PayloadScope</key>
+        <string>System</string>
+        <key>PayloadType</key>
+        <string>Configuration</string>
+        <key>PayloadUUID</key>
+        <string>87654321-4321-4321-4321-210987654321</string>
+        <key>PayloadVersion</key>
+        <integer>1</integer>
+    </dict>
+</plist>
