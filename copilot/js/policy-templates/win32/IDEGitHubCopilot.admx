@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Administrative Template for GitHub Copilot IDE Integration
+This template defines Group Policy settings for GitHub Copilot in IDE environments.
+-->
+<policyDefinitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" revision="1.0" schemaVersion="1.0" xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
+  <policyNamespaces>
+    <target prefix="ideGitHubCopilot" namespace="Microsoft.Policies.IDEGitHubCopilot" />
+    <using prefix="windows" namespace="Microsoft.Policies.Windows" />
+  </policyNamespaces>
+  
+  <supersededAdm fileName="" />
+  
+  <resources minRequiredRevision="1.0" />
+  
+  <categories>
+    <category name="Cat_IDEGitHubCopilot" displayName="$(string.Cat_IDEGitHubCopilot)" explainText="$(string.Cat_IDEGitHubCopilot_Explain)" />
+    <category name="Cat_IDEGitHubCopilot_MCP" displayName="$(string.Cat_IDEGitHubCopilot_MCP)" explainText="$(string.Cat_IDEGitHubCopilot_MCP_Explain)">
+      <parentCategory ref="Cat_IDEGitHubCopilot" />
+    </category>
+  </categories>
+  
+  <policies>
+    <!-- Enable Extension-Contributed MCP Servers Policy -->
+    <policy name="McpContributionPointEnabled" class="Both" displayName="$(string.McpContributionPointEnabled)" explainText="$(string.McpContributionPointEnabled_Explain)" key="SOFTWARE\Policies\Microsoft\IDEGitHubCopilot" valueName="mcp.contributionPoint.enabled">
+      <parentCategory ref="Cat_IDEGitHubCopilot_MCP" />
+      <supportedOn ref="windows:SUPPORTED_Windows_10_0" />
+      <enabledValue>
+        <decimal value="1" />
+      </enabledValue>
+      <disabledValue>
+        <decimal value="0" />
+      </disabledValue>
+    </policy>
+  </policies>
+</policyDefinitions>
