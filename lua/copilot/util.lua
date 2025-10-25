@@ -33,7 +33,7 @@ function M.get_copilot_lua_version()
   if not copilot_lua_version then
     local plugin_version_ok, plugin_version = pcall(function()
       local plugin_dir = M.get_plugin_path()
-      return vim.fn.systemlist(string.format("cd %s && git rev-parse HEAD", plugin_dir))[1]
+      return vim.fn.systemlist(string.format("git -C %s rev-parse HEAD", plugin_dir))[1]
     end)
     copilot_lua_version = plugin_version_ok and plugin_version or "dev"
   end
