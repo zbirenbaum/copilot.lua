@@ -96,7 +96,10 @@ end
 
 ---@return table
 function M.get_execute_command()
-  return util.append_command(M.node_command, { M.server_path or M.get_server_path(), "--stdio" })
+  return util.append_command(
+    M.node_command,
+    { "--experimental-sqlite", M.server_path or M.get_server_path(), "--stdio" }
+  )
 end
 
 ---@param node_command? string|string[]

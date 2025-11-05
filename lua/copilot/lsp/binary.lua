@@ -270,6 +270,7 @@ end
 ---@return table
 function M.get_execute_command()
   return {
+    "--experimental-sqlite",
     M.server_path or M.get_server_path(),
     "--stdio",
   }
