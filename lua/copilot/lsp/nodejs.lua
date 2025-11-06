@@ -97,7 +97,8 @@ end
 ---@return table
 function M.get_execute_command()
   local args = { M.server_path or M.get_server_path(), "--stdio" }
-  if M.node_version < 25 then
+  local node_version_major = tonumber(string.match(M.node_version or "", "^(%d+)%.")) or 0
+  if node_version_major < 25 then
     table.insert(args, 1, "--experimental-sqlite")
   end
   return util.append_command(M.node_command, args)
