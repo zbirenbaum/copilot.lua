@@ -197,7 +197,7 @@ function M.init()
   local plugin_path = vim.fs.normalize(util.get_plugin_path())
   local copilot_server_info = M.get_copilot_server_info()
   local download_filename =
-      string.format("copilot-language-server-%s-%s.zip", copilot_server_info.path, copilot_version)
+    string.format("copilot-language-server-%s-%s.zip", copilot_server_info.path, copilot_version)
   local url = string.format(
     "https://github.com/github/copilot-language-server-release/releases/download/%s/%s",
     copilot_version,
@@ -205,7 +205,7 @@ function M.init()
   )
   local local_server_zip_path = vim.fs.joinpath(plugin_path, "copilot/", copilot_server_info.path)
   local local_server_zip_filepath =
-      vim.fs.joinpath(plugin_path, "copilot/", copilot_server_info.path, download_filename)
+    vim.fs.joinpath(plugin_path, "copilot/", copilot_server_info.path, download_filename)
 
   logger.trace("copilot_server_info: ", copilot_server_info)
 
@@ -270,13 +270,8 @@ end
 
 ---@return table
 function M.get_execute_command()
-  local args = { M.server_path or M.get_server_path(), "--stdio" }
   local node_version = nodejs.get_node_version()
-  local node_version_major = tonumber(string.match(node_version or "", "^(%d+)%.")) or 0
-  if node_version_major < 25 then
-    table.insert(args, 1, "--experimental-sqlite")
-  end
-  return util.append_command(M.node_command, args)
+  return util.get_node_args(M.server_path or M.get_server_path(), node_version)
 end
 
 ---@return copilot_server_info
