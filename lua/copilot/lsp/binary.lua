@@ -1,5 +1,6 @@
 local util = require("copilot.util")
 local logger = require("copilot.logger")
+local nodejs = require("copilot.lsp.nodejs")
 
 local M = {
   ---@class copilot_server_info
@@ -269,11 +270,11 @@ end
 
 ---@return table
 function M.get_execute_command()
-  return {
-    "--experimental-sqlite",
-    M.server_path or M.get_server_path(),
-    "--stdio",
-  }
+  local args = { M.server_path or M.get_server_path(), "--stdio" }
+  if nodejs.get_node_version() < 25 then
+    table.insert(args, 1, "--experimental-sqlite")
+  end
+  return util.append_command(M.node_command, args)
 end
 
 ---@return copilot_server_info

@@ -96,10 +96,11 @@ end
 
 ---@return table
 function M.get_execute_command()
-  return util.append_command(
-    M.node_command,
-    { "--experimental-sqlite", M.server_path or M.get_server_path(), "--stdio" }
-  )
+  local args = { M.server_path or M.get_server_path(), "--stdio" }
+  if M.node_version < 25 then
+    table.insert(args, 1, "--experimental-sqlite")
+  end
+  return util.append_command(M.node_command, args)
 end
 
 ---@param node_command? string|string[]
