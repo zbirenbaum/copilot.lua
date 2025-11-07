@@ -1,0 +1,10 @@
+{
+    "chatAgents": [
+        {
+            "name": "Plan",
+            "description": "Researches and deconstructs tasks to create effective multi-step plans.",
+            "path": "./assets/agents/Plan.agent.md",
+            "showAsChatMode": true
+        }
+    ]
+}
