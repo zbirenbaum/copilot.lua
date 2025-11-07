@@ -96,7 +96,7 @@ end
 
 ---@return table
 function M.get_execute_command()
-  local args = util.get_node_args(M.server_path or M.get_server_path(), M.node_version)
+  local args = util.get_node_args(M.server_path or M.get_server_path(), "nodejs", M.node_version)
 
   return util.append_command(M.node_command, args)
 end

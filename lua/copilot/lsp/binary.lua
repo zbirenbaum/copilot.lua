@@ -271,7 +271,7 @@ end
 ---@return table
 function M.get_execute_command()
   local node_version = nodejs.get_node_version()
-  return util.get_node_args(M.server_path or M.get_server_path(), node_version)
+  return util.get_node_args(M.server_path or M.get_server_path(), "binary", node_version)
 end
 
 ---@return copilot_server_info
