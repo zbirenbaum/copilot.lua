@@ -1,5 +1,7 @@
+---@alias ServerType string<'nodejs', 'binary'>
+
 ---@class (exact) ServerConfig
----@field type string<'nodejs', 'binary'> Type of the server
+---@field type ServerType Type of the server
 ---@field custom_server_filepath? string|nil Path to the custom server file, can be absolute, relative or a file name (for PATH)
 
 local server = {

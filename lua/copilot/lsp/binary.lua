@@ -1,5 +1,6 @@
 local util = require("copilot.util")
 local logger = require("copilot.logger")
+local nodejs = require("copilot.lsp.nodejs")
 
 local M = {
   ---@class copilot_server_info
@@ -269,10 +270,8 @@ end
 
 ---@return table
 function M.get_execute_command()
-  return {
-    M.server_path or M.get_server_path(),
-    "--stdio",
-  }
+  local node_version = nodejs.get_node_version()
+  return util.get_node_args(M.server_path or M.get_server_path(), "binary", node_version)
 end
 
 ---@return copilot_server_info

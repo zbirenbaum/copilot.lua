@@ -96,7 +96,9 @@ end
 
 ---@return table
 function M.get_execute_command()
-  return util.append_command(M.node_command, { M.server_path or M.get_server_path(), "--stdio" })
+  local args = util.get_node_args(M.server_path or M.get_server_path(), "nodejs", M.node_version)
+
+  return util.append_command(M.node_command, args)
 end
 
 ---@param node_command? string|string[]
