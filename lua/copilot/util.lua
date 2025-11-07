@@ -187,4 +187,18 @@ function M.append_command(cmd, append)
   return full_cmd
 end
 
+---@param server_path string
+---@param server_type ServerType
+---@param node_version string|nil
+---@return string[]
+function M.get_node_args(server_path, server_type, node_version)
+  local args = { server_path, "--stdio" }
+  local node_version_major = tonumber(string.match(node_version or "", "^(%d+)%.")) or 0
+  if (server_type == "nodejs") and (node_version_major < 25) then
+    table.insert(args, 1, "--experimental-sqlite")
+  end
+
+  return args
+end
+
 return M

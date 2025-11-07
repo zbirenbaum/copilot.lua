@@ -39,12 +39,23 @@ function M.process(stdout, code, fail, callback)
   return captured_args
 end
 
-M.valid_node_version = "22.0.0"
 M.invalid_node_version = "10.0.0"
+M.valid_node_version_22 = "22.0.0"
+M.valid_node_version_24 = "24.0.0"
+M.valid_node_version_25 = "25.0.0"
 
 ---Convenience wrapper for Stub.process for a valid Node.js version (>= 22)
-function M.valid_node(callback)
-  return M.process("v" .. M.valid_node_version, 0, false, callback)
+function M.valid_node_22(callback)
+  return M.process("v" .. M.valid_node_version_22, 0, false, callback)
+end
+
+---Convenience wrapper for Stub.process for a valid Node.js version (>= 22)
+function M.valid_node_24(callback)
+  return M.process("v" .. M.valid_node_version_24, 0, false, callback)
+end
+
+function M.valid_node_25(callback)
+  return M.process("v" .. M.valid_node_version_25, 0, false, callback)
 end
 
 ---Convenience wrapper for Stub.process for an invalid Node.js version (< 22)
@@ -53,8 +64,9 @@ function M.invalid_node(callback)
 end
 
 ---@param callback function the function to call while vim.api.nvim_get_runtime_file is stubbed
+---@param node_function function|nil
 ---@return string|nil captured_path -- the path vim.api.nvim_get_runtime_file was called with
-function M.get_runtime_server_path(callback)
+function M.get_runtime_server_path(callback, node_function)
   local captured_path = nil
 
   local original_get_file = vim.api.nvim_get_runtime_file
@@ -70,8 +82,12 @@ function M.get_runtime_server_path(callback)
     return 1
   end
 
+  if node_function == nil then
+    node_function = M.valid_node_25
+  end
+
   -- stub valid node version for callback so setup() succeeds
-  M.valid_node(function()
+  node_function(function()
     -- wrap callback in pcall to ensure vim.api.nvim_get_runtime_file is restored if callback errors
     local ok, err = pcall(callback)
     vim.api.nvim_get_runtime_file = original_get_file

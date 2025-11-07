@@ -15,47 +15,47 @@ local T = MiniTest.new_set({
 T["get_node_version()"] = MiniTest.new_set()
 
 T["get_node_version()"]["default node command"] = function()
-  local captured_args = stub.valid_node(function()
+  local captured_args = stub.valid_node_22(function()
     stub.nodejs.setup()
     local version, error = stub.nodejs.get_node_version()
 
-    eq(version, stub.valid_node_version)
+    eq(version, stub.valid_node_version_22)
     eq(error, nil)
   end)
   eq(captured_args, { "node", "--version" })
 end
 
 T["get_node_version()"]["custom node command as string"] = function()
-  local captured_args = stub.valid_node(function()
+  local captured_args = stub.valid_node_22(function()
     stub.nodejs.setup("/usr/local/bin/node")
 
     local version, error = stub.nodejs.get_node_version()
 
-    eq(version, stub.valid_node_version)
+    eq(version, stub.valid_node_version_22)
     eq(error, nil)
   end)
   eq(captured_args, { "/usr/local/bin/node", "--version" })
 end
 
 T["get_node_version()"]["custom node command as string with spaces"] = function()
-  local captured_args = stub.valid_node(function()
+  local captured_args = stub.valid_node_22(function()
     stub.nodejs.setup("/path to/node")
 
     local version, error = stub.nodejs.get_node_version()
 
-    eq(version, stub.valid_node_version)
+    eq(version, stub.valid_node_version_22)
     eq(error, nil)
   end)
   eq(captured_args, { "/path to/node", "--version" })
 end
 
 T["get_node_version()"]["custom node command as table"] = function()
-  local captured_args = stub.valid_node(function()
+  local captured_args = stub.valid_node_22(function()
     stub.nodejs.setup({ "mise", "x", "node@lts", "--", "node" })
 
     local version, error = stub.nodejs.get_node_version()
 
-    eq(version, stub.valid_node_version)
+    eq(version, stub.valid_node_version_22)
     eq(error, nil)
   end)
   eq(captured_args, { "mise", "x", "node@lts", "--", "node", "--version" })
@@ -98,6 +98,24 @@ T["get_node_version()"]["validates node version requirement"] = function()
 end
 
 T["get_execute_command()"] = MiniTest.new_set()
+
+T["get_execute_command()"]["default node command v22, default server path"] = function()
+  local captured_path = stub.get_runtime_server_path(function()
+    eq(stub.nodejs.setup(), true)
+    local cmd = stub.nodejs.get_execute_command()
+    eq(cmd, { "node", "--experimental-sqlite", vim.fn.expand(stub.default_server_path), "--stdio" })
+  end, stub.valid_node_22)
+  eq(captured_path, stub.default_server_path)
+end
+
+T["get_execute_command()"]["default node command v24, default server path"] = function()
+  local captured_path = stub.get_runtime_server_path(function()
+    eq(stub.nodejs.setup(), true)
+    local cmd = stub.nodejs.get_execute_command()
+    eq(cmd, { "node", "--experimental-sqlite", vim.fn.expand(stub.default_server_path), "--stdio" })
+  end, stub.valid_node_24)
+  eq(captured_path, stub.default_server_path)
+end
 
 T["get_execute_command()"]["default node command, default server path"] = function()
   local captured_path = stub.get_runtime_server_path(function()
