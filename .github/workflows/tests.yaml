@@ -22,7 +22,7 @@ jobs:
             install-rg: choco install nodejs-lts curl
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: rhysd/action-setup-vim@v1
         with:
