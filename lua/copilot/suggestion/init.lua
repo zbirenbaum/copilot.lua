@@ -580,6 +580,32 @@ function M.prev()
   end, ctx)
 end
 
+local function apply_edit(range, new_lines, bufnr)
+  local start_line = range.start.line
+  local start_char = range.start.character
+  local end_line = range["end"].line
+  local end_char = range["end"].character
+
+  local current_lines = vim.api.nvim_buf_get_lines(bufnr, start_line, end_line + 1, false)
+  if #current_lines == 0 then return end
+
+  local before = current_lines[1]:sub(1, start_char)
+  local after = current_lines[#current_lines]:sub(end_char + 1)
+
+  local result_lines = {}
+  if #new_lines == 1 then
+    table.insert(result_lines, before .. new_lines[1] .. after)
+  else
+    table.insert(result_lines, before .. new_lines[1])
+    for i = 2, #new_lines - 1 do
+      table.insert(result_lines, new_lines[i])
+    end
+    table.insert(result_lines, new_lines[#new_lines] .. after)
+  end
+
+  vim.api.nvim_buf_set_lines(bufnr, start_line, end_line + 1, false, result_lines)
+end
+
 ---@param modifier? (fun(suggestion: copilot_get_completions_data_completion): copilot_get_completions_data_completion)
 function M.accept(modifier)
   local ctx = get_ctx()
@@ -639,8 +665,7 @@ function M.accept(modifier)
   vim.schedule_wrap(function()
     -- Create an undo breakpoint
     vim.cmd("let &undolevels=&undolevels")
-    -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
+
     local bufnr = vim.api.nvim_get_current_buf()
 
     -- only utf encodings are supported
@@ -657,13 +682,7 @@ function M.accept(modifier)
     local lines_count = #lines
     local last_col = #lines[lines_count]
 
-    -- apply_text_edits will remove the last \n if the last line is empty,
-    -- so we trick it by adding an extra one
-    if last_col == 0 then
-      newText = newText .. "\n"
-    end
-
-    vim.lsp.util.apply_text_edits({ { range = range, newText = newText } }, bufnr, encoding)
+    apply_edit(range, lines, bufnr)
 
     -- Position cursor at the end of the last inserted line
     local new_cursor_line = range["start"].line + #lines
