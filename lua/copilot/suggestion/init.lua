@@ -580,14 +580,16 @@ function M.prev()
   end, ctx)
 end
 
-local function apply_edit(range, new_lines, bufnr)
+local function apply_edit(range, new_lines, bufnr, position_encoding)
   local start_line = range.start.line
-  local start_char = range.start.character
+  local start_char = vim.lsp.util._get_line_byte_from_position(bufnr, range.start, position_encoding)
   local end_line = range["end"].line
-  local end_char = range["end"].character
+  local end_char = vim.lsp.util._get_line_byte_from_position(bufnr, range["end"], position_encoding)
 
   local current_lines = vim.api.nvim_buf_get_lines(bufnr, start_line, end_line + 1, false)
-  if #current_lines == 0 then return end
+  if #current_lines == 0 then
+    return
+  end
 
   local before = current_lines[1]:sub(1, start_char)
   local after = current_lines[#current_lines]:sub(end_char + 1)
@@ -682,7 +684,7 @@ function M.accept(modifier)
     local lines_count = #lines
     local last_col = #lines[lines_count]
 
-    apply_edit(range, lines, bufnr)
+    apply_edit(range, lines, bufnr, encoding)
 
     -- Position cursor at the end of the last inserted line
     local new_cursor_line = range["start"].line + #lines
