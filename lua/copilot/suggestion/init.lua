@@ -751,7 +751,11 @@ function M.toggle_auto_trigger()
     local ctx = get_ctx()
     clear(ctx)
     M.clear_preview()
+  else
+    request_suggestion_when_auto_trigger(bufnr)
   end
+
+  logger.trace("auto trigger toggled to " .. tostring(new_state))
 end
 
 local function on_insert_leave()
