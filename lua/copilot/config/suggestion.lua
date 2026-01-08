@@ -33,6 +33,7 @@ local suggestion = {
       next = "<M-]>",
       prev = "<M-[>",
       dismiss = "<C-]>",
+      toggle_auto_trigger = false,
     },
   },
 }
@@ -51,6 +52,7 @@ function suggestion.validate(config)
   vim.validate("keymap.next", config.keymap.next, { "string", "boolean" })
   vim.validate("keymap.prev", config.keymap.prev, { "string", "boolean" })
   vim.validate("keymap.dismiss", config.keymap.dismiss, { "string", "boolean" })
+  vim.validate("keymap.toggle_auto_trigger", config.keymap.toggle_auto_trigger, { "string", "boolean" })
 end
 
 return suggestion
