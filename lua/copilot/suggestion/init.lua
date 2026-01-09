@@ -742,6 +742,7 @@ end
 
 -- toggles auto trigger for the current buffer
 function M.toggle_auto_trigger()
+  local bufnr = vim.api.nvim_get_current_buf()
   local new_state = not should_auto_trigger()
   vim.b.copilot_suggestion_auto_trigger = new_state
 
