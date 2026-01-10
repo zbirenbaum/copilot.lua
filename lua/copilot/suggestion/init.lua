@@ -169,6 +169,14 @@ function M.set_keymap(bufnr)
 
     return false
   end, "[copilot] dismiss suggestion", bufnr)
+
+  keymaps.register_keymap(
+    "i",
+    keymap.toggle_auto_trigger,
+    M.toggle_auto_trigger,
+    "[copilot] toggle auto trigger",
+    bufnr
+  )
 end
 
 ---@param bufnr integer
@@ -184,6 +192,7 @@ function M.unset_keymap(bufnr)
   keymaps.unset_keymap_if_exists("i", keymap.next, bufnr)
   keymaps.unset_keymap_if_exists("i", keymap.prev, bufnr)
   keymaps.unset_keymap_if_exists("i", keymap.dismiss, bufnr)
+  keymaps.unset_keymap_if_exists("i", keymap.toggle_auto_trigger, bufnr)
 end
 
 local function stop_timer()
@@ -733,7 +742,21 @@ end
 
 -- toggles auto trigger for the current buffer
 function M.toggle_auto_trigger()
-  vim.b.copilot_suggestion_auto_trigger = not should_auto_trigger()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local new_state = not should_auto_trigger()
+  vim.b.copilot_suggestion_auto_trigger = new_state
+
+  -- Long debounce will still show suggestions after toggling in
+  -- insert mode, so we clear them manually.
+  if not new_state then
+    local ctx = get_ctx()
+    clear(ctx)
+    M.clear_preview()
+  else
+    request_suggestion_when_auto_trigger(bufnr)
+  end
+
+  logger.trace("auto trigger toggled to " .. tostring(new_state))
 end
 
 local function on_insert_leave()

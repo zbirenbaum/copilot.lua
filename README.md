@@ -133,7 +133,7 @@ require('copilot').setup({
     enabled = true,
     auto_trigger = false,
     hide_during_completion = true,
-    debounce = 75,
+    debounce = 15,
     trigger_on_accept = true,
     keymap = {
       accept = "<M-l>",
@@ -142,6 +142,7 @@ require('copilot').setup({
       next = "<M-]>",
       prev = "<M-[>",
       dismiss = "<C-]>",
+      toggle_auto_trigger = false,
     },
   },
   nes = {
