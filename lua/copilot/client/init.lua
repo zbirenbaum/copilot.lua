@@ -26,8 +26,9 @@ local M = {
 ---@param id integer
 local function store_client_id(id)
   if M.id and M.id ~= id then
-    if vim.lsp.get_client_by_id(M.id) then
-      vim.lsp.stop_client(M.id)
+    local client = vim.lsp.get_client_by_id(M.id)
+    if client then
+      client:stop()
     end
   end
 
@@ -240,8 +241,9 @@ function M.teardown()
     vim.api.nvim_clear_autocmds({ group = M.augroup })
   end
 
-  if M.id then
-    vim.lsp.stop_client(M.id)
+  local client = vim.lsp.get_client_by_id(M.id)
+  if client then
+    client:stop()
   end
 end
 
