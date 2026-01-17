@@ -11,6 +11,12 @@
             "description": "Detects and fixes security vulnerabilities (CVEs) in project dependencies across any ecosystem while maintaining a working build.",
             "path": "./assets/agents/CVE_Remediator.agent.md",
             "showAsChatMode": false
+        },
+        {
+            "name": "Debugger",
+            "description": "An expert debugging assistant that helps solve complex issues by actively using Java debugging capabilities",
+            "path": "./assets/agents/Debugger.agent.md",
+            "showAsChatMode": true
         }
     ]
 }
