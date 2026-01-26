@@ -1,6 +1,7 @@
 local completion_store = {
-  [""] = { "auth", "attach", "detach", "disable", "enable", "panel", "status", "suggestion", "toggle", "version" },
+  [""] = { "auth", "attach", "detach", "disable", "enable", "model", "panel", "status", "suggestion", "toggle", "version" },
   auth = { "signin", "signout", "info" },
+  model = { "select", "list", "get", "set" },
   panel = { "accept", "jump_next", "jump_prev", "open", "refresh", "toggle", "close", "is_open" },
   suggestion = {
     "accept",
@@ -34,6 +35,8 @@ vim.api.nvim_create_user_command("Copilot", function(opts)
   if not action_name then
     if mod_name == "auth" then
       action_name = "signin"
+    elseif mod_name == "model" then
+      action_name = "get"
     elseif mod_name == "panel" then
       action_name = "open"
     elseif mod_name == "suggestion" then
