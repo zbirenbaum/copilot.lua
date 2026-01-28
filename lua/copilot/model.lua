@@ -66,7 +66,7 @@ end
 --- Interactive model selection using vim.ui.select
 ---@param opts? { force?: boolean, args?: string }
 function M.select(opts)
-  opts = opts or {}
+  _ = opts or {}
 
   local client = c.get()
   if not client then
@@ -140,7 +140,7 @@ end
 --- List available completion models
 ---@param opts? { force?: boolean, args?: string }
 function M.list(opts)
-  opts = opts or {}
+  _ = opts or {}
 
   local client = c.get()
   if not client then
@@ -184,7 +184,7 @@ end
 --- Show the current model
 ---@param opts? { force?: boolean, args?: string }
 function M.get(opts)
-  opts = opts or {}
+  _ = opts or {}
 
   local current = M.get_current_model()
   if current == "" then
