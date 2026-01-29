@@ -65,9 +65,7 @@ end
 
 --- Interactive model selection using vim.ui.select
 ---@param opts? { force?: boolean, args?: string }
-function M.select(opts)
-  _ = opts or {}
-
+function M.select(opts) -- luacheck: ignore opts
   local client = c.get()
   if not client then
     logger.notify("Copilot client not running")
@@ -139,9 +137,7 @@ end
 
 --- List available completion models
 ---@param opts? { force?: boolean, args?: string }
-function M.list(opts)
-  _ = opts or {}
-
+function M.list(opts) -- luacheck: ignore opts
   local client = c.get()
   if not client then
     logger.notify("Copilot client not running")
@@ -183,9 +179,7 @@ end
 
 --- Show the current model
 ---@param opts? { force?: boolean, args?: string }
-function M.get(opts)
-  _ = opts or {}
-
+function M.get(opts) -- luacheck: ignore opts
   local current = M.get_current_model()
   if current == "" then
     logger.notify("No model configured (using server default)")
