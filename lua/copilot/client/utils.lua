@@ -29,7 +29,9 @@ function M.get_workspace_configurations()
     filetypes = vim.tbl_deep_extend("keep", filetypes, client_ft.internal_filetypes)
   end
 
-  local copilot_model = config and config.copilot_model ~= "" and config.copilot_model or ""
+  -- Use model module to get the current model (supports runtime override)
+  local model = require("copilot.model")
+  local copilot_model = model.get_current_model()
 
   ---@type string[]
   local disabled_filetypes = vim.tbl_filter(function(ft)
