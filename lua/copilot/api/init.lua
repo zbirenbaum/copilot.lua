@@ -154,4 +154,14 @@ end
 ---@alias copilot_window_show_document { uri: string, external?: boolean, takeFocus?: boolean, selection?: boolean }
 ---@alias copilot_window_show_document_result { success: boolean }
 
+---@alias copilot_model { id: string, modelName: string, scopes: string[], preview?: boolean, default?: boolean }
+---@alias copilot_models_data copilot_model[]
+
+---@return any|nil err
+---@return copilot_models_data data
+---@return table ctx
+function M.get_models(client, callback)
+  return M.request(client, "copilot/models", {}, callback)
+end
+
 return M

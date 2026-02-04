@@ -124,6 +124,11 @@ function M.prepare_client_config(overrides, client)
         end
 
         require("copilot.nes").setup(lsp_client)
+
+        -- Validate configured model on startup
+        if config.copilot_model and config.copilot_model ~= "" then
+          require("copilot.model").validate_current()
+        end
       end)
     end,
     on_exit = function(code, _, client_id)
