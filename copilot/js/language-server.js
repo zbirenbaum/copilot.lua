@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const minMajor = 22;
-const minMinor = 0;
+const minMinor = 13;
 
 function main() {
     const argv = process.argv.slice(2);
