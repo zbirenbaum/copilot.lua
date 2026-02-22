@@ -356,4 +356,56 @@ T["client()"]["saving file - will not yield URI not found error"] = function()
   u.expect_no_match(messages, "RPC.*Document for URI could not be found")
 end
 
+T["client()"]["disabled copilot does not spam warnings on buffer enter"] = function()
+  -- Override lsp.setup to return false, simulating a failed initialization
+  -- (e.g. Node.js not found or wrong version). This sets is_disabled=true
+  -- in client.setup() but suggestion autocmds are still created.
+  child.lua([[
+    local lsp = require("copilot.lsp")
+    lsp.setup = function(_, _)
+      return false
+    end
+  ]])
+
+  -- Intercept vim.notify to count "copilot is disabled" warnings
+  child.lua([[
+    _G.disabled_warning_count = 0
+    local original_notify = vim.notify
+    vim.notify = function(msg, level, opts)
+      if type(msg) == "string" and msg:find("copilot is disabled") then
+        _G.disabled_warning_count = _G.disabled_warning_count + 1
+      end
+      return original_notify(msg, level, opts)
+    end
+  ]])
+
+  -- Setup copilot with auto_trigger - client will be disabled but suggestion
+  -- autocmds are still created, causing buf_attach to be called on every
+  -- insert mode action
+  child.lua([[
+    M.setup({
+      suggestion = { auto_trigger = true },
+      filetypes = { ["*"] = true },
+    })
+  ]])
+
+  -- Trigger multiple insert mode entries across buffers.
+  -- Each InsertEnter and CursorMovedI fires the suggestion autocmd,
+  -- which calls buf_attach, which warns when client is disabled.
+  child.type_keys("i", "abc", "<Esc>")
+  child.cmd("e tests/files/file1.txt")
+  child.type_keys("i", "def", "<Esc>")
+  child.cmd("e tests/files/file2.txt")
+  child.type_keys("i", "ghi", "<Esc>")
+
+  -- Allow scheduled vim.notify calls to execute
+  child.lua("vim.wait(500, function() return false end, 50)")
+
+  local count = child.lua("return _G.disabled_warning_count")
+
+  -- The warning should appear at most once, not on every insert mode action.
+  -- See: https://github.com/zbirenbaum/copilot.lua/issues/629
+  MiniTest.expect.equality(count, 0)
+end
+
 return T

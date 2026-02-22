@@ -73,7 +73,7 @@ function M.buf_attach(force, bufnr)
   end
 
   if is_disabled then
-    logger.warn("copilot is disabled")
+    logger.debug("copilot is disabled")
     return
   end
 
@@ -142,7 +142,7 @@ function M.ensure_client_started()
   end
 
   if is_disabled then
-    logger.notify("copilot is offline")
+    logger.debug("copilot is offline")
     return
   end
 
