@@ -23,6 +23,7 @@ As lua is far more efficient and makes things easier to integrate with modern pl
 - [Setup and Configuration](#setup-and-configuration)
   - [panel](#panel)
   - [suggestion](#suggestion)
+  - [Highlight Groups](#highlight-groups)
   - [filetypes](#filetypes)
   - [logger](#logger)
   - [copilot_node_command](#copilot_node_command)
@@ -78,6 +79,33 @@ Tokens given by `gh auth token` do not support Copilot, you therefore need to fi
 
 Set either the environment variable `GITHUB_COPILOT_TOKEN` or `GH_COPILOT_TOKEN` to that token.
 Note that if you have the variable set, even empty, the LSP will attempt to use it to log in.
+
+</details>
+
+<details>
+<summary>Sign out / Switch accounts</summary>
+
+To sign out of your current GitHub account:
+
+```
+:Copilot auth signout
+```
+
+To sign in with a different account:
+
+```
+:Copilot auth signin
+```
+
+To view your current authentication token information:
+
+```
+:Copilot auth info
+```
+
+Credentials are stored in:
+- **Linux/macOS:** `~/.config/github-copilot/apps.json` (or `$XDG_CONFIG_HOME/github-copilot/apps.json`)
+- **Windows:** `~/AppData/Local/github-copilot/apps.json`
 
 </details>
 
@@ -279,6 +307,26 @@ require("copilot.suggestion").toggle_auto_trigger()
 ```
 These can also be accessed through the `:Copilot suggestion <function>` command (eg. `:Copilot suggestion accept`).
 
+### Highlight Groups
+
+Copilot uses two highlight groups to style its suggestions:
+
+| Highlight Group | Used For | Default Link |
+|---|---|---|
+| `CopilotSuggestion` | Inline ghost text suggestions | `Comment` |
+| `CopilotAnnotation` | Annotations in the panel and inline suggestions | `Comment` |
+
+If these highlight groups are not defined by your colorscheme, they will default to linking to `Comment`. To customize them, set the highlights **after** your colorscheme loads, or use a `ColorScheme` autocmd:
+
+```lua
+vim.api.nvim_create_autocmd("ColorScheme", {
+  callback = function()
+    vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#83a598", italic = true })
+    vim.api.nvim_set_hl(0, "CopilotAnnotation", { fg = "#83a598" })
+  end,
+})
+```
+
 ### nes (next edit suggestion)
 
 >[!WARNING]
@@ -395,9 +443,10 @@ copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v22
 
 ### server_opts_overrides
 
-Override copilot lsp client settings. The `settings` field is where you can set the values of the options defined in [SettingsOpts.md](./SettingsOpts.md).
-These options are specific to the copilot lsp and can be used to customize its behavior. Ensure that the name field is not overridden as is is used for
-efficiency reasons in numerous checks to verify copilot is actually running. See `:h vim.lsp.start` for list of options.
+Override copilot lsp client settings. See `:h vim.lsp.start` for the list of options.
+Ensure that the `name` field is not overridden as it is used for efficiency reasons in numerous checks to verify copilot is actually running.
+
+The `settings` field is where you can customize the copilot lsp behavior. See [SettingsOpts.md](./SettingsOpts.md) for the full list of available settings and their keys.
 
 Example:
 
@@ -414,6 +463,10 @@ require("copilot").setup {
   }
 }
 ```
+
+> [!NOTE]
+> The `settings` values follow a nested table structure matching the keys in [SettingsOpts.md](./SettingsOpts.md).
+> For example, `InlineSuggestCount: ["advanced", "inlineSuggestCount"]` becomes `settings = { advanced = { inlineSuggestCount = 3 } }`.
 
 ### workspace_folders
 
