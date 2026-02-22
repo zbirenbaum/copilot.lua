@@ -280,6 +280,8 @@ T["suggestion()"]["suggestion with range offset"] = function()
   child.wait_for_suggestion()
 
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
+end
+
 T["suggestion()"]["is_visible returns nil after accept"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"

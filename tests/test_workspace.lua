@@ -66,7 +66,8 @@ end
 T["workspace()"]["utils.add_workspace_folder accepts valid directory"] = function()
   local result = child.lua([[
     local utils = require("copilot.workspace.utils")
-    return utils.add_workspace_folder("/tmp")
+    local tmpdir = vim.uv.os_tmpdir()
+    return utils.add_workspace_folder(tmpdir)
   ]])
   eq(result, true)
 end
@@ -76,8 +77,9 @@ T["workspace()"]["utils.add_workspace_folder detects duplicates"] = function()
     local utils = require("copilot.workspace.utils")
     local config = require("copilot.config")
     config.workspace_folders = nil
-    local first = utils.add_workspace_folder("/tmp")
-    local second = utils.add_workspace_folder("/tmp")
+    local tmpdir = vim.uv.os_tmpdir()
+    local first = utils.add_workspace_folder(tmpdir)
+    local second = utils.add_workspace_folder(tmpdir)
     local folder_count = #config.workspace_folders
     return { first = first, second = second, folder_count = folder_count }
   ]])
