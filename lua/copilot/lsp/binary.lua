@@ -87,7 +87,7 @@ end
 local function download_file(url, local_server_zip_filepath, local_server_zip_path)
   logger.notify("current version of copilot-language-server is not downloaded, downloading")
 
-  if (vim.fn.executable("curl") ~= 1) and (vim.fn.executable("wget") == 1) then
+  if (vim.fn.executable("curl") ~= 1) and (vim.fn.executable("wget") ~= 1) then
     logger.error("neither curl nor wget is available, please make sure one of them is installed")
     M.initialization_failed = true
     return false
@@ -262,9 +262,9 @@ function M.get_server_info(client)
   local copilot_server_info = M.get_copilot_server_info()
 
   if client then
-    return copilot_server_info.path .. "/" .. copilot_server_info().filename
+    return copilot_server_info.path .. "/" .. copilot_server_info.filename
   else
-    return copilot_server_info.path .. "/" .. copilot_server_info().filename .. " " .. "not running"
+    return copilot_server_info.path .. "/" .. copilot_server_info.filename .. " " .. "not running"
   end
 end
 
