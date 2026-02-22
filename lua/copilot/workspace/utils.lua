@@ -34,7 +34,7 @@ function M.add_workspace_folder(folder_path)
     end
   end
 
-  table.insert(workspace_folders, { folder_path })
+  table.insert(workspace_folders, folder_path)
   config.workspace_folders = workspace_folders
 
   local client = c.get()
