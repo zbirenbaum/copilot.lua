@@ -29,4 +29,28 @@ T["suggestion_utils()"]["remove common suffix"] = function()
   end
 end
 
+T["suggestion_utils()"]["both empty strings returns empty"] = function()
+  eq(u.remove_common_suffix("", ""), "")
+end
+
+T["suggestion_utils()"]["no common suffix returns suggestion unchanged"] = function()
+  eq(u.remove_common_suffix("abc", "xyz"), "xyz")
+end
+
+T["suggestion_utils()"]["single char match"] = function()
+  eq(u.remove_common_suffix("a", "a"), "")
+end
+
+T["suggestion_utils()"]["single char differ"] = function()
+  eq(u.remove_common_suffix("a", "b"), "b")
+end
+
+T["suggestion_utils()"]["entire suggestion is suffix of str"] = function()
+  eq(u.remove_common_suffix("hello world", "world"), "")
+end
+
+T["suggestion_utils()"]["suggestion longer than str with common suffix"] = function()
+  eq(u.remove_common_suffix("ld", "hello world"), "hello wor")
+end
+
 return T

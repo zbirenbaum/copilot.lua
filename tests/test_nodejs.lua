@@ -97,6 +97,37 @@ T["get_node_version()"]["validates node version requirement"] = function()
   eq(captured_args, { "node", "--version" })
 end
 
+T["get_node_version()"]["version exactly at boundary v22.0.0"] = function()
+  local captured_args = stub.process("v22.0.0", 0, false, function()
+    stub.nodejs.setup("node")
+    local version, error = stub.nodejs.get_node_version()
+    eq(version, "22.0.0")
+    eq(error, nil)
+  end)
+  eq(captured_args, { "node", "--version" })
+end
+
+T["get_node_version()"]["version with pre-release suffix"] = function()
+  local captured_args = stub.process("v22.0.0-pre", 0, false, function()
+    stub.nodejs.setup("node")
+    local version, error = stub.nodejs.get_node_version()
+    eq(version, "22.0.0-pre")
+    eq(error, nil)
+  end)
+  eq(captured_args, { "node", "--version" })
+end
+
+T["get_node_version()"]["very old node version below minimum"] = function()
+  stub.process("v14.0.0", 0, false, function()
+    stub.nodejs.setup("node")
+    local _, error = stub.nodejs.get_node_version()
+    error = error or ""
+    eq(error:find("Node.js version 22 or newer required") ~= nil, true)
+    -- Error should mention the actual version found
+    eq(error:find("14.0.0") ~= nil, true)
+  end)
+end
+
 T["get_execute_command()"] = MiniTest.new_set()
 
 T["get_execute_command()"]["default node command v22, default server path"] = function()
