@@ -184,7 +184,7 @@ local function on_buf_enter(bufnr)
     -- This is to handle the case where the filetype changes after the buffer is already attached,
     -- causing the LSP to raise an error
     local previous_ft = util.get_buffer_previous_ft(bufnr)
-    if previous_ft and (previous_ft ~= vim.bo[bufnr].filetype) then
+    if previous_ft and vim.bo[bufnr].buflisted and (previous_ft ~= vim.bo[bufnr].filetype) then
       logger.trace("filetype changed, detaching and re-attaching")
       M.buf_detach_if_attached(bufnr)
     end
