@@ -47,9 +47,15 @@ function M.check()
 
   local client = c.get()
   if not client then
-    error("Copilot LSP client not available")
-    info("Check that the plugin is properly loaded and configured")
-    info("Or restart Neovim if the plugin was just installed")
+    if c.is_disabled() then
+      error("Copilot is disabled")
+      info("Check Node.js installation (version 22+ required)")
+      info("Run `:messages` for details or check the log file")
+    else
+      error("Copilot LSP client not available")
+      info("Check that the plugin is properly loaded and configured")
+      info("Or restart Neovim if the plugin was just installed")
+    end
     return
   end
 
