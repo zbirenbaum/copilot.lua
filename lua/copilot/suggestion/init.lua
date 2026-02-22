@@ -653,8 +653,6 @@ function M.accept(modifier)
   vim.schedule_wrap(function()
     -- Create an undo breakpoint
     vim.cmd("let &undolevels=&undolevels")
-    -- Hack for 'autoindent', makes the indent persist. Check `:help 'autoindent'`.
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true), "n", false)
     local bufnr = vim.api.nvim_get_current_buf()
 
     -- only utf encodings are supported
