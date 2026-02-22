@@ -170,6 +170,49 @@ function M.server()
           { client_id = 1, method = "statusNotification" }
         )
       end, 10)
+    elseif method == "copilot/models" then
+      vim.defer_fn(function()
+        handler(nil, {
+          {
+            id = "gpt-4o",
+            modelName = "GPT 4o",
+            scopes = { "completion", "panel" },
+            default = true,
+          },
+          {
+            id = "gpt-4o-mini",
+            modelName = "GPT 4o Mini",
+            scopes = { "completion" },
+          },
+          {
+            id = "claude-sonnet",
+            modelName = "Claude Sonnet",
+            scopes = { "chat" },
+            preview = true,
+          },
+        })
+      end, 10)
+    elseif method == "signInInitiate" then
+      vim.defer_fn(function()
+        handler(nil, { verificationUri = "https://github.com/login/device", userCode = "ABCD-1234" })
+      end, 10)
+    elseif method == "signInConfirm" then
+      vim.defer_fn(function()
+        handler(nil, { status = "OK", user = "testuser" })
+      end, 10)
+    elseif method == "signOut" then
+      vim.defer_fn(function()
+        handler(nil, {})
+      end, 10)
+    elseif method == "getVersion" then
+      vim.defer_fn(function()
+        handler(nil, { version = "1.430.0" })
+      end, 10)
+    elseif method == "getCompletionsCycling" then
+      local response = get_lsp_responses(params.textDocument)
+      vim.defer_fn(function()
+        handler(nil, response)
+      end, 10)
     elseif method == "notifyAccepted" or method == "notifyRejected" or method == "notifyShown" then
       handler(nil, {})
     elseif method == "getPanelCompletions" then

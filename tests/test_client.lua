@@ -356,6 +356,34 @@ T["client()"]["saving file - will not yield URI not found error"] = function()
   u.expect_no_match(messages, "RPC.*Document for URI could not be found")
 end
 
+T["client()"]["should_attach returns false prevents buffer attachment"] = function()
+  child.config.should_attach = [[function(bufnr, bufname)
+    return false
+  end]]
+  child.configure_copilot()
+  child.cmd("e test.txt")
+  child.type_keys("i", "<Esc>")
+  child.cmd("Copilot status")
+
+  local messages = child.lua([[
+    local messages = ""
+    local function has_passed()
+      messages = vim.api.nvim_exec("messages", { output = true }) or ""
+      if messages:find(".*Online.*") then
+        return true
+      end
+    end
+
+    vim.wait(500, function()
+      return has_passed()
+    end, 50)
+
+    return messages
+  ]])
+
+  u.expect_match(messages, ".*Online.*should_attach.*")
+end
+
 T["client()"]["disabled copilot does not spam warnings on buffer enter"] = function()
   -- Override lsp.setup to return false, simulating a failed initialization
   -- (e.g. Node.js not found or wrong version). This sets is_disabled=true
