@@ -507,6 +507,10 @@ end
 
 ---@param bufnr? integer
 local function request_suggestion(bufnr)
+  if c.is_disabled() then
+    return
+  end
+
   logger.trace("suggestion request")
   c.buf_attach(false, bufnr)
   schedule(bufnr)
