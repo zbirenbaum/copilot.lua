@@ -62,4 +62,28 @@ T["command()"]["panel is_open - is closed - returns false"] = function()
   u.expect_match(is_open, "false")
 end
 
+T["command()"]["toggle command works"] = function()
+  child.configure_copilot()
+  child.cmd("Copilot toggle")
+  local messages = child.cmd_capture("messages")
+  -- Toggle should not produce vim errors
+  u.expect_no_match(messages, "E%d+")
+end
+
+T["command()"]["enable and disable commands work"] = function()
+  child.configure_copilot()
+  child.cmd("Copilot disable")
+  child.cmd("Copilot enable")
+  local messages = child.cmd_capture("messages")
+  u.expect_no_match(messages, "E%d+")
+end
+
+T["command()"]["invalid subcommand does not error"] = function()
+  child.configure_copilot()
+  -- Invalid subcommands silently return (mod[action_name] is nil)
+  child.cmd("Copilot nonexistent_command")
+  local messages = child.cmd_capture("messages")
+  u.expect_no_match(messages, "E%d+")
+end
+
 return T
