@@ -305,4 +305,37 @@ T["suggestion()"]["next keymap triggers suggestion"] = function()
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 49, 50 }, ignore_attr = { 49, 50 } })
 end
 
+T["suggestion()"]["accept does not use feedkeys autoindent hack"] = function()
+  child.o.lines, child.o.columns = 10, 15
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
+  child.configure_copilot()
+
+  -- Intercept nvim_feedkeys to detect the autoindent hack
+  child.lua([[
+    _G.feedkeys_calls = {}
+    local original_feedkeys = vim.api.nvim_feedkeys
+    vim.api.nvim_feedkeys = function(keys, mode, escape_ks)
+      table.insert(_G.feedkeys_calls, keys)
+      return original_feedkeys(keys, mode, escape_ks)
+    end
+  ]])
+
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
+  child.wait_for_suggestion()
+  child.lua('require("copilot.suggestion").accept()')
+  child.lua("vim.wait(200, function() return false end, 10)")
+
+  -- Check that no feedkeys call contains the Space-Left-Del pattern
+  local has_hack = child.lua([[
+    local space_left_del = vim.api.nvim_replace_termcodes("<Space><Left><Del>", true, false, true)
+    for _, keys in ipairs(_G.feedkeys_calls) do
+      if keys == space_left_del then
+        return true
+      end
+    end
+    return false
+  ]])
+  MiniTest.expect.equality(has_hack, false)
+end
+
 return T
