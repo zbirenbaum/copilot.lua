@@ -436,4 +436,47 @@ T["client()"]["disabled copilot does not spam warnings on buffer enter"] = funct
   MiniTest.expect.equality(count, 0)
 end
 
+T["client()"]["on_buf_enter skips filetype check for non-buflisted buffers"] = function()
+  child.configure_copilot()
+
+  -- Create a non-buflisted buffer with a filetype mismatch and trigger BufEnter.
+  -- This simulates floating windows / preview buffers that should not trigger
+  -- the filetype-change detach+re-attach cycle.
+  child.lua([[
+    local util = require("copilot.util")
+
+    local buf = vim.api.nvim_create_buf(false, true)  -- nobuflisted, scratch
+    vim.api.nvim_set_option_value("filetype", "lua", { buf = buf })
+
+    -- Manually set previous_ft to simulate a buffer that was previously attached.
+    -- buf_attach won't succeed for non-buflisted buffers (should_attach rejects them),
+    -- so previous_ft wouldn't normally be set. In the real bug scenario, this state
+    -- can be reached through various pathways.
+    util.set_buffer_previous_ft(buf, "lua")
+
+    -- Change filetype on same non-buflisted buffer
+    vim.api.nvim_set_option_value("filetype", "python", { buf = buf })
+
+    -- Trigger BufEnter (simulating entering the buffer)
+    vim.api.nvim_exec_autocmds("BufEnter", { buffer = buf })
+
+    -- Wait for scheduled callbacks to execute
+    vim.wait(200, function() return false end, 10)
+  ]])
+
+  -- The filetype change should NOT cause detach+re-attach for non-buflisted buffers
+  local detach_was_called = child.lua([[
+    local log_content = ""
+    local logfile = io.open("./tests/logs/test_client.log", "r")
+    if logfile then
+      log_content = logfile:read("*a")
+      logfile:close()
+    end
+    -- If the guard works, we should NOT see "filetype changed" for non-buflisted buffers
+    return log_content:find("filetype changed, detaching and re%-attaching") ~= nil
+  ]])
+
+  MiniTest.expect.equality(detach_was_called, false)
+end
+
 return T
