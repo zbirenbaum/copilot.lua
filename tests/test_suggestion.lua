@@ -260,6 +260,23 @@ T["suggestion()"]["is_visible works"] = function()
   assert(is_visible, "is_visible should be true")
 end
 
+T["suggestion()"]["is_visible returns nil after accept"] = function()
+  child.o.lines, child.o.columns = 10, 15
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
+  child.configure_copilot()
+  child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
+  child.wait_for_suggestion()
+  local is_visible_before = child.lua('return require("copilot.suggestion").is_visible()')
+  assert(is_visible_before, "is_visible should be true before accept")
+
+  child.lua('require("copilot.suggestion").accept()')
+  -- Allow scheduled functions to complete
+  child.lua("vim.wait(200, function() return false end, 10)")
+
+  local is_visible_after = child.lua('return require("copilot.suggestion").is_visible()')
+  MiniTest.expect.equality(is_visible_after, vim.NIL)
+end
+
 T["suggestion()"]["next keymap triggers suggestion"] = function()
   child.configure_copilot()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")
