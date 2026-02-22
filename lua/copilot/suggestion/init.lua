@@ -635,10 +635,11 @@ function M.accept(modifier)
 
   local newText
 
+  ignore_next_cursor_moved = true
+
   if accepted_partial then
     newText = suggestion.partial_text
     ctx.accepted_partial = true
-    ignore_next_cursor_moved = true
   else
     M.clear_preview()
     newText = suggestion.text
