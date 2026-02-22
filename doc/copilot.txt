@@ -26,6 +26,7 @@ TABLE OF CONTENTS                      *copilot-copilot.lua-table-of-contents*
 - |copilot-setup-and-configuration|
     - |copilot-panel|
     - |copilot-suggestion|
+    - |copilot-highlight-groups|
     - |copilot-filetypes|
     - |copilot-logger|
     - |copilot-copilot_node_command|
@@ -81,6 +82,31 @@ first generate a token through the LSP by:
 Set either the environment variable `GITHUB_COPILOT_TOKEN` or
 `GH_COPILOT_TOKEN` to that token. Note that if you have the variable set, even
 empty, the LSP will attempt to use it to log in.
+
+Sign out / Switch accounts ~
+
+To sign out of your current GitHub account:
+
+>
+    :Copilot auth signout
+<
+
+To sign in with a different account:
+
+>
+    :Copilot auth signin
+<
+
+To view your current authentication token information:
+
+>
+    :Copilot auth info
+<
+
+Credentials are stored in: - **Linux/macOS:**
+`~/.config/github-copilot/apps.json` (or
+`$XDG_CONFIG_HOME/github-copilot/apps.json`) - **Windows:**
+`~/AppData/Local/github-copilot/apps.json`
 
 
 AUTHENTICATION WITH ALTERNATE GITHUB INSTANCES
@@ -283,6 +309,34 @@ These can also be accessed through the `:Copilot suggestion <function>` command
 (eg. `:Copilot suggestion accept`).
 
 
+HIGHLIGHT GROUPS ~
+
+Copilot uses two highlight groups to style its suggestions:
+
+  -----------------------------------------------------------------------
+  Highlight Group         Used For                Default Link
+  ----------------------- ----------------------- -----------------------
+  CopilotSuggestion       Inline ghost text       Comment
+                          suggestions             
+
+  CopilotAnnotation       Annotations in the      Comment
+                          panel and inline        
+                          suggestions             
+  -----------------------------------------------------------------------
+If these highlight groups are not defined by your colorscheme, they will
+default to linking to `Comment`. To customize them, set the highlights
+**after** your colorscheme loads, or use a `ColorScheme` autocmd:
+
+>lua
+    vim.api.nvim_create_autocmd("ColorScheme", {
+      callback = function()
+        vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#83a598", italic = true })
+        vim.api.nvim_set_hl(0, "CopilotAnnotation", { fg = "#83a598" })
+      end,
+    })
+<
+
+
 NES (NEXT EDIT SUGGESTION) ~
 
 
@@ -414,12 +468,13 @@ Example:
 
 SERVER_OPTS_OVERRIDES ~
 
-Override copilot lsp client settings. The `settings` field is where you can set
-the values of the options defined in SettingsOpts.md <./SettingsOpts.md>. These
-options are specific to the copilot lsp and can be used to customize its
-behavior. Ensure that the name field is not overridden as is is used for
+Override copilot lsp client settings. See |vim.lsp.start| for the list of
+options. Ensure that the `name` field is not overridden as it is used for
 efficiency reasons in numerous checks to verify copilot is actually running.
-See |vim.lsp.start| for list of options.
+
+The `settings` field is where you can customize the copilot lsp behavior. See
+SettingsOpts.md <./SettingsOpts.md> for the full list of available settings and
+their keys.
 
 Example:
 
@@ -437,6 +492,11 @@ Example:
     }
 <
 
+
+  [!NOTE] The `settings` values follow a nested table structure matching the keys
+  in SettingsOpts.md <./SettingsOpts.md>. For example, `InlineSuggestCount:
+  ["advanced", "inlineSuggestCount"]` becomes `settings = { advanced = {
+  inlineSuggestCount = 3 } }`.
 
 WORKSPACE_FOLDERS ~
 
