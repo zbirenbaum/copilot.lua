@@ -102,7 +102,9 @@ function M.buf_attach(force, bufnr)
   end
 
   vim.lsp.buf_attach_client(bufnr, M.id)
-  require("copilot.suggestion").set_keymap(bufnr)
+  if require("copilot.auth").is_gate_passed() then
+    require("copilot.suggestion").set_keymap(bufnr)
+  end
   require("copilot.nes").set_keymap(bufnr)
 
   util.set_buffer_previous_ft(bufnr, vim.bo[bufnr].filetype)

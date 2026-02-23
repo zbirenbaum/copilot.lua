@@ -24,6 +24,15 @@ function M.pass_gate()
   gate_passed = true
   require("copilot.suggestion").setup()
   require("copilot.panel").setup()
+
+  -- Set suggestion keymaps on buffers that were attached before auth passed
+  local client = c.get()
+  if client then
+    local suggestion = require("copilot.suggestion")
+    for _, bufnr in ipairs(vim.lsp.get_buffers_by_client_id(client.id)) do
+      suggestion.set_keymap(bufnr)
+    end
+  end
 end
 
 ---@return boolean
