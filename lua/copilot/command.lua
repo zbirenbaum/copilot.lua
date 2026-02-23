@@ -72,15 +72,12 @@ end
 function M.enable()
   logger.trace("enabling Copilot")
   c.setup()
-  require("copilot.panel").setup()
-  require("copilot.suggestion").setup()
 end
 
 function M.disable()
   logger.trace("disabling Copilot")
   c.teardown()
-  require("copilot.panel").teardown()
-  require("copilot.suggestion").teardown()
+  require("copilot.auth").reset_gate()
 end
 
 return M

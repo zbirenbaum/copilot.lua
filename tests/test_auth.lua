@@ -73,8 +73,7 @@ T["auth()"]["auth issue replication"] = function()
 end
 
 T["auth()"]["is_authenticated when not authed returns false"] = function()
-  child.configure_copilot()
-
+  -- Test before client is initialized (no configure_copilot call)
   local result = child.lua([[
     local auth = require("copilot.auth")
     local auth_result = auth.is_authenticated()

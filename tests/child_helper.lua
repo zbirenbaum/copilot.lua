@@ -120,6 +120,12 @@ function M.new_child_neovim(test_name)
       end
 
       vim.wait(5000, copilot_is_initialized, 10)
+
+      local auth_gate_passed = function()
+        return require("copilot.auth").is_gate_passed()
+      end
+
+      vim.wait(5000, auth_gate_passed, 10)
     ]])
   end
 

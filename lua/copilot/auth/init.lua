@@ -8,6 +8,52 @@ local function echo(message)
   vim.cmd('echom "[Copilot] ' .. tostring(message):gsub('"', '\\"') .. '"')
 end
 
+---@class copilot_auth_cache
+---@field authenticated boolean|nil
+---@field timestamp number
+
+---@type copilot_auth_cache
+local auth_cache = {
+  authenticated = nil,
+  timestamp = 0,
+}
+
+local gate_passed = false
+
+function M.pass_gate()
+  gate_passed = true
+  require("copilot.suggestion").setup()
+  require("copilot.panel").setup()
+end
+
+---@return boolean
+function M.is_gate_passed()
+  return gate_passed
+end
+
+function M.reset_gate()
+  gate_passed = false
+  require("copilot.suggestion").teardown()
+  require("copilot.panel").teardown()
+end
+
+---@param lsp_client vim.lsp.Client
+function M.check_and_gate(lsp_client)
+  local check = coroutine.wrap(function()
+    local err, status = api.check_status(lsp_client)
+    if not err and status and status.user then
+      auth_cache.authenticated = true
+      auth_cache.timestamp = vim.loop.now()
+      M.pass_gate()
+    elseif err then
+      logger.error("auth gate check failed: " .. tostring(err))
+    else
+      logger.debug("auth gate: user not authenticated")
+    end
+  end)
+  check()
+end
+
 function M.setup(client)
   local function copy_to_clipboard(str)
     vim.cmd(string.format(
@@ -64,6 +110,9 @@ function M.setup(client)
 
     if status.user then
       echo("Authenticated as GitHub user: " .. status.user)
+      auth_cache.authenticated = true
+      auth_cache.timestamp = vim.loop.now()
+      M.pass_gate()
       return
     end
 
@@ -97,12 +146,18 @@ function M.setup(client)
     end
 
     echo("Authenticated as GitHub user: " .. confirm.user)
+    auth_cache.authenticated = true
+    auth_cache.timestamp = vim.loop.now()
+    M.pass_gate()
   end)
 
   initiate_setup()
 end
 
 function M.signin()
+  M.reset_gate()
+  auth_cache.authenticated = nil
+  auth_cache.timestamp = 0
   c.use_client(function(client)
     M.setup(client)
   end)
@@ -126,7 +181,11 @@ function M.signout()
           echo("Not signed in")
         end
 
-        api.sign_out(client, function() end)
+        api.sign_out(client, function()
+          auth_cache.authenticated = nil
+          auth_cache.timestamp = 0
+          M.reset_gate()
+        end)
       end
     )
   end)
@@ -181,16 +240,6 @@ function M.info()
 
   logger.notify("GitHub Copilot token information: ", info)
 end
-
----@class copilot_auth_cache
----@field authenticated boolean|nil
----@field timestamp number
-
----@type copilot_auth_cache
-local auth_cache = {
-  authenticated = nil,
-  timestamp = 0,
-}
 
 ---@param authenticated boolean
 ---@return number

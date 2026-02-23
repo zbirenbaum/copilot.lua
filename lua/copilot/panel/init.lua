@@ -522,6 +522,11 @@ end
 ---position: (optional) 'bottom' | 'top' | 'left' | 'right' | 'horizontal' | 'vertical'
 ---ratio: (optional) between 0 and 1
 function M.open(layout)
+  if not require("copilot.auth").is_gate_passed() then
+    logger.error("not authenticated. Run ':Copilot auth' to sign in")
+    return
+  end
+
   local client = c.get()
   if not client then
     logger.error("copilot is not running")

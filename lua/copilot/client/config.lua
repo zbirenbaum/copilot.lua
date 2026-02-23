@@ -121,6 +121,8 @@ function M.prepare_client_config(overrides, client)
 
         if token_env_set then
           require("copilot.auth").signin()
+        else
+          require("copilot.auth").check_and_gate(lsp_client)
         end
 
         require("copilot.nes").setup(lsp_client)
@@ -134,6 +136,7 @@ function M.prepare_client_config(overrides, client)
     on_exit = function(code, _, client_id)
       if client.id == client_id then
         vim.schedule(function()
+          require("copilot.auth").reset_gate()
           client.teardown()
           client.id = nil
           client.capabilities = nil
