@@ -471,6 +471,10 @@ end
 
 ---@param bufnr? integer
 local function schedule(bufnr)
+  if not auth.is_gate_passed() then
+    return
+  end
+
   local function is_authenticated()
     return auth.is_authenticated(function(err)
       if err then

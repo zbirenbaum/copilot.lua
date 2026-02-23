@@ -268,7 +268,7 @@ local function check_status(client, callback)
 
     if not err and status and status.user then
       auth_cache.authenticated = true
-    elseif not err then
+    else
       auth_cache.authenticated = false
     end
 
