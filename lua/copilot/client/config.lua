@@ -66,6 +66,9 @@ function M.prepare_client_config(overrides, client)
     telemetry = { ---@type github_settings_telemetry
       telemetryLevel = "all",
     },
+    advanced = {
+      timeout = 30000, -- 30 seconds instead of indefinite
+    },
   }
 
   if proxy_uri then
