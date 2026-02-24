@@ -260,6 +260,28 @@ T["suggestion()"]["is_visible works"] = function()
   assert(is_visible, "is_visible should be true")
 end
 
+T["suggestion()"]["suggestion with indentation mismatch"] = function()
+  child.o.lines, child.o.columns = 10, 20
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
+  child.cmd("e indented_suggestion.txt")
+  child.configure_copilot()
+  child.type_keys("idef foo():", "<Esc>", "o    ")
+  child.wait_for_suggestion()
+
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
+end
+
+T["suggestion()"]["suggestion with range offset"] = function()
+  child.o.lines, child.o.columns = 10, 20
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
+  child.cmd("e range_offset.txt")
+  child.configure_copilot()
+  child.type_keys("idef bar():", "<Esc>", "o  i")
+  child.wait_for_suggestion()
+
+  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
+end
+
 T["suggestion()"]["next keymap triggers suggestion"] = function()
   child.configure_copilot()
   child.type_keys("i123", "<Esc>", "o456", "<Esc>", "o7")

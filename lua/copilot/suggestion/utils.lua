@@ -28,4 +28,41 @@ function M.remove_common_suffix(str, suggestion)
   return string.sub(suggestion, 1, suggestion_len - matching)
 end
 
+---Compute the display text for the first line of a suggestion.
+---Handles indentation mismatches and range.start.character > 0.
+---@param suggestion_first_line string
+---@param range_start_char number
+---@param cursor_col number 1-based cursor column (vim.fn.col("."))
+---@param current_line string
+---@return string display_text
+---@return number outdent
+function M.get_display_adjustments(suggestion_first_line, range_start_char, cursor_col, current_line)
+  local prefix = string.sub(current_line, 1, range_start_char)
+  local choice_text = prefix .. suggestion_first_line
+
+  local typed = string.sub(current_line, 1, cursor_col - 1)
+
+  if typed == "" then
+    return choice_text, 0
+  end
+
+  if typed:match("^%s+$") then
+    local choice_ws = choice_text:match("^(%s*)") or ""
+    local typed_len = #typed
+    local choice_ws_len = #choice_ws
+
+    if typed_len <= choice_ws_len then
+      return string.sub(choice_text, typed_len + 1), 0
+    else
+      return string.sub(choice_text, choice_ws_len + 1), typed_len - choice_ws_len
+    end
+  end
+
+  if string.sub(choice_text, 1, #typed) == typed then
+    return string.sub(choice_text, #typed + 1), 0
+  end
+
+  return "", 0
+end
+
 return M
