@@ -100,6 +100,9 @@ T["binary()"]["download_file rejects when neither curl nor wget is available"] =
       return orig_executable(cmd)
     end
 
+    -- Clean up any leftover files from previous runs
+    vim.fn.delete("/tmp/copilot-test", "rf")
+
     -- Access download_file indirectly via init() which calls download_file
     -- We need to reset state and set up server info so init() reaches download_file
     binary.initialized = false
@@ -143,6 +146,9 @@ T["binary()"]["download_file does not reject when wget is available but curl is 
       if cmd == "wget" then return 1 end
       return orig_executable(cmd)
     end
+
+    -- Clean up any leftover files from previous runs
+    vim.fn.delete("/tmp/copilot-test", "rf")
 
     binary.initialized = false
     binary.initialization_failed = false
