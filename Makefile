@@ -1,6 +1,15 @@
+# Run formatting and linting checks (matches CI)
+lint:
+	stylua --check lua/ --config-path=.stylua.toml
+	luacheck lua/ --globals vim
+
+# Auto-fix formatting
+fmt:
+	stylua lua/ --config-path=.stylua.toml
+
 # Run all test files
 # test: deps/mini.nvim
-test: 
+test:
 	nvim --headless --noplugin -u ./tests/scripts/minimal_init.lua -c "lua MiniTest.run()"
 
 # Run test from file at `$FILE` environment variable
