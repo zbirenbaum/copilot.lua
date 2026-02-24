@@ -302,8 +302,9 @@ function M.update_preview(ctx)
   local current_line = vim.api.nvim_buf_get_lines(0, cursor_line, cursor_line + 1, false)[1]
   local text_after_cursor = string.sub(current_line, cursor_col)
 
-  displayLines[1] =
-    string.sub(string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1), cursor_col)
+  local suggestion_first_line = string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1)
+  local range_start_char = suggestion.range and suggestion.range.start and suggestion.range.start.character or 0
+  displayLines[1] = suggestion_util.get_display_adjustments(suggestion_first_line, range_start_char, cursor_col, current_line)
 
   local suggestion_line1 = displayLines[1]
 

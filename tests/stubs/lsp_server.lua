@@ -27,6 +27,54 @@ M.completion_responses = {
       },
     },
   },
+  ["indented_suggestion.txt"] = {
+    completions = {
+      {
+        displayText = "  if True:\n    pass",
+        docVersion = 7,
+        position = {
+          character = 4,
+          line = 1,
+        },
+        range = {
+          ["end"] = {
+            character = 4,
+            line = 1,
+          },
+          start = {
+            character = 0,
+            line = 1,
+          },
+        },
+        text = "  if True:\n    pass",
+        uuid = "indented-suggestion-uuid",
+      },
+    },
+  },
+  ["range_offset.txt"] = {
+    completions = {
+      {
+        displayText = "if foo():\n    bar()",
+        docVersion = 7,
+        position = {
+          character = 3,
+          line = 1,
+        },
+        range = {
+          ["end"] = {
+            character = 3,
+            line = 1,
+          },
+          start = {
+            character = 2,
+            line = 1,
+          },
+        },
+        text = "if foo():\n    bar()",
+        uuid = "range-offset-uuid",
+      },
+    },
+  },
   ["numbers_as_arrays.txt"] = {
     completions = {
       {
