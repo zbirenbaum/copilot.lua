@@ -304,7 +304,8 @@ function M.update_preview(ctx)
 
   local suggestion_first_line = string.sub(suggestion.text, 1, (string.find(suggestion.text, "\n", 1, true) or 0) - 1)
   local range_start_char = suggestion.range and suggestion.range.start and suggestion.range.start.character or 0
-  displayLines[1] = suggestion_util.get_display_adjustments(suggestion_first_line, range_start_char, cursor_col, current_line)
+  displayLines[1] =
+    suggestion_util.get_display_adjustments(suggestion_first_line, range_start_char, cursor_col, current_line)
 
   local suggestion_line1 = displayLines[1]
 
