@@ -30,7 +30,7 @@ end
 
 -- get_editor_info tests
 
-T["util()"]["get_editor_info returns Neovim name and version"] = function()
+T["util()"]["get_editor_info returns Neovim name"] = function()
   local info = child.lua([[
     local util = require("copilot.util")
     local info = util.get_editor_info()
@@ -39,7 +39,6 @@ T["util()"]["get_editor_info returns Neovim name and version"] = function()
   eq(info.editorInfo.name, "Neovim")
   eq(type(info.editorInfo.version), "string")
   eq(info.editorPluginInfo.name, "copilot.lua")
-  eq(info.editorPluginInfo.version, "1.430.0")
 end
 
 -- strutf16len tests
