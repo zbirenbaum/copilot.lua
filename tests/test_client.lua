@@ -356,6 +356,72 @@ T["client()"]["saving file - will not yield URI not found error"] = function()
   u.expect_no_match(messages, "RPC.*Document for URI could not be found")
 end
 
+T["client()"]["renaming buffer with :file - detaches and re-attaches"] = function()
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
+  child.configure_copilot()
+  child.type_keys("i", "123", "<Esc>", "o456", "<Esc>", "o7")
+  child.wait_for_suggestion()
+  child.type_keys("<Esc>")
+  child.lua("M.suggested = false")
+
+  -- Rename the buffer
+  child.cmd("file tests/files/renamed.txt")
+  child.lua("vim.wait(200, function() return false end, 10)")
+
+  -- After rename, the buffer should still be attached (re-attached by BufFilePost handler)
+  local is_attached = child.lua("return c.buf_is_attached(0)")
+  MiniTest.expect.equality(is_attached, true)
+
+  -- Verify the detach+re-attach happened by checking the log
+  local log_has_reattach = child.lua([[
+    local logfile = io.open("./tests/logs/test_client.log", "r")
+    if not logfile then return false end
+    local content = logfile:read("*a")
+    logfile:close()
+    return content:find("buffer filename changed") ~= nil
+  ]])
+  MiniTest.expect.equality(log_has_reattach, true)
+
+  -- Verify suggestions still work after rename
+  child.type_keys("a8")
+  child.wait_for_suggestion()
+  local messages = child.cmd_capture("messages")
+  u.expect_no_match(messages, "RPC.*Document for URI could not be found")
+end
+
+T["client()"]["saving unnamed buffer with :w - detaches and re-attaches"] = function()
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
+  child.configure_copilot()
+  child.type_keys("i", "123", "<Esc>", "o456", "<Esc>", "o7")
+  child.wait_for_suggestion()
+  child.type_keys("<Esc>")
+  child.lua("M.suggested = false")
+
+  -- Save unnamed buffer to a file (changes buffer name)
+  child.cmd("w! tests/files/saved_new.txt")
+  child.lua("vim.wait(200, function() return false end, 10)")
+
+  -- After save, the buffer should still be attached
+  local is_attached = child.lua("return c.buf_is_attached(0)")
+  MiniTest.expect.equality(is_attached, true)
+
+  -- Verify the detach+re-attach happened by checking the log
+  local log_has_reattach = child.lua([[
+    local logfile = io.open("./tests/logs/test_client.log", "r")
+    if not logfile then return false end
+    local content = logfile:read("*a")
+    logfile:close()
+    return content:find("buffer filename changed") ~= nil
+  ]])
+  MiniTest.expect.equality(log_has_reattach, true)
+
+  -- Verify suggestions still work after save
+  child.type_keys("a8")
+  child.wait_for_suggestion()
+  local messages = child.cmd_capture("messages")
+  u.expect_no_match(messages, "RPC.*Document for URI could not be found")
+end
+
 T["client()"]["should_attach returns false prevents buffer attachment"] = function()
   child.config.should_attach = [[function(bufnr, bufname)
     return false
