@@ -225,6 +225,19 @@ function M.setup()
     desc = "[copilot] (client) buf entered",
   })
 
+  vim.api.nvim_create_autocmd("BufFilePost", {
+    group = M.augroup,
+    callback = function(args)
+      local bufnr = (args and args.buf) or nil
+      if bufnr and M.buf_is_attached(bufnr) then
+        logger.trace("buffer filename changed, detaching and re-attaching")
+        M.buf_detach_if_attached(bufnr)
+        M.buf_attach(false, bufnr)
+      end
+    end,
+    desc = "[copilot] (client) buffer filename changed",
+  })
+
   vim.schedule(M.ensure_client_started)
   -- BufEnter is likely already triggered for shown buffer, so we trigger it manually
   local bufnr = vim.api.nvim_get_current_buf()

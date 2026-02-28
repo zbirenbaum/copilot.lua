@@ -137,7 +137,6 @@ end
 function M.server()
   local closing = false
   local srv = {}
-  -- local seen_files = {}
 
   function srv.request(method, params, handler)
     logger.trace("lsp request: " .. method)
@@ -149,17 +148,10 @@ function M.server()
     elseif method == "shutdown" then
       handler(nil, nil)
     elseif method == "getCompletions" then
-      -- elseif method == "textDocument/copilotInlineEdit" then
-      -- if not seen_files[params.textDocument.uri] then
-      -- seen_files[params.textDocument.uri] = true
       local response = get_lsp_responses(params.textDocument)
       vim.defer_fn(function()
         handler(nil, response)
       end, 10)
-    -- local empty_response = {
-    --   edits = {},
-    -- }
-    -- handler(nil, empty_response)
     elseif method == "checkStatus" then
       vim.defer_fn(function()
         handler(nil, { user = "someUser", status = "OK" })
@@ -254,7 +246,7 @@ function M.server()
   end
 
   function srv.notify(method, params)
-    logger.trace("lsp notify")
+    logger.trace("lsp notify: " .. method)
     table.insert(M.messages, { method = method, params = params })
     if method == "exit" then
       closing = true
