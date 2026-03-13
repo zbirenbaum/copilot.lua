@@ -14,6 +14,7 @@ local is_disabled = false
 ---@field config vim.lsp.ClientConfig | nil
 ---@field startup_error string | nil
 ---@field initialized boolean
+---@field client_starting boolean
 local M = {
   augroup = nil,
   id = nil,
@@ -21,6 +22,7 @@ local M = {
   config = nil,
   startup_error = nil,
   initialized = false,
+  client_starting = false,
 }
 
 ---@param id integer
@@ -141,6 +143,11 @@ function M.ensure_client_started()
     return
   end
 
+  if M.client_starting then
+    logger.trace("client startup already in progress, skipping duplicate")
+    return
+  end
+
   if is_disabled then
     logger.debug("copilot is offline")
     return
@@ -155,8 +162,12 @@ function M.ensure_client_started()
     return
   end
 
+  M.client_starting = true
+
   M.config.root_dir = utils.get_root_dir(config.root_dir)
   local client_id, err = vim.lsp.start(M.config, { attach = false })
+
+  M.client_starting = false
 
   if not client_id then
     logger.error(string.format("error starting LSP client: %s", err))
@@ -208,6 +219,11 @@ function M.setup()
     return
   end
 
+  -- Stop all existing copilot clients to prevent orphan processes
+  for _, existing_client in ipairs(vim.lsp.get_clients({ name = "copilot" })) do
+    existing_client:stop(true)
+  end
+
   is_disabled = false
   M.id = nil
 
@@ -223,6 +239,17 @@ function M.setup()
       on_buf_enter(bufnr)
     end,
     desc = "[copilot] (client) buf entered",
+  })
+
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    group = M.augroup,
+    callback = function()
+      local client = vim.lsp.get_client_by_id(M.id)
+      if client then
+        client:stop()
+      end
+    end,
+    desc = "[copilot] (client) stop LSP client on exit",
   })
 
   vim.api.nvim_create_autocmd("BufFilePost", {
