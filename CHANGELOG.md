@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/zbirenbaum/copilot.lua/compare/v2.0.0...v2.0.1) (2026-03-13)
+
+
+### Bug Fixes
+
+* safeguards against orphaned copilot servers ([8e2a918](https://github.com/zbirenbaum/copilot.lua/commit/8e2a91828210d6043744468f6d7027d256a41f42)), closes [#667](https://github.com/zbirenbaum/copilot.lua/issues/667)
+
 ## [2.0.0](https://github.com/zbirenbaum/copilot.lua/compare/v1.0.0...v2.0.0) (2026-03-06)
 
 
