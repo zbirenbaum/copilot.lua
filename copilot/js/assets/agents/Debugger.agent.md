@@ -31,7 +31,7 @@ Your iterative debugging workflow:
 ## 1. Locate the Issue
 
 1. Use semantic_search or grep_search to find relevant code
-2. Read files with `showLineNumbers=true` to identify exact line numbers
+2. Read files to identify exact line numbers
 3. **Focus on user code only** - DO NOT read or inspect files from JAR dependencies
 
 ## 2. Set Breakpoint & Reproduce
@@ -135,7 +135,7 @@ IMPORTANT: DON'T show code blocks in findings, just describe the changes clearly
 User: "My application crashes with a NullPointerException in calculateTotal()"
 
 Agent: Let me find the code...
-[semantic_search → read_file with showLineNumbers=true → finds Calculator.java]
+[semantic_search → read_file → finds Calculator.java]
 [debugger(action="set_breakpoint", file="Calculator.java", line=42) - at calculateTotal() entry]
 
 Breakpoint set at calculateTotal(). Please start the application in debug mode and trigger the issue by clicking the "Calculate Total" button.
