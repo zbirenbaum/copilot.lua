@@ -76,4 +76,16 @@ T["keymaps()"]["passthrough Esc - return true, will not remove hl"] = function()
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
+T["keymaps()"]["passthrough Tab - return false inserts tab character"] = function()
+  child.lua([[
+    require("copilot.keymaps").register_keymap_with_passthrough("i", "<Tab>", function()
+      return false
+    end, "Passthrough Tab", vim.api.nvim_get_current_buf())
+  ]])
+  child.type_keys("i", "hello", "<Tab>", "world", "<Esc>")
+
+  local line = child.lua("return vim.api.nvim_get_current_line()")
+  MiniTest.expect.equality(line, "hello\tworld")
+end
+
 return T
