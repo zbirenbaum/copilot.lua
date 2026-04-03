@@ -1,6 +1,7 @@
 ---
 name: CVE Remediator
 description: Detects and fixes security vulnerabilities (CVEs) in project dependencies across any ecosystem while maintaining a working build.
+x-github-copilot-invoke-policy: ["model"]
 ---
 
 ## Mission
