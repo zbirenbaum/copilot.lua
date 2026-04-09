@@ -119,10 +119,11 @@ function M.register_keymap_with_passthrough(mode, key, action, desc, bufnr)
     end
 
     logger.trace("No previous keymap to pass through for " .. keymap_key)
-    return vim.api.nvim_replace_termcodes(key, true, false, true)
+    return key
   end, {
     desc = desc,
     expr = true,
+    replace_keycodes = true,
     silent = true,
     buffer = bufnr,
   })
