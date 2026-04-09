@@ -88,4 +88,16 @@ T["keymaps()"]["passthrough Tab - return false inserts tab character"] = functio
   MiniTest.expect.equality(line, "hello\tworld")
 end
 
+T["keymaps()"]["passthrough Right - return false moves cursor right"] = function()
+  child.lua([[
+    require("copilot.keymaps").register_keymap_with_passthrough("i", "<Right>", function()
+      return false
+    end, "Passthrough Right", vim.api.nvim_get_current_buf())
+  ]])
+  child.type_keys("i", "abcd", "<Esc>", "0i", "<Right>", "X", "<Esc>")
+
+  local line = child.lua("return vim.api.nvim_get_current_line()")
+  MiniTest.expect.equality(line, "aXbcd")
+end
+
 return T
