@@ -50,8 +50,12 @@ end
 ---@param mode string
 ---@param key string
 ---@param keymap_key string
-local function save_existing_keymap(mode, key, keymap_key)
-  local existing = vim.fn.maparg(key, mode, false, true)
+---@param bufnr integer
+local function save_existing_keymap(mode, key, keymap_key, bufnr)
+  local existing
+  vim.api.nvim_buf_call(bufnr, function()
+    existing = vim.fn.maparg(key, mode, false, true)
+  end)
 
   if existing then
     if existing.rhs and existing.rhs ~= "" then
@@ -91,7 +95,7 @@ function M.register_keymap_with_passthrough(mode, key, action, desc, bufnr)
     logger.trace("Keymap already registered for " .. keymap_key)
   end
 
-  save_existing_keymap(mode, key, keymap_key)
+  save_existing_keymap(mode, key, keymap_key, bufnr)
 
   vim.keymap.set(mode, key, function()
     logger.trace("Keymap triggered for " .. keymap_key)
