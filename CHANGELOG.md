@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.2](https://github.com/zbirenbaum/copilot.lua/compare/v2.0.1...v2.0.2) (2026-04-11)
+
+
+### Bug Fixes
+
+* **keymaps:** preserve special insert keys in passthrough fallback ([736b88c](https://github.com/zbirenbaum/copilot.lua/commit/736b88cfe74217064f15dcd0b1a8988643a1b2ba))
+* wrap maparg in nvim_buf_call to prevent capturing keymaps from the wrong buffer ([555fe9d](https://github.com/zbirenbaum/copilot.lua/commit/555fe9d77d8cbb464f4be857db25ef5c7dbb86d0))
+
 ## [2.0.1](https://github.com/zbirenbaum/copilot.lua/compare/v2.0.0...v2.0.1) (2026-03-24)
 
 
