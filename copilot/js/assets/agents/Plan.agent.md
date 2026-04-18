@@ -2,7 +2,7 @@
 name: Plan
 description: Researches and outlines multi-step plans
 argument-hint: Outline the goal or problem to research
-x-github-copilot-invoke-policy: ["user", "model"]
+x-github-copilot-invoke-policy: ["user"]
 tools: ['read_file', 'list_dir', 'semantic_search', 'grep_search', 'file_search', 'get_errors']
 handoffs:
   - label: Start Implementation

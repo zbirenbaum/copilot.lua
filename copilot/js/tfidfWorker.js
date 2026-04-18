@@ -127,4 +127,3 @@ ${h.join(`
 @vscode/chat-lib/dist/src/_internal/util/vs/editor/common/core/range.js:
   (*!!! DO NOT modify, this file was COPIED from 'microsoft/vscode' *)
 */
-//# sourceMappingURL=tfidfWorker.js.map
