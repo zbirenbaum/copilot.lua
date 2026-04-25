@@ -266,6 +266,7 @@ export declare class Context {
     handleStore: HandleStore;
     private readonly refCounter?;
     private readonly cleanupQueue;
+    private readonly _externalMemory;
     feature: {
         supportReflect: boolean;
         supportFinalizer: boolean;
@@ -280,7 +281,7 @@ export declare class Context {
             prototype: MessageChannel;
         } | undefined;
     };
-    constructor();
+    constructor(options?: ContextOptions);
     /**
      * Suppress the destroy on `beforeExit` event in Node.js.
      * Call this method if you want to keep the context and
@@ -302,6 +303,7 @@ export declare class Context {
     createReferenceWithData(envObject: Env, handle_id: napi_value, initialRefcount: uint32_t, ownership: ReferenceOwnership, data: void_p): Reference;
     createReferenceWithFinalizer(envObject: Env, handle_id: napi_value, initialRefcount: uint32_t, ownership: ReferenceOwnership, finalize_callback?: napi_finalize, finalize_data?: void_p, finalize_hint?: void_p): Reference;
     createDeferred<T = any>(value: IDeferrdValue<T>): Deferred<T>;
+    adjustAmountOfExternalAllocatedMemory(changeInBytes: number | bigint): bigint;
     createEnv(filename: string, moduleApiVersion: number, makeDynCall_vppp: (cb: Ptr) => (a: Ptr, b: Ptr, c: Ptr) => void, makeDynCall_vp: (cb: Ptr) => (a: Ptr) => void, abort: (msg?: string) => never, nodeBinding?: any): Env;
     createTrackedFinalizer(envObject: Env, finalize_callback: napi_finalize, finalize_data: void_p, finalize_hint: void_p): TrackedFinalizer;
     getCurrentScope(): HandleScope | null;
@@ -324,7 +326,11 @@ export declare class Context {
     destroy(): void;
 }
 
-export declare function createContext(): Context;
+export declare interface ContextOptions {
+    onExternalMemoryChange?: (current: bigint, old: bigint, delta: bigint) => any;
+}
+
+export declare function createContext(options?: ContextOptions): Context;
 
 export declare class Deferred<T = any> implements IStoreValue {
     static create<T = any>(ctx: Context, value: IDeferrdValue<T>): Deferred;
