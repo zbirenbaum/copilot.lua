@@ -42,7 +42,7 @@ ${h.join(`
 			PRAGMA foreign_keys = ON;
 			PRAGMA journal_mode = OFF;
 			PRAGMA synchronous = 0;
-			PRAGMA cache_size = ${-128*1024};
+			PRAGMA cache_size = 1000000;
 			PRAGMA locking_mode = EXCLUSIVE;
 			PRAGMA temp_store = MEMORY;
 		`),this.db.exec(`
