@@ -20,6 +20,10 @@ function M.get_execute_command()
   return require("tests.stubs.lsp_server").server
 end
 
+function M.get_cmd_env()
+  return {}
+end
+
 function M.setup(_, _)
   return true
 end
