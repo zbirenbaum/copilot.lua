@@ -92,6 +92,7 @@ function M.prepare_client_config(overrides, client)
   -- LSP config, not to be confused with config.lua
   return vim.tbl_deep_extend("force", {
     cmd = cmd,
+    cmd_env = lsp.get_cmd_env(),
     root_dir = root_dir,
     name = "copilot",
     capabilities = capabilities,

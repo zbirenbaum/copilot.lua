@@ -46,9 +46,19 @@ function M.get_node_version()
     end
 
     M.node_version = node_version
+    M.node_version_major = node_version_major
   end
 
   return M.node_version, M.node_version_error
+end
+
+---@return table<string, string>
+function M.get_cmd_env()
+  -- Workaround for github/copilot-language-server-release#45 (Node 26+ undici fetch bug).
+  if (M.node_version_major or 0) >= 26 then
+    return { GH_COPILOT_USE_HELIX_FETCHER = "true" }
+  end
+  return {}
 end
 
 ---@param _ vim.lsp.Client|nil
