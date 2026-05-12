@@ -43,6 +43,7 @@ M.invalid_node_version = "10.0.0"
 M.valid_node_version_22 = "22.0.0"
 M.valid_node_version_24 = "24.0.0"
 M.valid_node_version_25 = "25.0.0"
+M.valid_node_version_26 = "26.0.0"
 
 ---Convenience wrapper for Stub.process for a valid Node.js version (>= 22)
 function M.valid_node_22(callback)
@@ -56,6 +57,10 @@ end
 
 function M.valid_node_25(callback)
   return M.process("v" .. M.valid_node_version_25, 0, false, callback)
+end
+
+function M.valid_node_26(callback)
+  return M.process("v" .. M.valid_node_version_26, 0, false, callback)
 end
 
 ---Convenience wrapper for Stub.process for an invalid Node.js version (< 22)
