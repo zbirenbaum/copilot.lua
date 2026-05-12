@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.3](https://github.com/zbirenbaum/copilot.lua/compare/v2.0.2...v2.0.3) (2026-05-12)
+
+
+### Bug Fixes
+
+* temporary env variable for nodejs 26 ([3598fa8](https://github.com/zbirenbaum/copilot.lua/commit/3598fa89f2271141d62e7b1dfb4a82929f7eb23c)), closes [#695](https://github.com/zbirenbaum/copilot.lua/issues/695)
+
 ## [2.0.2](https://github.com/zbirenbaum/copilot.lua/compare/v2.0.1...v2.0.2) (2026-04-11)
 
 
