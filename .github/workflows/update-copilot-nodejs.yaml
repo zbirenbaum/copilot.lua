@@ -20,16 +20,43 @@ jobs:
         run: |
           mkdir -p copilot/js
 
+      - name: Resolve latest semver release
+        id: resolve
+        run: |
+          set -euo pipefail
+          # GitHub's `releases/latest` endpoint sorts by created_at, so a backport
+          # patch published to an older minor wins over a newer minor. Pick the
+          # highest semver instead by parsing tag_name as MAJOR.MINOR.PATCH.
+          tag=$(curl -fsS "https://api.github.com/repos/github/copilot-language-server-release/releases?per_page=100" \
+            | jq -r '[.[] | select(.prerelease==false and .draft==false) | .tag_name]
+                     | sort_by(split(".") | map(tonumber)) | last')
+          if [ -z "$tag" ] || [ "$tag" = "null" ]; then
+            echo "Failed to resolve latest release tag" >&2
+            exit 1
+          fi
+          url=$(curl -fsS "https://api.github.com/repos/github/copilot-language-server-release/releases/tags/$tag" \
+            | jq -r '.assets[] | select(.name | test("copilot-language-server-js-.*\\.zip$")) | .browser_download_url')
+          if [ -z "$url" ] || [ "$url" = "null" ]; then
+            echo "No copilot-language-server-js asset found for $tag" >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
       - name: Download latest LSP
         run: |
-          curl -s https://api.github.com/repos/github/copilot-language-server-release/releases/latest | grep "browser_download_url.*copilot-language-server-js-.*zip" | cut -d : -f 2,3 | tr -d \" | wget -vi -
+          set -euo pipefail
+          wget -v "${{ steps.resolve.outputs.url }}"
 
       - name: Update version in util.lua
         run: |
-          COPILOT_LATEST_RELEASE_VER=$(curl -s https://api.github.com/repos/github/copilot-language-server-release/releases | jq -r '.[0].tag_name') && sed -i.bak -E "s/(version = \")[^\"]+(\",)/\1$COPILOT_LATEST_RELEASE_VER\2/" "lua/copilot/util.lua" && rm lua/copilot/util.lua.bak
+          set -euo pipefail
+          sed -i.bak -E "s/(version = \")[^\"]+(\",)/\1${{ steps.resolve.outputs.tag }}\2/" "lua/copilot/util.lua"
+          rm lua/copilot/util.lua.bak
 
       - name: Unzip LSP
         run: |
+          set -euo pipefail
           unzip -o copilot-language-server-js-*.zip -d copilot/js
           rm copilot-language-server-js-*.zip
 
