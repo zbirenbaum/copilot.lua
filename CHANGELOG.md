@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.4](https://github.com/zbirenbaum/copilot.lua/compare/v2.0.3...v2.0.4) (2026-05-15)
+
+
+### Bug Fixes
+
+* mark bundled Copilot LSP files as binary to prevent EOL normalization ([51316fe](https://github.com/zbirenbaum/copilot.lua/commit/51316fe6e8972fb2af80c25646fcb2643241b334)), closes [#691](https://github.com/zbirenbaum/copilot.lua/issues/691)
+
 ## [2.0.3](https://github.com/zbirenbaum/copilot.lua/compare/v2.0.2...v2.0.3) (2026-05-12)
 
 
