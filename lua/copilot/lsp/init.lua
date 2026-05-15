@@ -52,15 +52,6 @@ function M.get_execute_command()
   return {}
 end
 
----@return table<string, string>
-function M.get_cmd_env()
-  if M.config.type == "nodejs" then
-    return M.nodejs.get_cmd_env()
-  end
-
-  return {}
-end
-
 ---@param server_config ServerConfig
 ---@param copilot_node_command string
 ---@return boolean
