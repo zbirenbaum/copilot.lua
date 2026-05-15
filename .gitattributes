@@ -1,3 +1,2 @@
-/copilot/dist/** -whitespace -diff
-/dist/** -whitespace -diff
+/copilot/js/** binary
 *.lua eol=lf
