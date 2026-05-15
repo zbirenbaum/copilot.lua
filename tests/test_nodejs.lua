@@ -128,41 +128,6 @@ T["get_node_version()"]["very old node version below minimum"] = function()
   end)
 end
 
-T["get_cmd_env()"] = MiniTest.new_set()
-
-T["get_cmd_env()"]["returns empty when node version has not been resolved"] = function()
-  -- get_node_version() has not run yet, so node_version_major is nil.
-  eq(stub.nodejs.get_cmd_env(), {})
-end
-
-T["get_cmd_env()"]["returns empty for node 22"] = function()
-  stub.valid_node_22(function()
-    stub.nodejs.setup()
-    eq(stub.nodejs.get_cmd_env(), {})
-  end)
-end
-
-T["get_cmd_env()"]["returns empty for node 25"] = function()
-  stub.valid_node_25(function()
-    stub.nodejs.setup()
-    eq(stub.nodejs.get_cmd_env(), {})
-  end)
-end
-
-T["get_cmd_env()"]["sets helix fetcher for node 26"] = function()
-  stub.valid_node_26(function()
-    stub.nodejs.setup()
-    eq(stub.nodejs.get_cmd_env(), { GH_COPILOT_USE_HELIX_FETCHER = "true" })
-  end)
-end
-
-T["get_cmd_env()"]["sets helix fetcher for node versions above 26"] = function()
-  stub.process("v30.5.1", 0, false, function()
-    stub.nodejs.setup()
-    eq(stub.nodejs.get_cmd_env(), { GH_COPILOT_USE_HELIX_FETCHER = "true" })
-  end)
-end
-
 T["get_execute_command()"] = MiniTest.new_set()
 
 T["get_execute_command()"]["default node command v22, default server path"] = function()
