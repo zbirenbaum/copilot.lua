@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/zbirenbaum/copilot.lua/compare/v2.0.4...v3.0.0) (2026-06-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove support for apps.json as it is not used anymore by LSP
+
+### Bug Fixes
+
+* remove support for apps.json as it is not used anymore by LSP ([6afee36](https://github.com/zbirenbaum/copilot.lua/commit/6afee363c52b6063a11b409ed20a3f1ab95325ab))
+
 ## [2.0.4](https://github.com/zbirenbaum/copilot.lua/compare/v2.0.3...v2.0.4) (2026-05-15)
 
 
