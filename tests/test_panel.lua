@@ -57,7 +57,7 @@ end
 T["panel.utils()"] = MiniTest.new_set()
 
 T["panel.utils()"]["panel_uri_from_doc_uri"] = function()
-  local panel_uri = ""
+  local panel_uri
 
   if vim.fn.has("win32") > 0 then
     panel_uri = "copilot:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua"
@@ -75,7 +75,7 @@ T["panel.utils()"]["panel_uri_from_doc_uri"] = function()
 end
 
 T["panel.utils()"]["panel_uri_to_doc_uri"] = function()
-  local doc_uri = ""
+  local doc_uri
 
   if vim.fn.has("win32") > 0 then
     doc_uri = "file:///C:/Users/antoi/AppData/Local/nvim-data/lazy/copilot.lua/lua/copilot/suggestion/init.lua"

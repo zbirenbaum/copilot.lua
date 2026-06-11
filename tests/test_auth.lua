@@ -31,7 +31,7 @@ T["auth()"]["auth before attaching, should not give error"] = function()
       return has_passed()
     end, 50)
 
-    return messages 
+    return messages
   ]])
 
   u.expect_match(messages, ".*Authenticated as GitHub user.*")
@@ -66,7 +66,7 @@ T["auth()"]["auth issue replication"] = function()
       return has_passed()
     end, 50)
 
-    return messages 
+    return messages
   ]])
 
   u.expect_match(messages, ".*Online.*")
