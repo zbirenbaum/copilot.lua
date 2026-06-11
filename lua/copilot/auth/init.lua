@@ -152,34 +152,26 @@ function M.find_config_path()
   logger.error("could not find config path")
 end
 
----@return table|nil
-function M.get_creds()
-  local filename = M.find_config_path() .. "/github-copilot/apps.json"
-
-  if vim.fn.filereadable(filename) == 0 then
-    logger.error("Copilot auth file could not be read from:" .. filename)
-    return
-  end
-
-  local filedata = vim.api.nvim_eval("readfile('" .. filename .. "')")
-
-  if not filedata or #filedata == 0 then
-    logger.error("Copilot's apps.json file not found or empty, make sure to sign in first")
-    return
-  end
-
-  local appsdata = vim.json.decode(filedata[1])
-  return appsdata
-end
-
 function M.info()
-  local info = M.get_creds()
-  if not info then
-    logger.error("no GitHub Copilot token found, make sure to sign in first")
-    return
-  end
+  c.use_client(function(client)
+    api.check_status(
+      client,
+      {},
+      ---@param status copilot_check_status_data
+      function(err, status)
+        if err then
+          logger.error("failed to retrieve authentication status: " .. tostring(err))
+          return
+        end
 
-  logger.notify("GitHub Copilot token information: ", info)
+        if status.user then
+          logger.notify("Authenticated as GitHub user: " .. status.user .. " (status: " .. status.status .. ")")
+        else
+          logger.error("not authenticated (status: " .. status.status .. "), make sure to sign in first")
+        end
+      end
+    )
+  end)
 end
 
 ---@class copilot_auth_cache

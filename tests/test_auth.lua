@@ -72,6 +72,27 @@ T["auth()"]["auth issue replication"] = function()
   u.expect_match(messages, ".*Online.*")
 end
 
+T["auth()"]["auth info reports authentication status from the LSP"] = function()
+  child.configure_copilot()
+  child.cmd("Copilot auth info")
+
+  local messages = child.lua([[
+    local messages = ""
+    local function has_passed()
+      messages = vim.api.nvim_exec("messages", { output = true }) or ""
+      return string.find(messages, ".*Authenticated as GitHub user: someUser.*") ~= nil
+    end
+
+    vim.wait(5000, function()
+      return has_passed()
+    end, 50)
+
+    return messages
+  ]])
+
+  u.expect_match(messages, ".*Authenticated as GitHub user: someUser.*")
+end
+
 T["auth()"]["is_authenticated when not authed returns false"] = function()
   child.configure_copilot()
 

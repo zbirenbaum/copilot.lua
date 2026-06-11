@@ -1,5 +1,6 @@
 local M = {}
 
+local api = require("copilot.api")
 local auth = require("copilot.auth")
 local c = require("copilot.client")
 local config = require("copilot.config")
@@ -35,13 +36,13 @@ function M.check()
   end
 
   local config_path = auth.find_config_path()
-  local creds_ok, creds = pcall(auth.get_creds)
-  if creds_ok and creds then
-    ok("Local credentials file found")
-    info("Location: `" .. (config_path or "unknown") .. "/github-copilot/apps.json`")
+  local auth_db_path = (config_path or "unknown") .. "/github-copilot/auth.db"
+  if config_path and vim.fn.filereadable(auth_db_path) == 1 then
+    ok("Local credentials found")
+    info("Location: `" .. auth_db_path .. "`")
   else
-    info("No local credentials file found")
-    info("Expected location: `" .. (config_path or "unknown") .. "/github-copilot/apps.json`")
+    info("No local credentials found")
+    info("Expected location: `" .. auth_db_path .. "`")
     info("Run `:Copilot auth` to authenticate")
   end
 
@@ -63,11 +64,39 @@ function M.check()
   ok("LSP client is available and running")
   info("Client ID: " .. tostring(client.id))
 
-  local lsp_authenticated = auth.is_authenticated()
-  if lsp_authenticated then
-    ok("LSP authentication status: authenticated")
+  vim.wait(2000, function()
+    return c.initialized
+  end, 50)
+
+  if not c.initialized then
+    warn("LSP client is running but has not finished initializing")
+    info("This is not an authentication problem, retry `:checkhealth copilot` once Copilot is active")
   else
-    warn("LSP authentication status: not authenticated")
+    local done = false
+    local status_err, status = nil, nil
+    api.check_status(
+      client,
+      {},
+      ---@param status_data copilot_check_status_data
+      function(err, status_data)
+        status_err, status = err, status_data
+        done = true
+      end
+    )
+    vim.wait(5000, function()
+      return done
+    end, 50)
+
+    if not done then
+      warn("LSP authentication status: no response from server (timed out)")
+    elseif status_err then
+      warn("LSP authentication status: " .. tostring(status_err))
+    elseif status and status.user then
+      ok("LSP authentication status: authenticated as `" .. status.user .. "`")
+    else
+      warn("LSP authentication status: not authenticated (status: " .. (status and status.status or "unknown") .. ")")
+      info("Run `:Copilot auth signin` to authenticate")
+    end
   end
   info("For detailed authentication status, run `:Copilot status`")
 

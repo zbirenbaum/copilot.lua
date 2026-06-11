@@ -97,15 +97,15 @@ To sign in with a different account:
 :Copilot auth signin
 ```
 
-To view your current authentication token information:
+To view your current authentication status:
 
 ```
 :Copilot auth info
 ```
 
-Credentials are stored in:
-- **Linux/macOS:** `~/.config/github-copilot/apps.json` (or `$XDG_CONFIG_HOME/github-copilot/apps.json`)
-- **Windows:** `~/AppData/Local/github-copilot/apps.json`
+Credentials are stored by the Copilot Language Server in:
+- **Linux/macOS:** `~/.config/github-copilot/auth.db` (or `$XDG_CONFIG_HOME/github-copilot/auth.db`)
+- **Windows:** `~/AppData/Local/github-copilot/auth.db`
 
 </details>
 
