@@ -1,6 +1,5 @@
 local child_helper = require("tests.child_helper")
 local child = child_helper.new_child_neovim("test_client_lifecycle")
-local u = require("tests.utils")
 local eq = MiniTest.expect.equality
 
 local T = MiniTest.new_set({
@@ -30,9 +29,6 @@ T["client lifecycle()"]["ensure_client_started with starting guard prevents dupl
 
   -- Simulate the guard being set (as if startup is in progress)
   child.lua("c.client_starting = true")
-
-  -- Store original client id
-  local original_id = child.lua("return c.id")
 
   -- Try to start another client - should be blocked by the guard
   child.lua([[

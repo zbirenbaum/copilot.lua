@@ -2,6 +2,12 @@ local logger = require("copilot.logger")
 local M = {}
 
 M.messages = {}
+
+local numbers_as_arrays_text = "  19,20,21\n  22,23,24\n  25,26,27\n}\n{\n"
+  .. "  28,29,30\n  31,32,33\n  34,35,36\n}\n{\n"
+  .. "  37,38,39\n  40,41,42\n  43,44,45\n}\n{\n"
+  .. "  46,47,48\n  49,50,51\n  52,53,54\n}"
+
 M.completion_responses = {
   ["numbers_with_spaces.txt"] = {
     completions = {
@@ -78,7 +84,7 @@ M.completion_responses = {
   ["numbers_as_arrays.txt"] = {
     completions = {
       {
-        displayText = "  19,20,21\n  22,23,24\n  25,26,27\n}\n{\n  28,29,30\n  31,32,33\n  34,35,36\n}\n{\n  37,38,39\n  40,41,42\n  43,44,45\n}\n{\n  46,47,48\n  49,50,51\n  52,53,54\n}",
+        displayText = numbers_as_arrays_text,
         docVersion = 30,
         position = {
           character = 0,
@@ -94,7 +100,7 @@ M.completion_responses = {
             line = 11,
           },
         },
-        text = "  19,20,21\n  22,23,24\n  25,26,27\n}\n{\n  28,29,30\n  31,32,33\n  34,35,36\n}\n{\n  37,38,39\n  40,41,42\n  43,44,45\n}\n{\n  46,47,48\n  49,50,51\n  52,53,54\n}",
+        text = numbers_as_arrays_text,
         uuid = "1df58ae9-3e93-4e6a-b514-218a9fe7e816",
       },
     },
