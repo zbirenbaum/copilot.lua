@@ -1,5 +1,5 @@
 *copilot.txt* Fully featured & enhanced replacement for copilot.vim complete with API for interacting with Github Copilot
-                                For NVIM v0.11.0    Last change: 11 June, 2026
+                                For NVIM v0.11.0    Last change: 01 July, 2026
 
 ==============================================================================
 1. copilot.lua                                           *copilot-copilot.lua*
