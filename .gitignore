@@ -1,5 +1,6 @@
 tests/logs
 tests/env.lua
 deps/
+.worktrees/
 
 tests/files/test.txt
