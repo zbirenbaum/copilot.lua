@@ -16,3 +16,13 @@ jobs:
 
       - name: Lint
         run: luacheck lua/ --globals vim
+
+  release_automation:
+    name: Release automation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Test LSP release helper
+        run: bash tests/scripts/test_lsp_release.sh
+      - name: Test LSP update workflow
+        run: bash tests/scripts/test_lsp_update_workflow.sh

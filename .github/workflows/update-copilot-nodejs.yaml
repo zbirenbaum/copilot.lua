@@ -5,16 +5,29 @@ on:
     - cron: "0 0 * * *"
   push:
     branches: [master]
+  pull_request:
+    branches: [master]
+    types: [closed]
   workflow_dispatch:
 
 jobs:
   update_copilot_lsp:
     runs-on: ubuntu-latest
     name: Update Copilot LSP
-    if: github.repository == 'zbirenbaum/copilot.lua'
+    concurrency:
+      group: copilot-lsp-update
+      cancel-in-progress: false
+    if: >-
+      github.repository == 'zbirenbaum/copilot.lua' &&
+      github.event_name != 'pull_request'
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Create directory
         run: |
@@ -43,31 +56,100 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
+      - name: Check release tag
+        id: release
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+          manifest_version=$(jq -er '.["."] | select(type == "string")' .release-please-manifest.json)
+          if git show-ref --verify --quiet "refs/tags/v$manifest_version"; then
+            ready=true
+          else
+            ready=false
+            echo "Manifest tag v$manifest_version is pending; skipping LSP update" >&2
+          fi
+          echo "ready=$ready" >> "$GITHUB_OUTPUT"
+
+      - name: Check for LSP update
+        if: steps.release.outputs.ready == 'true'
+        id: update
+        run: |
+          set -euo pipefail
+          required=$(bash .github/scripts/lsp-release.sh needs-lsp-update "${{ steps.resolve.outputs.tag }}")
+          echo "required=$required" >> "$GITHUB_OUTPUT"
+
       - name: Download latest LSP
+        if: steps.update.outputs.required == 'true'
         run: |
           set -euo pipefail
           wget -v "${{ steps.resolve.outputs.url }}"
 
       - name: Update version in util.lua
+        if: steps.update.outputs.required == 'true'
         run: |
           set -euo pipefail
-          sed -i.bak -E "s/(version = \")[^\"]+(\",)/\1${{ steps.resolve.outputs.tag }}\2/" "lua/copilot/util.lua"
+          sed -i.bak -E 's/(version = ")[^"]+(",)/\1${{ steps.resolve.outputs.tag }}\2/' lua/copilot/util.lua
           rm lua/copilot/util.lua.bak
 
+      - name: Refresh tags before version bump
+        if: steps.update.outputs.required == 'true'
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+
+      - name: Bump plugin patch version
+        if: steps.update.outputs.required == 'true'
+        run: |
+          set -euo pipefail
+          version=$(bash .github/scripts/lsp-release.sh next-patch)
+          jq --arg version "$version" '.["."] = $version' .release-please-manifest.json > .release-please-manifest.json.tmp
+          mv .release-please-manifest.json.tmp .release-please-manifest.json
+
       - name: Unzip LSP
+        if: steps.update.outputs.required == 'true'
         run: |
           set -euo pipefail
           unzip -o copilot-language-server-js-*.zip -d copilot/js
           rm copilot-language-server-js-*.zip
 
       - name: Create Pull Request
+        if: steps.update.outputs.required == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
           add-paths: |
             copilot/js/*
             lua/copilot/util.lua
+            .release-please-manifest.json
           author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           base: master
           branch: create-pull-request/update-copilot-lsp
           commit-message: "chore: update to latest Copilot LSP"
           title: "Update Copilot LSP"
+
+  tag_copilot_lsp_update:
+    runs-on: ubuntu-latest
+    name: Tag Copilot LSP update
+    if: >-
+      github.repository == 'zbirenbaum/copilot.lua' &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'create-pull-request/update-copilot-lsp'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout merged update
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+
+      - name: Refresh tags before tagging
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+
+      - name: Create patch tag
+        run: |
+          set -euo pipefail
+          bash .github/scripts/lsp-release.sh tag "${{ github.event.pull_request.merge_commit_sha }}"
