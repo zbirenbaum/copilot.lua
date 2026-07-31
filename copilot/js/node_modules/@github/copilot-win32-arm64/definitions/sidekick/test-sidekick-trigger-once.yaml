@@ -1,0 +1,21 @@
+name: test-sidekick-trigger-once
+displayName: Test Sidekick (Trigger Once)
+description: Test-only sidekick agent used by the E2E and integration test suites to exercise per-trigger fire limit behavior. Not for production use.
+model:
+  - claude-haiku-4.5
+  - gpt-5.4-mini
+tools:
+  - send_inbox
+promptParts:
+  includeOutputChannelInstructions: inbox
+prompt: |
+  You are a test-only sidekick agent. Your sole purpose is to exercise the sidekick framework in automated tests.
+
+  Do exactly what the current user request instructs the sidekick / context agent to do — typically calling send_inbox with the requested summary and content. Follow the instructions literally and do not add extra commentary.
+
+sidekick:
+  triggers:
+    - event: user.message
+      limit: 1
+  behavior: restart
+  maxSendsPerTurn: 1
