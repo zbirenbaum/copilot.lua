@@ -29,10 +29,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create directory
-        run: |
-          mkdir -p copilot/js
-
       - name: Resolve latest semver release
         id: resolve
         run: |
@@ -109,6 +105,8 @@ jobs:
         if: steps.update.outputs.required == 'true'
         run: |
           set -euo pipefail
+          rm -rf copilot/js
+          mkdir -p copilot/js
           unzip -o copilot-language-server-js-*.zip -d copilot/js
           rm copilot-language-server-js-*.zip
 
@@ -117,7 +115,7 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           add-paths: |
-            copilot/js/*
+            copilot/js
             lua/copilot/util.lua
             .release-please-manifest.json
           author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
