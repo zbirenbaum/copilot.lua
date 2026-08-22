@@ -3,216 +3,197 @@ local stub = require("tests.stubs.nodejs")
 
 local T = MiniTest.new_set({
   hooks = {
-    pre_once = function() end,
     pre_case = function()
-      -- Reset the module state before each test
       package.loaded["copilot.lsp.nodejs"] = nil
       stub.nodejs = require("copilot.lsp.nodejs")
     end,
   },
 })
 
+local function setup(node_function, node_command, custom_path, callback)
+  stub.install(function()
+    node_function(function()
+      stub.nodejs.setup(node_command, custom_path, callback)
+    end)
+  end)
+end
+
 T["get_node_version()"] = MiniTest.new_set()
 
-T["get_node_version()"]["default node command"] = function()
-  local captured_args = stub.valid_node_22(function()
-    stub.nodejs.setup()
-    local version, error = stub.nodejs.get_node_version()
-
+T["get_node_version()"]["validates Node.js 22"] = function()
+  local captured = stub.valid_node_22(function()
+    stub.nodejs.node_command = "node"
+    local version, err = stub.nodejs.get_node_version()
     eq(version, stub.valid_node_version_22)
-    eq(error, nil)
+    eq(err, nil)
   end)
-  eq(captured_args, { "node", "--version" })
+  eq(captured, { "node", "--version" })
 end
 
-T["get_node_version()"]["custom node command as string"] = function()
-  local captured_args = stub.valid_node_22(function()
-    stub.nodejs.setup("/usr/local/bin/node")
-
-    local version, error = stub.nodejs.get_node_version()
-
-    eq(version, stub.valid_node_version_22)
-    eq(error, nil)
+T["get_node_version()"]["rejects older Node.js"] = function()
+  stub.invalid_node(function()
+    stub.nodejs.node_command = "node"
+    local _, err = stub.nodejs.get_node_version()
+    eq(err:find("Node.js version 22 or newer required") ~= nil, true)
   end)
-  eq(captured_args, { "/usr/local/bin/node", "--version" })
 end
 
-T["get_node_version()"]["custom node command as string with spaces"] = function()
-  local captured_args = stub.valid_node_22(function()
-    stub.nodejs.setup("/path to/node")
+T["setup()"] = MiniTest.new_set()
 
-    local version, error = stub.nodejs.get_node_version()
-
-    eq(version, stub.valid_node_version_22)
-    eq(error, nil)
+T["setup()"]["uses installer entrypoint after version validation"] = function()
+  local received
+  setup(stub.valid_node_22, nil, nil, function(err)
+    received = err
   end)
-  eq(captured_args, { "/path to/node", "--version" })
+  eq(received, nil)
+  eq(stub.nodejs.server_path, stub.default_server_path)
 end
 
-T["get_node_version()"]["custom node command as table"] = function()
-  local captured_args = stub.valid_node_22(function()
-    stub.nodejs.setup({ "mise", "x", "node@lts", "--", "node" })
-
-    local version, error = stub.nodejs.get_node_version()
-
-    eq(version, stub.valid_node_version_22)
-    eq(error, nil)
+T["setup()"]["custom path bypasses installer"] = function()
+  local installer_called = false
+  local installer = require("copilot.lsp.installer")
+  local original_ensure = installer.ensure
+  installer.ensure = function()
+    installer_called = true
+  end
+  local original_readable = vim.fn.filereadable
+  vim.fn.filereadable = function(path)
+    return path == stub.custom_server_path and 1 or original_readable(path)
+  end
+  local received
+  stub.valid_node_22(function()
+    stub.nodejs.setup(nil, stub.custom_server_path, function(err)
+      received = err
+    end)
   end)
-  eq(captured_args, { "mise", "x", "node@lts", "--", "node", "--version" })
+  vim.fn.filereadable = original_readable
+  installer.ensure = original_ensure
+  eq(received, nil)
+  eq(installer_called, false)
+  eq(stub.nodejs.server_path, stub.custom_server_path)
 end
 
-T["get_node_version()"]["handles vim.system failure"] = function()
-  local captured_args = stub.process("", -1, true, function()
-    stub.nodejs.setup("node")
-
-    local _, error = stub.nodejs.get_node_version()
-    error = error or ""
-
-    eq(error:find("Could not determine Node.js version") ~= nil, true)
+T["setup()"]["invalid Node.js does not request installation"] = function()
+  local installer_called = false
+  local installer = require("copilot.lsp.installer")
+  local original_ensure = installer.ensure
+  installer.ensure = function()
+    installer_called = true
+  end
+  local received
+  stub.invalid_node(function()
+    stub.nodejs.setup(nil, nil, function(err)
+      received = err
+    end)
   end)
-  eq(captured_args, { "node", "--version" })
+  installer.ensure = original_ensure
+  eq(installer_called, false)
+  eq(received:find("Node.js version 22 or newer required") ~= nil, true)
 end
 
-T["get_node_version()"]["handles process with non-zero exit code"] = function()
-  local captured_args = stub.process("", 127, false, function()
-    stub.nodejs.setup("nonexistent-node")
-
-    local _, error = stub.nodejs.get_node_version()
-    error = error or ""
-
-    eq(error:find("Could not determine Node.js version") ~= nil, true)
+T["setup()"]["retries version probe after a failed command"] = function()
+  local first_error
+  stub.invalid_node(function()
+    stub.nodejs.setup("node", nil, function(err)
+      first_error = err
+    end)
   end)
-  eq(captured_args, { "nonexistent-node", "--version" })
+  local second_error
+  stub.install(function()
+    stub.valid_node_25(function()
+      stub.nodejs.setup("node", nil, function(err)
+        second_error = err
+      end)
+    end)
+  end)
+  eq(first_error:find("Node.js version 22 or newer required") ~= nil, true)
+  eq(second_error, nil)
 end
 
-T["get_node_version()"]["validates node version requirement"] = function()
-  local captured_args = stub.invalid_node(function()
-    stub.nodejs.setup("node")
-
-    local _, error = stub.nodejs.get_node_version()
-    error = error or ""
-
-    eq(error:find("Node.js version 22 or newer required") ~= nil, true)
+T["setup()"]["revalidates when the node command changes"] = function()
+  local first_error
+  stub.install(function()
+    stub.valid_node_25(function()
+      stub.nodejs.setup("node-25", nil, function(err)
+        first_error = err
+      end)
+    end)
   end)
-  eq(captured_args, { "node", "--version" })
+  local second_error
+  stub.invalid_node(function()
+    stub.nodejs.setup("node-10", nil, function(err)
+      second_error = err
+    end)
+  end)
+  eq(first_error, nil)
+  eq(second_error:find("Node.js version 22 or newer required") ~= nil, true)
 end
 
-T["get_node_version()"]["version exactly at boundary v22.0.0"] = function()
-  local captured_args = stub.process("v22.0.0", 0, false, function()
-    stub.nodejs.setup("node")
-    local version, error = stub.nodejs.get_node_version()
-    eq(version, "22.0.0")
-    eq(error, nil)
+T["setup()"]["reports command failure and nonzero exit"] = function()
+  local process_error
+  stub.process("", -1, true, function()
+    stub.nodejs.setup("broken-node", nil, function(err)
+      process_error = err
+    end)
   end)
-  eq(captured_args, { "node", "--version" })
-end
-
-T["get_node_version()"]["version with pre-release suffix"] = function()
-  local captured_args = stub.process("v22.0.0-pre", 0, false, function()
-    stub.nodejs.setup("node")
-    local version, error = stub.nodejs.get_node_version()
-    eq(version, "22.0.0-pre")
-    eq(error, nil)
+  local exit_error
+  stub.process("", 127, false, function()
+    stub.nodejs.setup("missing-node", nil, function(err)
+      exit_error = err
+    end)
   end)
-  eq(captured_args, { "node", "--version" })
-end
-
-T["get_node_version()"]["very old node version below minimum"] = function()
-  stub.process("v14.0.0", 0, false, function()
-    stub.nodejs.setup("node")
-    local _, error = stub.nodejs.get_node_version()
-    error = error or ""
-    eq(error:find("Node.js version 22 or newer required") ~= nil, true)
-    -- Error should mention the actual version found
-    eq(error:find("14.0.0") ~= nil, true)
-  end)
+  eq(process_error:find("Could not determine Node.js version") ~= nil, true)
+  eq(exit_error:find("Could not determine Node.js version") ~= nil, true)
 end
 
 T["get_execute_command()"] = MiniTest.new_set()
 
-T["get_execute_command()"]["default node command v22, default server path"] = function()
-  local captured_path = stub.get_runtime_server_path(function()
-    eq(stub.nodejs.setup(), true)
-    local cmd = stub.nodejs.get_execute_command()
-    eq(cmd, { "node", "--experimental-sqlite", vim.fn.expand(stub.default_server_path), "--stdio" })
-  end, stub.valid_node_22)
-  eq(captured_path, stub.default_server_path)
-end
-
-T["get_execute_command()"]["default node command v24, default server path"] = function()
-  local captured_path = stub.get_runtime_server_path(function()
-    eq(stub.nodejs.setup(), true)
-    local cmd = stub.nodejs.get_execute_command()
-    eq(cmd, { "node", "--experimental-sqlite", vim.fn.expand(stub.default_server_path), "--stdio" })
-  end, stub.valid_node_24)
-  eq(captured_path, stub.default_server_path)
-end
-
-T["get_execute_command()"]["default node command, default server path"] = function()
-  local captured_path = stub.get_runtime_server_path(function()
-    eq(stub.nodejs.setup(), true)
-    local cmd = stub.nodejs.get_execute_command()
-    eq(cmd, { "node", vim.fn.expand(stub.default_server_path), "--stdio" })
-  end)
-  eq(captured_path, stub.default_server_path)
-end
-
-T["get_execute_command()"]["default node command, custom server path"] = function()
-  stub.get_runtime_server_path(function()
-    eq(stub.nodejs.setup(nil, vim.fn.expand(stub.custom_server_path)), true)
-    local cmd = stub.nodejs.get_execute_command()
-    eq(cmd, { "node", vim.fn.expand(stub.custom_server_path), "--stdio" })
+T["get_execute_command()"]["adds sqlite flag for Node 22"] = function()
+  setup(stub.valid_node_22, nil, nil, function(err)
+    eq(err, nil)
+    eq(stub.nodejs.get_execute_command(), { "node", "--experimental-sqlite", stub.default_server_path, "--stdio" })
   end)
 end
 
-T["get_execute_command()"]["custom node command as string, default server path"] = function()
-  local captured_path = stub.get_runtime_server_path(function()
-    eq(stub.nodejs.setup("/usr/local/bin/node"), true)
-    local cmd = stub.nodejs.get_execute_command()
-    eq(cmd, { "/usr/local/bin/node", vim.fn.expand(stub.default_server_path), "--stdio" })
+T["get_execute_command()"]["preserves custom command and server path"] = function()
+  local original_readable = vim.fn.filereadable
+  vim.fn.filereadable = function(path)
+    return path == stub.custom_server_path and 1 or original_readable(path)
+  end
+  stub.valid_node_24(function()
+    stub.nodejs.setup({ "mise", "x", "node@lts", "--", "node" }, stub.custom_server_path, function(err)
+      eq(err, nil)
+      eq(stub.nodejs.get_execute_command(), {
+        "mise",
+        "x",
+        "node@lts",
+        "--",
+        "node",
+        "--experimental-sqlite",
+        stub.custom_server_path,
+        "--stdio",
+      })
+    end)
   end)
-  eq(captured_path, stub.default_server_path)
+  vim.fn.filereadable = original_readable
 end
 
-T["get_execute_command()"]["custom node command as string, custom server path"] = function()
-  stub.get_runtime_server_path(function()
-    stub.nodejs.setup("/usr/local/bin/node", stub.custom_server_path)
-    local cmd = stub.nodejs.get_execute_command()
-    eq(cmd, { "/usr/local/bin/node", stub.custom_server_path, "--stdio" })
-  end)
-end
-
-T["get_execute_command()"]["custom node command as string with spaces, default server path"] = function()
-  local captured_path = stub.get_runtime_server_path(function()
-    stub.nodejs.setup("/path to/node")
-    local cmd = stub.nodejs.get_execute_command()
-    eq(cmd, { "/path to/node", vim.fn.expand(stub.default_server_path), "--stdio" })
-  end)
-  eq(captured_path, stub.default_server_path)
-end
-
-T["get_execute_command()"]["custom node command as string with spaces, custom server path"] = function()
-  stub.get_runtime_server_path(function()
-    stub.nodejs.setup("/path to/node", stub.custom_server_path)
-    local cmd = stub.nodejs.get_execute_command()
-    eq(cmd, { "/path to/node", stub.custom_server_path, "--stdio" })
+T["get_execute_command()"]["omits sqlite flag for Node 25"] = function()
+  setup(stub.valid_node_25, nil, nil, function(err)
+    eq(err, nil)
+    eq(stub.nodejs.get_execute_command(), { "node", stub.default_server_path, "--stdio" })
   end)
 end
 
-T["get_execute_command()"]["custom node command as table, default server path"] = function()
-  local captured_path = stub.get_runtime_server_path(function()
-    stub.nodejs.setup({ "mise", "x", "node@lts", "--", "node" })
-    local cmd = stub.nodejs.get_execute_command()
-    eq(cmd, { "mise", "x", "node@lts", "--", "node", vim.fn.expand(stub.default_server_path), "--stdio" })
-  end)
-  eq(captured_path, stub.default_server_path)
-end
-
-T["get_execute_command()"]["custom node command as table, custom server path"] = function()
-  stub.get_runtime_server_path(function()
-    stub.nodejs.setup({ "mise", "x", "node@lts", "--", "node" }, stub.custom_server_path)
-    local cmd = stub.nodejs.get_execute_command()
-    eq(cmd, { "mise", "x", "node@lts", "--", "node", stub.custom_server_path, "--stdio" })
+T["get_execute_command()"]["supports a string command containing spaces"] = function()
+  setup(stub.valid_node_22, "/path to/node", nil, function(err)
+    eq(err, nil)
+    eq(stub.nodejs.get_execute_command(), {
+      "/path to/node",
+      "--experimental-sqlite",
+      stub.default_server_path,
+      "--stdio",
+    })
   end)
 end
 

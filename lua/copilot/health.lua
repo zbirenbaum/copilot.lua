@@ -4,6 +4,9 @@ local api = require("copilot.api")
 local auth = require("copilot.auth")
 local c = require("copilot.client")
 local config = require("copilot.config")
+local installer = require("copilot.lsp.installer")
+local nodejs = require("copilot.lsp.nodejs")
+local release = require("copilot.lsp.release")
 
 local start = vim.health.start or vim.health.report_start
 local ok = vim.health.ok or vim.health.report_ok
@@ -11,18 +14,52 @@ local warn = vim.health.warn or vim.health.report_warn
 local error = vim.health.error or vim.health.report_error
 local info = vim.health.info or vim.health.report_info
 
+local function command_string(command)
+  if type(command) == "table" then
+    return table.concat(command, " ")
+  end
+  return command
+end
+
 function M.check()
   start("{copilot.lua}")
   info("{copilot.lua} GitHub Copilot plugin for Neovim")
 
   start("Copilot Dependencies")
 
-  if vim.fn.executable("node") == 1 then
-    local node_version = vim.fn.system("node --version"):gsub("\n", "")
-    ok("`node` found: " .. node_version)
+  local server_config = config.server
+  local server_type = server_config and server_config.type or "binary"
+  info("server mode: " .. server_type)
+  info("pinned version: " .. release.version)
+  if server_config.custom_server_filepath then
+    info("custom server path: " .. server_config.custom_server_filepath)
+    info("installation bypassed for custom server path")
   else
-    error("`node` not found in PATH")
-    info("Install Node.js from https://nodejs.org")
+    info("cache: `" .. installer.get_cache_root() .. "`")
+
+    local target, target_error = installer.resolve_target(server_type)
+    if target then
+      info("target: " .. target)
+    else
+      error("native target unavailable: " .. target_error)
+      info('Configure `server = { type = "nodejs" }` for the Node.js fallback')
+    end
+  end
+  local installer_status = installer.get_status()
+  info("installer state: " .. installer_status.state)
+  if installer_status.error then
+    info("installer error: " .. installer_status.error)
+  end
+
+  if server_type == "nodejs" then
+    local node_command = config.copilot_node_command or "node"
+    info("Node.js command: " .. command_string(node_command))
+    local node_version, node_version_error = nodejs.get_node_version_for_command(node_command)
+    if node_version_error then
+      error("Node.js command failed: " .. node_version_error)
+    else
+      ok("Node.js found: " .. node_version)
+    end
   end
 
   start("Copilot Authentication")
@@ -50,7 +87,11 @@ function M.check()
   if not client then
     if c.is_disabled() then
       error("Copilot is disabled")
-      info("Check Node.js installation (version 22+ required)")
+      if server_type == "nodejs" then
+        info("Check Node.js installation (version 22+ required)")
+      else
+        info("Check the native Copilot server target and installer status above")
+      end
       info("Run `:messages` for details or check the log file")
     else
       error("Copilot LSP client not available")

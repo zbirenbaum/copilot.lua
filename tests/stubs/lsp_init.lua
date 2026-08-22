@@ -1,15 +1,5 @@
 local M = {}
 
----@return boolean
-function M.initialization_failed()
-  return false
-end
-
----@return boolean
-function M.init()
-  return true
-end
-
 ---@param _ vim.lsp.Client|nil
 ---@return string
 function M.get_server_info(_)
@@ -24,8 +14,8 @@ function M.get_cmd_env()
   return {}
 end
 
-function M.setup(_, _)
-  return true
+function M.setup(_, _, callback)
+  callback(nil)
 end
 
 return M

@@ -7,72 +7,44 @@ local M = {
   config = nil,
 }
 
----@return boolean
-function M.initialization_failed()
-  if M.config.type == "nodejs" then
-    return M.nodejs.initialization_failed
-  elseif M.config.type == "binary" then
-    return M.binary.initialization_failed
-  end
-
-  return true
-end
-
----@return boolean
-function M.init()
-  if M.config.type == "nodejs" then
-    return M.nodejs.init()
-  elseif M.config.type == "binary" then
-    return M.binary.init()
-  end
-
-  return false
-end
-
 ---@param client vim.lsp.Client|nil
 ---@return string
 function M.get_server_info(client)
-  if M.config.type == "nodejs" then
-    return M.nodejs.get_server_info(client)
-  elseif M.config.type == "binary" then
-    return M.binary.get_server_info(client)
+  if M.config and M[M.config.type] then
+    return M[M.config.type].get_server_info(client)
   end
-
   return ""
 end
 
 ---@return table
 function M.get_execute_command()
-  if M.config.type == "nodejs" then
-    return M.nodejs.get_execute_command()
-  elseif M.config.type == "binary" then
-    return M.binary.get_execute_command()
+  if M.config and M[M.config.type] then
+    return M[M.config.type].get_execute_command()
   end
-
   return {}
 end
 
 ---@param server_config ServerConfig
 ---@param copilot_node_command string
----@return boolean
-function M.setup(server_config, copilot_node_command)
-  local result = true
-
+---@param callback fun(err: string|nil)
+function M.setup(server_config, copilot_node_command, callback)
   if not server_config then
-    logger.error("server_config is required")
-  end
-
-  if server_config.type == "nodejs" then
-    result = M.nodejs.setup(copilot_node_command, server_config.custom_server_filepath)
-  elseif server_config.type == "binary" then
-    M.binary.setup(server_config.custom_server_filepath)
-  else
-    logger.error("invalid server_config.type")
-    result = false
+    local err = "server_config is required"
+    logger.error(err)
+    callback(err)
+    return
   end
 
   M.config = server_config
-  return result
+  if server_config.type == "nodejs" then
+    M.nodejs.setup(copilot_node_command, server_config.custom_server_filepath, callback)
+  elseif server_config.type == "binary" then
+    M.binary.setup(server_config.custom_server_filepath, callback)
+  else
+    local err = "invalid server_config.type"
+    logger.error(err)
+    callback(err)
+  end
 end
 
 return M

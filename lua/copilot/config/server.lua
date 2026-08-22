@@ -7,7 +7,7 @@
 local server = {
   ---@type ServerConfig
   default = {
-    type = "nodejs",
+    type = "binary",
     custom_server_filepath = nil,
   },
 }
