@@ -1,0 +1,239 @@
+name: Copilot server install smoke
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/server-install-smoke.yml"
+      - "lua/copilot/lsp/installer.lua"
+      - "lua/copilot/lsp/release.lua"
+      - "lua/copilot/lsp/adapters/**"
+      - "lua/copilot/lsp/**"
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    name: Install server (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15-intel, windows-2025]
+
+    steps:
+      - name: Check out source without payload
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .github
+            lua
+            plugin
+          sparse-checkout-cone-mode: false
+
+      - name: Install stable Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: stable
+
+      - name: Prepare isolated data directory (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          data_dir="${RUNNER_TEMP}/copilot-server-smoke"
+          mkdir -p "$data_dir"
+          printf 'XDG_DATA_HOME=%s\n' "$data_dir" >> "$GITHUB_ENV"
+          printf 'COPILOT_SMOKE_DATA=%s\n' "$data_dir" >> "$GITHUB_ENV"
+
+      - name: Prepare isolated data directory (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dataDir = Join-Path $env:RUNNER_TEMP 'copilot-server-smoke'
+          New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
+          "LOCALAPPDATA=$dataDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "COPILOT_SMOKE_DATA=$dataDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Write installer smoke script (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          script="${RUNNER_TEMP}/copilot-install-smoke.lua"
+          cat > "$script" <<'LUA'
+          vim.opt.runtimepath:prepend(vim.env.GITHUB_WORKSPACE)
+          local installer = require("copilot.lsp.installer")
+          local done, install_err, entrypoint = false, nil, nil
+          installer.ensure("binary", function(err, path)
+            install_err, entrypoint, done = err, path, true
+          end)
+          assert(vim.wait(600000, function()
+            return done
+          end, 50), "installer timed out")
+          assert(not install_err, install_err)
+          assert(entrypoint and vim.fn.filereadable(entrypoint) == 1, "entrypoint missing")
+          assert(vim.fn.executable(entrypoint) == 1, "entrypoint is not executable")
+          local process = vim.system({ entrypoint, "--stdio" }, { text = true })
+          local exited = vim.wait(1000, function()
+            return process:is_closing()
+          end, 50)
+          assert(not exited, "server exited during smoke interval")
+          process:kill()
+          process:wait(5000)
+          vim.fn.writefile({ entrypoint }, assert(vim.env.COPILOT_SMOKE_RESULT))
+          LUA
+          printf 'COPILOT_SMOKE_SCRIPT=%s\n' "$script" >> "$GITHUB_ENV"
+
+      - name: Write installer smoke script (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $script = Join-Path $env:RUNNER_TEMP 'copilot-install-smoke.lua'
+          @'
+          vim.opt.runtimepath:prepend(vim.env.GITHUB_WORKSPACE)
+          local installer = require("copilot.lsp.installer")
+          local done, install_err, entrypoint = false, nil, nil
+          installer.ensure("binary", function(err, path)
+            install_err, entrypoint, done = err, path, true
+          end)
+          assert(vim.wait(600000, function()
+            return done
+          end, 50), "installer timed out")
+          assert(not install_err, install_err)
+          assert(entrypoint and vim.fn.filereadable(entrypoint) == 1, "entrypoint missing")
+          local process = vim.system({ entrypoint, "--stdio" }, { text = true })
+          local exited = vim.wait(1000, function()
+            return process:is_closing()
+          end, 50)
+          assert(not exited, "server exited during smoke interval")
+          process:kill()
+          process:wait(5000)
+          vim.fn.writefile({ entrypoint }, assert(vim.env.COPILOT_SMOKE_RESULT))
+          '@ | Set-Content -LiteralPath $script -Encoding utf8NoBOM
+          "COPILOT_SMOKE_SCRIPT=$script" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8NoBOM -Append
+
+      - name: Install and start pinned server (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          COPILOT_SMOKE_RESULT: ${{ runner.temp }}/copilot-server-smoke-result
+        run: |
+          set -Eeuo pipefail
+          nvim --headless --clean -u NONE -c "lua dofile(vim.env.COPILOT_SMOKE_SCRIPT)" -c 'qa!'
+          test -s "$COPILOT_SMOKE_RESULT"
+
+      - name: Install and start pinned server (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          COPILOT_SMOKE_RESULT: ${{ runner.temp }}\copilot-server-smoke-result
+        run: |
+          $ErrorActionPreference = 'Stop'
+          nvim --headless --clean -u NONE -c "lua dofile(vim.env.COPILOT_SMOKE_SCRIPT)" -c 'qa!'
+          if (-not (Test-Path -LiteralPath $env:COPILOT_SMOKE_RESULT)) { throw 'smoke result missing' }
+
+      - name: Verify Windows install ACL contract
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          COPILOT_SMOKE_RESULT: ${{ runner.temp }}\copilot-server-smoke-result
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $entrypoint = (Get-Content -LiteralPath $env:COPILOT_SMOKE_RESULT -Raw).Trim()
+          if (-not $entrypoint) { throw 'entrypoint result is empty' }
+          $entry = Get-Item -LiteralPath $entrypoint
+          if (-not $entry.Exists) { throw "entrypoint missing: $entrypoint" }
+          $generation = $entry.Directory
+          $generations = $generation.Parent
+          $target = $generations.Parent
+          $version = $target.Parent
+          if ($version.Name -ne '1.527.5') { throw "unexpected version: $($version.Name)" }
+          if ($target.Name -ne 'win32-x64') { throw "unexpected target: $($target.Name)" }
+          if ($generations.Name -ne 'generations') { throw "unexpected generations directory: $($generations.Name)" }
+          if ($generation.Name -cnotmatch '^[0-9a-f]{64}-[0-9]+-[0-9]+-[0-9]+$') { throw "unexpected generation: $($generation.Name)" }
+
+          $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
+          function Get-Sid($identity) {
+            return $identity.Translate([System.Security.Principal.SecurityIdentifier]).Value
+          }
+          function Assert-ParentAcl($path) {
+            $acl = Get-Acl -LiteralPath $path
+            if ($acl.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $sid.Value) { throw "owner mismatch: $path" }
+            if (-not $acl.AreAccessRulesProtected) { throw "DACL is not protected: $path" }
+            if (@($acl.Access).Count -ne 1) { throw "unexpected ACE count: $path" }
+            $ace = $acl.Access[0]
+            if ($ace.AccessControlType -ne 'Allow' -or (Get-Sid $ace.IdentityReference) -ne $sid.Value) { throw "unexpected ACE identity/type: $path" }
+            if ($ace.FileSystemRights.ToString() -ne 'FullControl') { throw "unexpected ACE rights: $path" }
+            if ($ace.InheritanceFlags.ToString() -ne 'ContainerInherit, ObjectInherit' -or $ace.PropagationFlags.ToString() -ne 'None') { throw "unexpected ACE inheritance: $path" }
+            if ($ace.IsInherited) { throw "parent ACE is inherited: $path" }
+            return $acl
+          }
+          $parent = Assert-ParentAcl $generations.FullName
+          $child = Get-Acl -LiteralPath $generation.FullName
+          if ($child.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $sid.Value) { throw 'reservation owner mismatch' }
+          if (@($child.Access).Count -ne 1) { throw 'unexpected reservation ACE count' }
+          $childAce = $child.Access[0]
+          if ($childAce.AccessControlType -ne 'Allow' -or (Get-Sid $childAce.IdentityReference) -ne $sid.Value) { throw 'unexpected reservation ACE identity/type' }
+          if ($childAce.FileSystemRights.ToString() -ne 'FullControl') { throw 'unexpected reservation ACE rights' }
+          if ($childAce.InheritanceFlags.ToString() -ne 'ContainerInherit, ObjectInherit' -or $childAce.PropagationFlags.ToString() -ne 'None') { throw 'unexpected reservation ACE inheritance' }
+          if (-not $childAce.IsInherited) { throw 'reservation ACE is not inherited' }
+          if ($parent.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $sid.Value -or -not $parent.AreAccessRulesProtected) { throw 'parent changed during reservation verification' }
+
+      - name: Install failing transport wrappers (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin_dir="${RUNNER_TEMP}/copilot-failing-transports"
+          mkdir -p "$bin_dir"
+          for command in curl wget powershell sha256sum shasum openssl unzip chmod; do
+            cat > "$bin_dir/$command" <<'SH'
+          #!/bin/sh
+          printf 'unexpected transport invocation: %s\n' "$0" >&2
+          exit 91
+          SH
+            chmod +x "$bin_dir/$command"
+          done
+          printf 'PATH=%s:%s\n' "$bin_dir" "$PATH" >> "$GITHUB_ENV"
+
+      - name: Install failing transport wrappers (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $binDir = Join-Path $env:RUNNER_TEMP 'copilot-failing-transports'
+          New-Item -ItemType Directory -Force -Path $binDir | Out-Null
+          foreach ($command in @('curl', 'wget', 'powershell', 'sha256sum', 'shasum', 'openssl', 'unzip', 'chmod')) {
+            "@echo unexpected transport invocation: $command`r`n@exit /b 91" | Set-Content -LiteralPath (Join-Path $binDir "$command.cmd") -Encoding ascii
+          }
+          "PATH=$binDir;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Reuse cache without network (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          COPILOT_SMOKE_RESULT: ${{ runner.temp }}/copilot-server-smoke-result
+          COPILOT_SMOKE_EXPECT: ${{ runner.temp }}/copilot-server-smoke-result
+        run: |
+          set -Eeuo pipefail
+          expected="$(cat "$COPILOT_SMOKE_EXPECT")"
+          nvim --headless --clean -u NONE -c "lua dofile(vim.env.COPILOT_SMOKE_SCRIPT)" -c 'qa!'
+          test "$(cat "$COPILOT_SMOKE_RESULT")" = "$expected"
+
+      - name: Reuse cache without network (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          COPILOT_SMOKE_RESULT: ${{ runner.temp }}\copilot-server-smoke-result
+          COPILOT_SMOKE_EXPECT: ${{ runner.temp }}\copilot-server-smoke-result
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $expected = (Get-Content -LiteralPath $env:COPILOT_SMOKE_EXPECT -Raw).Trim()
+          nvim --headless --clean -u NONE -c "lua dofile(vim.env.COPILOT_SMOKE_SCRIPT)" -c 'qa!'
+          if ((Get-Content -LiteralPath $env:COPILOT_SMOKE_RESULT -Raw).Trim() -ne $expected) { throw 'cache entrypoint changed' }
