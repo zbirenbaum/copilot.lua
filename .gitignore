@@ -2,5 +2,6 @@ tests/logs
 tests/env.lua
 deps/
 .worktrees/
+/copilot/
 
 tests/files/test.txt
