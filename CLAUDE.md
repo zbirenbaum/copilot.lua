@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 copilot.lua is a pure Lua Neovim plugin for GitHub Copilot integration, replacing github/copilot.vim. It communicates with the Copilot Language Server via Neovim's built-in LSP client to provide inline suggestions, a completion panel, and next-edit suggestions (NES).
 
-**Requirements**: Neovim 0.11+, Node.js 22+ (for the default nodejs server mode).
+**Requirements**: Neovim 0.11+. The native binary server is the default; Node.js 22+ is required only for explicit `server = { type = "nodejs" }` mode.
 
 ## Development Commands
 
@@ -40,7 +40,7 @@ The LSP client is lazily initialized — it starts on first buffer attach or exp
 |--------|------|
 | `client/` | LSP client lifecycle, buffer attach/detach, state tracking |
 | `api/` | Wraps all LSP requests/notifications (coroutine-based async) |
-| `lsp/` | Server startup — `nodejs.lua` (default) or `binary.lua` (experimental) |
+| `lsp/` | Server startup — downloaded native binary by default or explicit `nodejs.lua` mode |
 | `config/` | Modular config with per-feature defaults, deep merge, validation |
 | `auth/` | Device code sign-in flow, token caching from `~/.config/github-copilot/` |
 | `suggestion/` | Inline virtual text completions with accept/dismiss/cycle |
