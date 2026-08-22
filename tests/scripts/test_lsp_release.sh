@@ -46,7 +46,8 @@ new_fixture() {
   git -C "$dir" config user.email test@example.com
   git -C "$dir" remote add origin "$dir-origin.git"
   mkdir -p "$dir/lua/copilot"
-  printf 'return {\n  editorPluginInfo = {\n    version = "1.527.1",\n  },\n}\n' >"$dir/lua/copilot/util.lua"
+  mkdir -p "$dir/lua/copilot/lsp"
+  printf 'return {\n  version = "1.527.1",\n  assets = {},\n}\n' >"$dir/lua/copilot/lsp/release.lua"
   printf '{\n  ".": "3.0.3"\n}\n' >"$dir/.release-please-manifest.json"
   git -C "$dir" add .
   git -C "$dir" commit -m initial >/dev/null

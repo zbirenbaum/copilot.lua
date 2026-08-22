@@ -26,3 +26,5 @@ jobs:
         run: bash tests/scripts/test_lsp_release.sh
       - name: Test LSP update workflow
         run: bash tests/scripts/test_lsp_update_workflow.sh
+      - name: Test LSP metadata generator
+        run: bash tests/scripts/test_update_lsp_metadata.sh

@@ -36,21 +36,15 @@ jobs:
           # GitHub's `releases/latest` endpoint sorts by created_at, so a backport
           # patch published to an older minor wins over a newer minor. Pick the
           # highest semver instead by parsing tag_name as MAJOR.MINOR.PATCH.
-          tag=$(curl -fsS "https://api.github.com/repos/github/copilot-language-server-release/releases?per_page=100" \
-            | jq -r '[.[] | select(.prerelease==false and .draft==false) | .tag_name]
-                     | sort_by(split(".") | map(tonumber)) | last')
-          if [ -z "$tag" ] || [ "$tag" = "null" ]; then
-            echo "Failed to resolve latest release tag" >&2
-            exit 1
-          fi
-          url=$(curl -fsS "https://api.github.com/repos/github/copilot-language-server-release/releases/tags/$tag" \
-            | jq -r '.assets[] | select(.name | test("copilot-language-server-js-.*\\.zip$")) | .browser_download_url')
-          if [ -z "$url" ] || [ "$url" = "null" ]; then
-            echo "No copilot-language-server-js asset found for $tag" >&2
-            exit 1
-          fi
+          selected_release="$RUNNER_TEMP/copilot-selected-release.json"
+          gh api --paginate --header 'Accept: application/vnd.github+json' \
+            "/repos/github/copilot-language-server-release/releases?per_page=100" \
+            | jq -s -e '[add[] | select(.prerelease == false and .draft == false and (.tag_name | test("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\z")))] | sort_by(.tag_name | split(".") | map(tonumber)) | last' >"$selected_release"
+          tag=$(jq -er '.tag_name' "$selected_release")
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "release_json=$selected_release" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Check release tag
         id: release
@@ -74,18 +68,13 @@ jobs:
           required=$(bash .github/scripts/lsp-release.sh needs-lsp-update "${{ steps.resolve.outputs.tag }}")
           echo "required=$required" >> "$GITHUB_OUTPUT"
 
-      - name: Download latest LSP
+      - name: Generate LSP release metadata
         if: steps.update.outputs.required == 'true'
         run: |
           set -euo pipefail
-          wget -v "${{ steps.resolve.outputs.url }}"
-
-      - name: Update version in util.lua
-        if: steps.update.outputs.required == 'true'
-        run: |
-          set -euo pipefail
-          sed -i.bak -E 's/(version = ")[^"]+(",)/\1${{ steps.resolve.outputs.tag }}\2/' lua/copilot/util.lua
-          rm lua/copilot/util.lua.bak
+          bash .github/scripts/update-lsp-metadata.sh \
+            "${{ steps.resolve.outputs.release_json }}" \
+            lua/copilot/lsp/release.lua
 
       - name: Refresh tags before version bump
         if: steps.update.outputs.required == 'true'
@@ -101,22 +90,42 @@ jobs:
           jq --arg version "$version" '.["."] = $version' .release-please-manifest.json > .release-please-manifest.json.tmp
           mv .release-please-manifest.json.tmp .release-please-manifest.json
 
-      - name: Unzip LSP
+      - name: Set up Neovim and dependencies
+        if: steps.update.outputs.required == 'true'
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: stable
+
+      - name: Install workflow validation tools
         if: steps.update.outputs.required == 'true'
         run: |
           set -euo pipefail
-          rm -rf copilot/js
-          mkdir -p copilot/js
-          unzip -o copilot-language-server-js-*.zip -d copilot/js
-          rm copilot-language-server-js-*.zip
+          sudo apt-get update
+          sudo apt-get install -y luarocks
+          sudo luarocks install luacheck
+          cargo install stylua
+          make deps
+          go install github.com/rhysd/actionlint/cmd/actionlint@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Validate generated update
+        if: steps.update.outputs.required == 'true'
+        run: |
+          set -euo pipefail
+          make lint
+          make test
+          bash tests/scripts/test_lsp_release.sh
+          bash tests/scripts/test_lsp_update_workflow.sh
+          bash tests/scripts/test_update_lsp_metadata.sh
+          actionlint
 
       - name: Create Pull Request
         if: steps.update.outputs.required == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
           add-paths: |
-            copilot/js
-            lua/copilot/util.lua
+            lua/copilot/lsp/release.lua
             .release-please-manifest.json
           author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           base: master

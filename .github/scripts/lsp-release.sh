@@ -12,7 +12,7 @@ stable_version() {
 
 installed_lsp_version() {
   local version
-  version=$(sed -n -E 's/^[[:space:]]*version = "([^"]+)",$/\1/p' lua/copilot/util.lua)
+  version=$(sed -n -E 's/^[[:space:]]*version = "([^"]+)",$/\1/p' lua/copilot/lsp/release.lua)
   stable_version "$version" || die "Unable to read the installed LSP version"
   printf '%s\n' "$version"
 }
