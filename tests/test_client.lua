@@ -451,13 +451,12 @@ T["client()"]["should_attach returns false prevents buffer attachment"] = functi
 end
 
 T["client()"]["disabled copilot does not spam warnings on buffer enter"] = function()
-  -- Override lsp.setup to return false, simulating a failed initialization
-  -- (e.g. Node.js not found or wrong version). This sets is_disabled=true
-  -- in client.setup() but suggestion autocmds are still created.
+  -- Override lsp.setup to report a failed readiness callback
+  -- (e.g. Node.js not found or wrong version).
   child.lua([[
     local lsp = require("copilot.lsp")
-    lsp.setup = function(_, _)
-      return false
+    lsp.setup = function(_, _, callback)
+      callback("Node.js unavailable")
     end
   ]])
 

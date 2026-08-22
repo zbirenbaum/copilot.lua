@@ -12,12 +12,8 @@ local callbacks = {}
 ---@param overrides table<string, any>
 ---@param client CopilotClient
 function M.prepare_client_config(overrides, client)
-  if lsp.initialization_failed() then
-    client.startup_error = "initialization of copilot-language-server failed"
-    return
-  end
-
   client.startup_error = nil
+  local generation = client.setup_generation
 
   local cmd = lsp.get_execute_command()
 
@@ -114,6 +110,9 @@ function M.prepare_client_config(overrides, client)
         api.notify_set_trace(lsp_client, trace_params)
 
         -- prevent requests to copilot prior to being initialized
+        if client.setup_generation ~= generation or client.id ~= lsp_client.id then
+          return
+        end
         client.initialized = true
 
         for _, callback in ipairs(callbacks) do
@@ -137,6 +136,9 @@ function M.prepare_client_config(overrides, client)
     on_exit = function(code, _, client_id)
       if client.id == client_id then
         vim.schedule(function()
+          if client.id ~= client_id then
+            return
+          end
           client.teardown()
           client.id = nil
           client.capabilities = nil

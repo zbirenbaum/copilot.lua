@@ -14,6 +14,11 @@ local T = MiniTest.new_set({
 
 T["config()"] = MiniTest.new_set()
 
+T["config()"]["binary server is the default"] = function()
+  local result = child.lua([[return require("copilot.config").server.type]])
+  eq(result, "binary")
+end
+
 T["config()"]["validate accepts valid config with defaults"] = function()
   local result = child.lua([[
     local config = require("copilot.config")

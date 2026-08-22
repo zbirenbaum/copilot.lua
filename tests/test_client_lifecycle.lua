@@ -15,6 +15,145 @@ local T = MiniTest.new_set({
 
 T["client lifecycle()"] = MiniTest.new_set()
 
+T["client lifecycle()"]["defers start until LSP readiness"] = function()
+  local result = child.lua([[
+    local lsp = require("copilot.lsp")
+    local ready
+    local starts = 0
+    local original_start = vim.lsp.start
+    lsp.setup = function(_, _, callback)
+      ready = callback
+    end
+    vim.lsp.start = function(...)
+      starts = starts + 1
+      return original_start(...)
+    end
+    c.setup()
+    local before = starts
+    ready(nil)
+    vim.wait(200, function()
+      return starts > before
+    end, 10)
+    vim.lsp.start = original_start
+    return { before = before, after = starts, attached = c.buf_is_attached(0) }
+  ]])
+  eq(result.before, 0)
+  eq(result.after, 1)
+  eq(result.attached, true)
+end
+
+T["client lifecycle()"]["attach requests are silent while LSP readiness is pending"] = function()
+  local result = child.lua([[
+    local lsp = require("copilot.lsp")
+    local ready
+    local notifications = {}
+    local original_notify = vim.notify
+    lsp.setup = function(_, _, callback)
+      ready = callback
+    end
+    vim.notify = function(message)
+      table.insert(notifications, message)
+    end
+    c.setup()
+    c.buf_attach(true, 0)
+    vim.wait(100, function() return false end, 10)
+    local pending_notifications = vim.deepcopy(notifications)
+    ready(nil)
+    vim.wait(200, function() return c.buf_is_attached(0) end, 10)
+    vim.notify = original_notify
+    return { notifications = pending_notifications, attached = c.buf_is_attached(0) }
+  ]])
+  eq(result.notifications, {})
+  eq(result.attached, true)
+end
+
+T["client lifecycle()"]["attach requests report missing configuration outside setup"] = function()
+  local result = child.lua([[
+    local notifications = {}
+    local original_notify = vim.notify
+    vim.notify = function(message)
+      table.insert(notifications, message)
+    end
+    c.buf_attach(true, 0)
+    vim.wait(100, function() return #notifications > 0 end, 10)
+    vim.notify = original_notify
+    return notifications
+  ]])
+  eq(result, { "[Copilot.lua] cannot attach: configuration not initialized" })
+end
+
+T["client lifecycle()"]["only newest readiness completion starts client"] = function()
+  local result = child.lua([[
+    local lsp = require("copilot.lsp")
+    local callbacks = {}
+    local starts = 0
+    local original_start = vim.lsp.start
+    lsp.setup = function(_, _, callback)
+      table.insert(callbacks, callback)
+    end
+    vim.lsp.start = function(...)
+      starts = starts + 1
+      return original_start(...)
+    end
+    c.setup()
+    c.setup()
+    callbacks[2](nil)
+    callbacks[1](nil)
+    vim.wait(200, function()
+      return starts > 0
+    end, 10)
+    vim.lsp.start = original_start
+    return starts
+  ]])
+  eq(result, 1)
+end
+
+T["client lifecycle()"]["teardown during install prevents startup"] = function()
+  local result = child.lua([[
+    local lsp = require("copilot.lsp")
+    local ready
+    local starts = 0
+    local original_start = vim.lsp.start
+    lsp.setup = function(_, _, callback)
+      ready = callback
+    end
+    vim.lsp.start = function(...)
+      starts = starts + 1
+      return original_start(...)
+    end
+    c.setup()
+    c.teardown()
+    ready(nil)
+    vim.wait(100, function() return false end, 10)
+    vim.lsp.start = original_start
+    return starts
+  ]])
+  eq(result, 0)
+end
+
+T["client lifecycle()"]["readiness errors can be retried"] = function()
+  local result = child.lua([[
+    local lsp = require("copilot.lsp")
+    local callbacks = {}
+    lsp.setup = function(_, _, callback)
+      table.insert(callbacks, callback)
+    end
+    c.setup()
+    callbacks[1]("install failed")
+    local first_error = c.startup_error
+    local disabled_after_error = c.is_disabled()
+    c.setup()
+    callbacks[2](nil)
+    vim.wait(200, function()
+      return c.id ~= nil
+    end, 10)
+    return { first_error = first_error, disabled_after_error = disabled_after_error, retry = c.id ~= nil }
+  ]])
+  eq(result.first_error, "install failed")
+  eq(result.disabled_after_error, true)
+  eq(result.retry, true)
+end
+
 -- Fix #1: ensure_client_started should have a startup guard to prevent duplicate spawns
 T["client lifecycle()"]["ensure_client_started sets starting guard during startup"] = function()
   child.configure_copilot()
@@ -126,9 +265,11 @@ T["client lifecycle()"]["disable then enable does not leak client processes"] = 
   -- Disable and re-enable
   child.lua([[
     require("copilot.command").disable()
-    vim.wait(200, function() return false end, 10)
+    _G.initialized_after_disable = require("copilot.client").initialized
     require("copilot.command").enable()
   ]])
+
+  eq(child.lua("return _G.initialized_after_disable"), false)
 
   -- Wait for the new client to initialize
   child.lua([[

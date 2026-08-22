@@ -124,11 +124,11 @@ T["status()"]["status shows Online when running"] = function()
 end
 
 T["status()"]["status shows Offline when disabled"] = function()
-  -- Override lsp.setup to return false, simulating disabled state
+  -- Override lsp.setup to report a failed readiness callback
   child.lua([[
     local lsp = require("copilot.lsp")
-    lsp.setup = function(_, _)
-      return false
+    lsp.setup = function(_, _, callback)
+      callback("Node.js unavailable")
     end
   ]])
 
