@@ -40,9 +40,23 @@ As lua is far more efficient and makes things easier to integrate with modern pl
 
 ## Requirements
 
-- Curl
 - NeoVim 0.11.0 or higher
-- NodeJS v22 or higher if using the default nodejs LSP version
+- NodeJS v22 or higher only when using `server = { type = "nodejs" }`
+
+The native Copilot Language Server is the default. On supported platforms, the
+first use asynchronously downloads about 75-110 MB depending on the pinned
+release and platform. It is cached under
+`stdpath("data")/copilot.lua/lsp`. Downloads are version-pinned and SHA-256
+verified. A first install or cache miss needs a transport (`curl`, `wget`, or
+PowerShell), hashing, and extraction tool; cache hits and custom paths need none.
+Successful installs are extracted into private staging and atomically published
+to a cache path keyed by version, platform, and SHA-256. Interrupted staging
+directories are ignored and cleaned later. Concurrent first runs may duplicate
+a download, but they reuse the first complete published install.
+
+Native binaries are supported on Linux x64/arm64 with glibc, macOS x64/arm64,
+and Windows x64/arm64. Musl Linux and other unsupported systems must use
+`server = { type = "nodejs" }`.
 
 ## Install
 
@@ -191,7 +205,7 @@ require('copilot').setup({
     trace_lsp_progress = false,
     log_lsp_messages = false,
   },
-  copilot_node_command = 'node', -- Node.js version must be > 22
+  copilot_node_command = 'node', -- Node.js version must be 22 or newer
   workspace_folders = {},
   copilot_model = "",
   disable_limit_reached_message = false,  -- Set to `true` to suppress completion limit reached popup
@@ -212,7 +226,7 @@ require('copilot').setup({
     return true
   end,
   server = {
-    type = "nodejs", -- "nodejs" | "binary"
+    type = "binary", -- "binary" | "nodejs"
     custom_server_filepath = nil,
   },
   server_opts_overrides = {},
@@ -438,7 +452,7 @@ Use this field to provide the path to a specific node version such as one instal
 Example:
 
 ```lua
-copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v22.0.0/bin/node", -- Node.js version must be > 22
+  copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v22.0.0/bin/node", -- Node.js version must be 22 or newer
 ```
 
 ### server_opts_overrides
@@ -512,21 +526,28 @@ require("copilot").setup {
 
 ### server
 
-> [!CAUTION]
-> `"binary"` mode is still very much experimental, please report any issues you encounter.
-
-`type` can be either `"nodejs"` or `"binary"`. The binary version will be downloaded if used.
+The native server is used by default. `type` can be either `"binary"` or
+`"nodejs"`. Native mode downloads the pinned server asynchronously on first
+use, caches it in `stdpath("data")/copilot.lua/lsp`, and verifies its SHA-256
+checksum.
+Complete installs are cached at a deterministic version, target, and SHA-256
+path. Publication occurs only after extraction and entrypoint validation;
+incomplete staging directories are never used as cache hits.
+Supported native targets are Linux x64/arm64 with glibc, macOS
+x64/arm64, and Windows x64/arm64. Musl Linux and unsupported systems should
+configure `server = { type = "nodejs" }`.
 
 `custom_server_filepath` is used to specify the server path (filename included) of either the `js` file if using `"nodejs"` or to the binary if using `"binary"`.
-The filename on its own can also be set if accessible through your PATH.
-When using `"binary"`, the download process will be disabled and the binary will be used directly.
+The filename on its own can also be set if accessible through your PATH. A
+custom path disables downloading and remains available for offline or manual
+installs.
 example:
 
 ```lua
 require("copilot").setup {
   server = {
-    type = "nodejs",
-    custom_server_filepath = "/home/user/copilot-lsp/language-server.js",
+    type = "binary",
+    custom_server_filepath = "/home/user/copilot-lsp/copilot-language-server",
   },
 }
 ```
