@@ -144,7 +144,7 @@ T["health()"]["reports native server resolution and installer status"] = functio
 
   u.expect_match(output, "server mode: binary")
   u.expect_match(output, "target: linux%-x64")
-  u.expect_match(output, "version: 1%.527%.5")
+  u.expect_match(output, "version: 1%.534%.0")
   u.expect_match(output, "cache: .-copilot%.lua.-lsp")
   u.expect_match(output, "installer state: downloading")
 end
