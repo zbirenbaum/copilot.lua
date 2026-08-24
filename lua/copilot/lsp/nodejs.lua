@@ -63,7 +63,12 @@ end
 function M.get_node_version()
   if M.node_version == nil or not vim.deep_equal(M.node_version_command, M.node_command) then
     M.node_version, M.node_version_error = probe_node_version(M.node_command)
-    M.node_version_command = vim.deepcopy(M.node_command)
+    local node_command = M.node_command
+    if type(node_command) == "table" then
+      M.node_version_command = vim.deepcopy(node_command)
+    else
+      M.node_version_command = node_command
+    end
   end
 
   return M.node_version, M.node_version_error

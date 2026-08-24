@@ -57,6 +57,7 @@ T["setup()"]["custom path bypasses installer"] = function()
     installer_called = true
   end
   local original_readable = vim.fn.filereadable
+  ---@diagnostic disable-next-line: duplicate-set-field
   vim.fn.filereadable = function(path)
     return path == stub.custom_server_path and 1 or original_readable(path)
   end
@@ -157,6 +158,7 @@ end
 
 T["get_execute_command()"]["preserves custom command and server path"] = function()
   local original_readable = vim.fn.filereadable
+  ---@diagnostic disable-next-line: duplicate-set-field
   vim.fn.filereadable = function(path)
     return path == stub.custom_server_path and 1 or original_readable(path)
   end

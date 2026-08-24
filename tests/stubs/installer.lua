@@ -18,6 +18,7 @@ end
 function M.start()
   local original = vim.system
   M.reset()
+  ---@diagnostic disable-next-line: duplicate-set-field
   vim.system = function(command, options, callback)
     if command[1] == "ldd" then
       return {

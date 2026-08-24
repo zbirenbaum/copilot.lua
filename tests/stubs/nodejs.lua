@@ -27,6 +27,7 @@ end
 function M.process(stdout, code, fail, callback)
   local captured_args = nil
   local original_vim_system = vim.system
+  ---@diagnostic disable-next-line: duplicate-set-field
   vim.system = function(cmd)
     captured_args = cmd
     if fail then
