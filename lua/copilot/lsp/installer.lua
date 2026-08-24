@@ -353,7 +353,7 @@ end
 
 local function extract(operation, extract_script)
   set_status("extracting", operation.target, nil, nil)
-  vim.fn.mkdir(operation.staging, "p", 448)
+  vim.fn.mkdir(operation.staging, "p", "448")
   run_commands(operation, "extract", {
     { "unzip", "-o", operation.archive, "-d", operation.staging },
     { "powershell", "-NoProfile", "-Command", extract_script },
@@ -434,7 +434,7 @@ end
 
 local function begin_install(operation)
   operation.archive = unique_path("archive", ".zip")
-  vim.fn.mkdir(cache_root(), "p", 448)
+  vim.fn.mkdir(cache_root(), "p", "448")
   local fd = vim.uv.fs_open(operation.archive, "w", 384)
   if fd then
     vim.uv.fs_close(fd)
@@ -579,7 +579,7 @@ end
 
 ---@param server_type string
 ---@param uname? { sysname: string, machine: string }
----@param musl? boolean
+---@param musl? string|boolean
 ---@return string? target
 ---@return string? error_message
 function M.resolve_target(server_type, uname, musl)

@@ -12,7 +12,6 @@ local M = {
   server_path = nil,
 }
 
----@return boolean
 ---@param client vim.lsp.Client|nil
 ---@return string
 function M.get_server_info(client)

@@ -10,16 +10,20 @@ local M = {
 ---@param client vim.lsp.Client|nil
 ---@return string
 function M.get_server_info(client)
-  if M.config and M[M.config.type] then
-    return M[M.config.type].get_server_info(client)
+  if M.config and M.config.type == "binary" then
+    return M.binary.get_server_info(client)
+  elseif M.config and M.config.type == "nodejs" then
+    return M.nodejs.get_server_info(client)
   end
   return ""
 end
 
 ---@return table
 function M.get_execute_command()
-  if M.config and M[M.config.type] then
-    return M[M.config.type].get_execute_command()
+  if M.config and M.config.type == "binary" then
+    return M.binary.get_execute_command()
+  elseif M.config and M.config.type == "nodejs" then
+    return M.nodejs.get_execute_command()
   end
   return {}
 end

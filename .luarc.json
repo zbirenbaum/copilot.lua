@@ -6,6 +6,11 @@
   "type": {
     "checkTableShape": true
   },
+  "workspace": {
+    "library": [
+      "${env:VIMRUNTIME}"
+    ]
+  },
   "diagnostics.globals": [
     "describe",
     "it",
