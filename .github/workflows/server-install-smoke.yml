@@ -149,14 +149,13 @@ jobs:
           if (-not $entrypoint) { throw 'entrypoint result is empty' }
           $entry = Get-Item -LiteralPath $entrypoint
           if (-not $entry.Exists) { throw "entrypoint missing: $entrypoint" }
-          $generation = $entry.Directory
-          $generations = $generation.Parent
-          $target = $generations.Parent
+          $install = $entry.Directory
+          $target = $install.Parent
           $version = $target.Parent
-          if ($version.Name -ne '1.534.0') { throw "unexpected version: $($version.Name)" }
+          $cacheRoot = $version.Parent
+          if ($version.Name -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$') { throw "unexpected version: $($version.Name)" }
           if ($target.Name -ne 'win32-x64') { throw "unexpected target: $($target.Name)" }
-          if ($generations.Name -ne 'generations') { throw "unexpected generations directory: $($generations.Name)" }
-          if ($generation.Name -cnotmatch '^[0-9a-f]{64}-[0-9]+-[0-9]+-[0-9]+$') { throw "unexpected generation: $($generation.Name)" }
+          if ($install.Name -cnotmatch '^[0-9a-f]{64}$') { throw "unexpected install digest: $($install.Name)" }
 
           $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
           function Get-Sid($identity) {
@@ -174,16 +173,19 @@ jobs:
             if ($ace.IsInherited) { throw "parent ACE is inherited: $path" }
             return $acl
           }
-          $parent = Assert-ParentAcl $generations.FullName
-          $child = Get-Acl -LiteralPath $generation.FullName
-          if ($child.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $sid.Value) { throw 'reservation owner mismatch' }
-          if (@($child.Access).Count -ne 1) { throw 'unexpected reservation ACE count' }
+          foreach ($parentPath in @($cacheRoot.FullName, $version.FullName, $target.FullName)) {
+            Assert-ParentAcl $parentPath | Out-Null
+          }
+          $parent = Assert-ParentAcl $target.FullName
+          $child = Get-Acl -LiteralPath $install.FullName
+          if ($child.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $sid.Value) { throw 'install owner mismatch' }
+          if (@($child.Access).Count -ne 1) { throw 'unexpected install ACE count' }
           $childAce = $child.Access[0]
           if ($childAce.AccessControlType -ne 'Allow' -or (Get-Sid $childAce.IdentityReference) -ne $sid.Value) { throw 'unexpected reservation ACE identity/type' }
           if ($childAce.FileSystemRights.ToString() -ne 'FullControl') { throw 'unexpected reservation ACE rights' }
           if ($childAce.InheritanceFlags.ToString() -ne 'ContainerInherit, ObjectInherit' -or $childAce.PropagationFlags.ToString() -ne 'None') { throw 'unexpected reservation ACE inheritance' }
-          if (-not $childAce.IsInherited) { throw 'reservation ACE is not inherited' }
-          if ($parent.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $sid.Value -or -not $parent.AreAccessRulesProtected) { throw 'parent changed during reservation verification' }
+          if (-not $childAce.IsInherited) { throw 'install ACE is not inherited' }
+          if ($parent.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $sid.Value -or -not $parent.AreAccessRulesProtected) { throw 'parent changed during install verification' }
 
       - name: Install failing transport wrappers (Unix)
         if: runner.os != 'Windows'
