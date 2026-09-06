@@ -1,26 +1,70 @@
 local eq = MiniTest.expect.equality
 local store = require("copilot.lsp.store")
 
-local T = MiniTest.new_set()
+local base_filereadable = vim.fn.filereadable
+local base_executable = vim.fn.executable
+local base_rm = vim.fs.rm
+local T = MiniTest.new_set({
+  hooks = {
+    post_case = function()
+      vim.fn.filereadable = base_filereadable
+      vim.fn.executable = base_executable
+      vim.fs.rm = base_rm
+    end,
+  },
+})
 local digest = string.rep("a", 64)
 
 local function mkdir_private(path)
-  vim.fn.mkdir(path, "p", 448)
+  vim.fn.mkdir(path, "p", "448")
 end
 
 local function root()
   local path = vim.fn.tempname()
   mkdir_private(path)
-  return path
+  return vim.uv.fs_realpath(path) or path
+end
+
+local function symlink(source, target)
+  local ok, err = vim.uv.fs_symlink(source, target)
+  eq(ok, true)
+  eq(err, nil)
+end
+
+local function directory_symlink(source, target)
+  local ok, err = vim.uv.fs_symlink(source, target, { dir = true })
+  eq(ok, true)
+  eq(err, nil)
+end
+
+local function mark_non_executable(path)
+  if vim.loop.os_uname().sysname == "Windows_NT" then
+    ---@diagnostic disable-next-line: duplicate-set-field
+    vim.fn.executable = function(value)
+      if value == path then
+        return 0
+      end
+      return base_executable(value)
+    end
+  else
+    vim.fn.setfperm(path, "rw-------")
+  end
+end
+
+local function fixture_target()
+  return vim.loop.os_uname().sysname == "Windows_NT" and "win32-x64" or "linux-x64"
 end
 
 local function options(path, target, sha256)
+  target = target or fixture_target()
   return {
     cache_root = path,
     version = "1.527.5",
-    target = target or "linux-x64",
+    target = target,
     sha256 = sha256 or digest,
-    entrypoint = target == "js" and "server.js" or "copilot-language-server",
+    entrypoint = target == "js" and "server.js"
+      or target:match("^win32%-") and "copilot-language-server.exe"
+      or "copilot-language-server",
   }
 end
 
@@ -51,7 +95,7 @@ local function complete_install(path, opts)
   return final, entry
 end
 
-local function reserve_with_entry(path, opts)
+local function reserve_with_entry(_, opts)
   local reservation = assert(store.reserve(opts))
   local entry = vim.fs.joinpath(reservation.path, opts.entrypoint)
   vim.fn.writefile({ opts.target == "js" and "module.exports = 1" or "server" }, entry)
@@ -122,7 +166,7 @@ T["supports a symlink to a private cache root"] = function()
   end
   local physical = root()
   local path = vim.fn.tempname()
-  vim.uv.fs_symlink(physical, path)
+  directory_symlink(physical, path)
   local opts = options(path)
   local reservation = assert(store.reserve(opts))
   local entry = vim.fs.joinpath(reservation.path, opts.entrypoint)
@@ -182,11 +226,12 @@ T["rejects missing symlinked unreadable and non-executable entrypoints"] = funct
   eq(store.resolve(opts), nil)
   local outside = vim.fs.joinpath(path, "outside")
   vim.fn.writefile({ "server" }, outside)
-  vim.uv.fs_symlink(outside, vim.fs.joinpath(final, opts.entrypoint))
+  symlink(outside, vim.fs.joinpath(final, opts.entrypoint))
   eq(store.resolve(opts), nil)
-  vim.fn.delete(vim.fs.joinpath(final, opts.entrypoint))
-  vim.fn.writefile({ "server" }, vim.fs.joinpath(final, opts.entrypoint))
-  vim.fn.setfperm(vim.fs.joinpath(final, opts.entrypoint), "rw-------")
+  local entry = vim.fs.joinpath(final, opts.entrypoint)
+  vim.fn.delete(entry)
+  vim.fn.writefile({ "server" }, entry)
+  mark_non_executable(entry)
   eq(store.resolve(opts), nil)
   vim.fn.delete(path, "rf")
 end
@@ -195,15 +240,15 @@ T["rejects an unreadable JavaScript entrypoint"] = function()
   local path = root()
   local opts = options(path, "js")
   local _, entry = complete_install(path, opts)
-  local original_filereadable = vim.fn.filereadable
+  local saved_filereadable = vim.fn.filereadable
   vim.fn.filereadable = function(value)
     if value == entry then
       return 0
     end
-    return original_filereadable(value)
+    return saved_filereadable(value)
   end
   eq(store.resolve(opts), nil)
-  vim.fn.filereadable = original_filereadable
+  vim.fn.filereadable = saved_filereadable
   vim.fn.delete(path, "rf")
 end
 
@@ -228,12 +273,12 @@ T["rejects symlinked final and ancestor directories"] = function()
   local outside_final, outside_entry = complete_install(outside, options(outside))
   local final = final_path(path, opts)
   mkdir_private(target_root(path, opts))
-  vim.uv.fs_symlink(outside_final, final)
+  directory_symlink(outside_final, final)
   eq(store.resolve(opts), nil)
   vim.fn.delete(final)
   local version = vim.fs.joinpath(path, opts.version)
   vim.fn.delete(version, "rf")
-  vim.uv.fs_symlink(vim.fs.joinpath(outside, opts.version), version)
+  directory_symlink(vim.fs.joinpath(outside, opts.version), version)
   eq(store.resolve(opts), nil)
   eq(store.reserve(opts) == nil, true)
   eq(vim.fn.filereadable(outside_entry), 1)
@@ -249,7 +294,7 @@ T["rejects a symlinked target ancestor during reservation"] = function()
   mkdir_private(version)
   local external_target = vim.fs.joinpath(outside, opts.target)
   mkdir_private(external_target)
-  vim.uv.fs_symlink(external_target, vim.fs.joinpath(version, opts.target))
+  directory_symlink(external_target, vim.fs.joinpath(version, opts.target))
   eq(store.reserve(opts) == nil, true)
   vim.fn.delete(path, "rf")
   vim.fn.delete(outside, "rf")
@@ -347,17 +392,17 @@ end
 T["delivers exactly one callback for every publication failure"] = function()
   local cases = {
     {
-      setup = function()
+      setup = function(_, _)
         return nil, nil
       end,
     },
     {
-      setup = function(path, opts)
+      setup = function(_, opts)
         return nil, opts
       end,
     },
     {
-      setup = function(path, opts)
+      setup = function(_, opts)
         return assert(store.reserve(opts)), opts
       end,
     },
@@ -377,15 +422,15 @@ T["delivers exactly one callback for every publication failure"] = function()
         local opts = options(path, "js")
         local reservation = reserve_with_entry(path, opts)
         local entry = vim.fs.joinpath(reservation.path, opts.entrypoint)
-        local original_filereadable = vim.fn.filereadable
+        local saved_filereadable = vim.fn.filereadable
         vim.fn.filereadable = function(value)
           if value == entry then
             return 0
           end
-          return original_filereadable(value)
+          return saved_filereadable(value)
         end
         opts._restore = function()
-          vim.fn.filereadable = original_filereadable
+          vim.fn.filereadable = saved_filereadable
         end
         return reservation, opts
       end,
@@ -396,7 +441,7 @@ T["delivers exactly one callback for every publication failure"] = function()
         local reservation = assert(store.reserve(opts))
         local entry = vim.fs.joinpath(reservation.path, opts.entrypoint)
         vim.fn.writefile({ "server" }, entry)
-        vim.fn.setfperm(entry, "rw-------")
+        mark_non_executable(entry)
         return reservation, opts
       end,
     },
@@ -406,15 +451,15 @@ T["delivers exactly one callback for every publication failure"] = function()
         mkdir_private(final)
         vim.fn.writefile({ "invalid" }, vim.fs.joinpath(final, "invalid"))
         local reservation = reserve_with_entry(path, opts)
-        local original_rm = vim.fs.rm
+        local saved_rm = vim.fs.rm
         vim.fs.rm = function(value)
           if value == final then
             error("remove failed")
           end
-          return original_rm(value)
+          return saved_rm(value)
         end
         opts._restore = function()
-          vim.fs.rm = original_rm
+          vim.fs.rm = saved_rm
         end
         return reservation, opts
       end,
@@ -477,7 +522,7 @@ T["reuses a concurrent valid winner after rename failure"] = function()
   local reservation = reserve_with_entry(path, opts)
   local original_rename = vim.uv.fs_rename
   opts._fs = {
-    rename = function(source, target)
+    rename = function(_, _)
       complete_install(path, opts)
       return false
     end,
@@ -660,15 +705,15 @@ T["reports rename and deterministic removal failures"] = function()
   local final = final_path(path, opts)
   mkdir_private(final)
   vim.fn.writefile({ "invalid" }, vim.fs.joinpath(final, "invalid"))
-  local original_rm = vim.fs.rm
+  local saved_rm = vim.fs.rm
   vim.fs.rm = function(value)
     if value == final then
       error("remove failed")
     end
-    return original_rm(value)
+    return saved_rm(value)
   end
   local removal_result = publish(reserve_with_entry(path, opts), opts)
-  vim.fs.rm = original_rm
+  vim.fs.rm = saved_rm
   eq(removal_result[1] ~= nil, true)
   vim.fn.delete(path, "rf")
 end
@@ -682,7 +727,7 @@ T["preserves SHA directories and archive symlinks during cleanup"] = function()
   local archive = vim.fs.joinpath(path, ".copilot-lsp-archive-1-2.zip")
   local external_archive = vim.fs.joinpath(external, "archive.zip")
   vim.fn.writefile({ "archive" }, external_archive)
-  vim.uv.fs_symlink(external_archive, archive)
+  symlink(external_archive, archive)
   local removed = store.cleanup_incomplete(opts, os.time())
   eq(removed, 0)
   local archive_removed = store.cleanup_archives(opts, os.time())
@@ -718,23 +763,23 @@ T["reuses a winner that appears before invalid removal"] = function()
   local final = final_path(path, opts)
   mkdir_private(final)
   vim.fn.writefile({ "invalid" }, vim.fs.joinpath(final, "invalid"))
-  local original_rm = vim.fs.rm
+  local saved_rm = vim.fs.rm
   local injected = false
   opts._fs = {
     rename = function()
       return false
     end,
   }
-  vim.fs.rm = function(value, options)
+  vim.fs.rm = function(value, rm_options)
     if value == final and not injected then
       injected = true
       complete_install(path, opts)
       return true
     end
-    return original_rm(value, options)
+    return saved_rm(value, rm_options)
   end
   local result = publish(reserve_with_entry(path, opts), opts)
-  vim.fs.rm = original_rm
+  vim.fs.rm = saved_rm
   eq(result[1], nil)
   eq(result[2], vim.fs.joinpath(final, opts.entrypoint))
   eq(table.concat(vim.fn.readfile(result[2]), "\n"), "server")

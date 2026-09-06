@@ -5,8 +5,12 @@ local M = {
   options = {},
   killed = 0,
 }
+local active_restore
 
 function M.reset()
+  if active_restore then
+    active_restore()
+  end
   M.calls = {}
   M.pending = {}
   M.responses = {}
@@ -15,9 +19,28 @@ function M.reset()
   M.on_complete = nil
 end
 
+function M.restore()
+  if active_restore then
+    active_restore()
+  end
+end
+
 function M.start()
-  local original = vim.system
   M.reset()
+  local original = vim.system
+  local restored = false
+  local restore
+  restore = function()
+    if restored then
+      return
+    end
+    restored = true
+    vim.system = original
+    if active_restore == restore then
+      active_restore = nil
+    end
+  end
+  active_restore = restore
   ---@diagnostic disable-next-line: duplicate-set-field
   vim.system = function(command, options, callback)
     if command[1] == "ldd" then
@@ -43,9 +66,7 @@ function M.start()
     table.insert(M.pending, { process = process, callback = callback, command = command, response = response })
     return process
   end
-  return function()
-    vim.system = original
-  end
+  return restore
 end
 
 function M.complete_next(result)
