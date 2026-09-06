@@ -187,12 +187,24 @@ T["downloads and publishes at the deterministic path"] = function()
   )
 end
 
-T["release metadata remains pinned"] = function()
-  eq(release.version, "1.534.0")
-  eq(release.assets["linux-x64"].filename, "copilot-language-server-linux-x64-1.534.0.zip")
-  eq(release.assets["linux-x64"].entrypoint, "copilot-language-server")
-  eq(release.assets.js.entrypoint, "language-server.js")
-  eq(vim.tbl_count(release.assets), 7)
+T["release metadata is internally consistent"] = function()
+  eq(release.version:match("^[0-9]+%.[0-9]+%.[0-9]+$") ~= nil, true)
+  local entrypoints = {
+    ["darwin-arm64"] = "copilot-language-server",
+    ["darwin-x64"] = "copilot-language-server",
+    js = "language-server.js",
+    ["linux-arm64"] = "copilot-language-server",
+    ["linux-x64"] = "copilot-language-server",
+    ["win32-arm64"] = "copilot-language-server.exe",
+    ["win32-x64"] = "copilot-language-server.exe",
+  }
+  eq(vim.tbl_count(release.assets), vim.tbl_count(entrypoints))
+  for target, expected_entrypoint in pairs(entrypoints) do
+    local asset = release.assets[target]
+    eq(asset.filename, string.format("copilot-language-server-%s-%s.zip", target, release.version))
+    eq(asset.sha256:match("^[0-9a-f]+$") ~= nil and #asset.sha256 == 64, true)
+    eq(asset.entrypoint, expected_entrypoint)
+  end
 end
 
 T["resolve_target maps platforms and libc probes"] = function()
