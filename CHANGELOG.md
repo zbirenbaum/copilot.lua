@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.1.0](https://github.com/zbirenbaum/copilot.lua/compare/v3.0.4...v3.1.0) (2026-09-06)
+
+
+### Features
+
+* install downloaded Copilot servers securely ([1e5ecac](https://github.com/zbirenbaum/copilot.lua/commit/1e5ecac946d6b51e04197ebb76e5c76004882a2a))
+* start Copilot from downloaded native servers ([08f7e2b](https://github.com/zbirenbaum/copilot.lua/commit/08f7e2bd3f70902cac6b7b16a8704deeab4b258a))
+
+
+### Bug Fixes
+
+* clear Lua language server warnings ([6908839](https://github.com/zbirenbaum/copilot.lua/commit/69088396970a74ada8108df029d67c14cd834599))
+* resolve cross-platform CI test and typecheck failures ([fcbb424](https://github.com/zbirenbaum/copilot.lua/commit/fcbb42433daf27c7c94985fdcbd373538c15a2d5))
+* validate cached server installations ([516e513](https://github.com/zbirenbaum/copilot.lua/commit/516e51302d8da2007c63c2676a00549bfc52cba3))
+
 ## [3.0.0](https://github.com/zbirenbaum/copilot.lua/compare/v2.0.4...v3.0.0) (2026-06-11)
 
 
