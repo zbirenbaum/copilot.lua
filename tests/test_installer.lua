@@ -270,7 +270,7 @@ T["installs from a completely absent cache root"] = function()
   eq(vim.fn.isdirectory(root), 1)
 end
 
-T["windows prepares only version and target parents"] = function()
+T["windows prepares cache version and target parents"] = function()
   local target = "win32-x64"
   local root = new_cache(target)
   local original_uname = vim.loop.os_uname
@@ -299,6 +299,7 @@ T["windows prepares only version and target parents"] = function()
   local version_path = vim.fs.joinpath(root, release.version)
   local target_path = vim.fs.joinpath(version_path, target)
   eq(parent:find("generations", 1, true), nil)
+  eq(parent:find("'" .. root .. "'", 1, true) ~= nil, true)
   eq(parent:find("'" .. version_path .. "'", 1, true) ~= nil, true)
   eq(parent:find("'" .. target_path .. "'", 1, true) ~= nil, true)
   eq(process_stub.calls[1][1], "powershell")
@@ -307,6 +308,85 @@ T["windows prepares only version and target parents"] = function()
   eq(process_stub.calls[2][4]:find("generations", 1, true), nil)
   eq(process_stub.calls[3][1], "curl")
   eq(result[1], nil)
+end
+
+T["windows validates cache ACLs before reusing an install"] = function()
+  local target = "win32-x64"
+  local root = new_cache(target)
+  local expected = create_hit(root, target)
+  local original_uname = vim.loop.os_uname
+  vim.loop.os_uname = function()
+    return { sysname = "Windows_NT", machine = "AMD64" }
+  end
+  local restore = process_stub.start()
+  process_stub.responses = {
+    powershell = {
+      { code = 0, stdout = "", stderr = "" },
+      { code = 0, stdout = "", stderr = "" },
+      { code = 0, stdout = "", stderr = "" },
+    },
+  }
+  local result
+  installer.ensure("binary", function(err, path)
+    result = { err, path }
+  end)
+  for _ = 1, 3 do
+    vim.wait(1000, function()
+      return result ~= nil or #process_stub.pending > 0
+    end)
+    if result then
+      break
+    end
+    process_stub.complete_next()
+  end
+  vim.wait(1000, function()
+    return result ~= nil
+  end)
+  restore()
+  vim.loop.os_uname = original_uname
+  eq(result, { nil, expected })
+  eq(#process_stub.calls, 3)
+  for _, command in ipairs(process_stub.calls) do
+    eq(command[1], "powershell")
+  end
+end
+
+T["windows rejects a cache hit when ACL validation fails"] = function()
+  local target = "win32-x64"
+  local root = new_cache(target)
+  create_hit(root, target)
+  local original_uname = vim.loop.os_uname
+  vim.loop.os_uname = function()
+    return { sysname = "Windows_NT", machine = "AMD64" }
+  end
+  local restore = process_stub.start()
+  process_stub.responses = {
+    powershell = {
+      { code = 0, stdout = "", stderr = "" },
+      { code = 1, stdout = "", stderr = "untrusted cache" },
+    },
+  }
+  local result
+  installer.ensure("binary", function(err, path)
+    result = { err, path }
+  end)
+  for _ = 1, 2 do
+    vim.wait(1000, function()
+      return result ~= nil or #process_stub.pending > 0
+    end)
+    if result then
+      break
+    end
+    process_stub.complete_next()
+  end
+  vim.wait(1000, function()
+    return result ~= nil
+  end)
+  restore()
+  vim.loop.os_uname = original_uname
+  eq(result[1]:find("cache privacy verification failed", 1, true) ~= nil, true)
+  eq(result[2], nil)
+  eq(#process_stub.calls, 2)
 end
 
 T["windows parent and staging ACL failures stop in order"] = function()
@@ -504,7 +584,7 @@ T["reuses a concurrent deterministic winner"] = function()
   local original_publish = store.publish
   store.publish = function(reservation, opts)
     local final = reservation.final_path
-    vim.fn.mkdir(final, "p")
+    vim.fn.mkdir(final, "p", 448)
     local entry = vim.fs.joinpath(final, opts.entrypoint)
     vim.fn.writefile({ "winner" }, entry)
     vim.fn.setfperm(entry, "rwx------")
@@ -512,6 +592,7 @@ T["reuses a concurrent deterministic winner"] = function()
       { vim.json.encode({ version = opts.version, target = opts.target, sha256 = opts.sha256 }) },
       vim.fs.joinpath(final, "install.json")
     )
+    vim.fn.setfperm(vim.fs.joinpath(final, "install.json"), "rw-------")
     return { committed = true, outcome = "published", path = entry }
   end
   local _, result = run_install("linux-x64")

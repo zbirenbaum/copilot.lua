@@ -48,7 +48,8 @@ first use asynchronously downloads about 75-110 MB depending on the pinned
 release and platform. It is cached under
 `stdpath("data")/copilot.lua/lsp`. Downloads are version-pinned and SHA-256
 verified. A first install or cache miss needs a transport (`curl`, `wget`, or
-PowerShell), hashing, and extraction tool; cache hits and custom paths need none.
+PowerShell), hashing, and extraction tool. Unix cache hits and custom paths need
+none; Windows cache hits use PowerShell to validate the cached files' ACLs.
 Successful installs are extracted into private staging and atomically published
 to a cache path keyed by version, platform, and SHA-256. Interrupted staging
 directories are ignored and cleaned later. Concurrent first runs may duplicate
