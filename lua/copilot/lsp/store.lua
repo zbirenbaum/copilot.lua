@@ -110,20 +110,43 @@ local function read_json(fs, path)
   return ok and type(value) == "table" and value or nil
 end
 
-local function ensure_directory(path)
+local function ensure_directory(path, allow_link)
   local stat = uv.fs_lstat(path)
   if stat then
-    return stat.type == "directory"
+    if stat.type == "link" and allow_link then
+      path = uv.fs_realpath(path)
+      stat = path and uv.fs_lstat(path) or nil
+    end
+    if not stat or stat.type ~= "directory" then
+      return false
+    end
+  else
+    vim.fn.mkdir(path, "p", 448)
+    stat = uv.fs_lstat(path)
+    if not stat or stat.type ~= "directory" then
+      return false
+    end
   end
-  vim.fn.mkdir(path, "p", 448)
-  stat = uv.fs_lstat(path)
-  return stat and stat.type == "directory"
+
+  if uv.os_uname().sysname == "Windows_NT" then
+    return true
+  end
+  if not uv.getuid or stat.uid ~= uv.getuid() then
+    return false
+  end
+  if stat.mode % 64 ~= 0 then
+    if uv.fs_chmod(path, 448) ~= true then
+      return false
+    end
+    stat = uv.fs_lstat(path)
+  end
+  return stat and stat.uid == uv.getuid() and stat.mode % 64 == 0
 end
 
 local static_paths_valid
 
 local function prepared_paths(options, fs)
-  if not ensure_directory(options.cache_root) then
+  if not ensure_directory(options.cache_root, true) then
     return nil, "could not establish cache root"
   end
   local cache_root = (fs and fs.realpath or uv.fs_realpath)(options.cache_root)
@@ -146,6 +169,23 @@ local function resolve_final(fs, options, store_paths)
   if not static_paths_valid(fs, store_paths) then
     return nil
   end
+  if uv.os_uname().sysname ~= "Windows_NT" then
+    local uid = uv.getuid and uv.getuid()
+    if not uid then
+      return nil
+    end
+    for _, path in ipairs({
+      store_paths.cache_root,
+      store_paths.version_path,
+      store_paths.target_path,
+      store_paths.final_path,
+    }) do
+      local stat = fs.lstat(path)
+      if not stat or stat.type ~= "directory" or stat.uid ~= uid or stat.mode % 64 ~= 0 then
+        return nil
+      end
+    end
+  end
   local marker_path = vim.fs.joinpath(store_paths.final_path, "install.json")
   local marker_stat = fs.lstat(marker_path)
   local marker = marker_stat and marker_stat.type == "file" and read_json(fs, marker_path) or nil
@@ -161,6 +201,20 @@ local function resolve_final(fs, options, store_paths)
   local stat = fs.lstat(entry)
   if not stat or stat.type ~= "file" then
     return nil
+  end
+  if uv.os_uname().sysname ~= "Windows_NT" then
+    local uid = uv.getuid and uv.getuid()
+    if
+      not uid
+      or marker_stat.uid ~= uid
+      or stat.uid ~= uid
+      or math.floor(marker_stat.mode / 16) % 2 ~= 0
+      or math.floor(marker_stat.mode / 2) % 2 ~= 0
+      or math.floor(stat.mode / 16) % 2 ~= 0
+      or math.floor(stat.mode / 2) % 2 ~= 0
+    then
+      return nil
+    end
   end
   if options.target == "js" then
     return vim.fn.filereadable(entry) == 1 and entry or nil
@@ -200,7 +254,7 @@ static_paths_valid = function(fs, store_paths)
     if stat and stat.type ~= "directory" then
       return false
     end
-    if path == store_paths.final_path and stat then
+    if stat then
       local real = fs.realpath(path)
       if not real or not beneath(store_paths.cache_root, real) then
         return false
@@ -319,7 +373,7 @@ function M.reserve(user_options, prepared)
     return nil, err
   end
   local fs = filesystem(user_options)
-  if not fs.realpath(user_options.cache_root) and not ensure_directory(user_options.cache_root) then
+  if not ensure_directory(user_options.cache_root, true) then
     return nil, "could not establish cache root"
   end
   local store_paths = paths(user_options, fs)
@@ -376,7 +430,9 @@ function M.cleanup_incomplete(user_options, now)
   if not root_stat then
     return 0, nil
   end
-  if root_stat.type ~= "directory" then
+  local physical_root = fs.realpath(user_options.cache_root)
+  root_stat = physical_root and fs.lstat(physical_root) or nil
+  if not root_stat or root_stat.type ~= "directory" then
     return 0, "cache root is not a directory"
   end
   local store_paths = paths(user_options, fs)
@@ -423,14 +479,11 @@ function M.cleanup_archives(user_options, now)
   if not root_stat then
     return 0, nil
   end
-  if root_stat.type ~= "directory" then
-    return 0, "cache root is not a directory"
-  end
   local cache_root = fs.realpath(user_options.cache_root)
   if not cache_root then
     return 0, "cache root is unavailable"
   end
-  local stat = uv.fs_lstat(cache_root)
+  local stat = fs.lstat(cache_root)
   if not stat or stat.type ~= "directory" then
     return 0, "cache root is not a directory"
   end
@@ -467,7 +520,9 @@ function M.cleanup_old_versions(user_options)
   if not root_stat then
     return 0, nil
   end
-  if root_stat.type ~= "directory" then
+  local physical_root = fs.realpath(user_options.cache_root)
+  root_stat = physical_root and fs.lstat(physical_root) or nil
+  if not root_stat or root_stat.type ~= "directory" then
     return 0, "cache root is not a directory"
   end
   local store_paths = paths(user_options, fs)

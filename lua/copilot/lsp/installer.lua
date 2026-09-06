@@ -180,7 +180,9 @@ finish = function(operation, err, path, outcome)
   else
     set_status("ready", operation.target, path, nil)
     logger.info("Copilot server " .. release.version .. " ready at " .. path)
-    notify("Copilot server " .. release.version .. " ready")
+    if outcome ~= "cached" then
+      notify("Copilot server " .. release.version .. " ready")
+    end
   end
   local callbacks = operation.callbacks
   operation.callbacks = {}
@@ -259,6 +261,7 @@ local function private_acl_command(path, apply, parent)
 end
 
 local function private_parent_command(path_token)
+  local cache = ps_quote(path_token.cache_root)
   local version = ps_quote(path_token.version_path)
   local target = ps_quote(path_token.target_path)
   local script = "$ErrorActionPreference='Stop';"
@@ -268,6 +271,8 @@ local function private_parent_command(path_token)
     .. "$d=New-Object System.Security.AccessControl.DirectorySecurity;"
     .. "$d.SetOwner($s);$d.SetAccessRuleProtection($true,$false);$d.AddAccessRule($r);"
     .. "$paths=@("
+    .. cache
+    .. ","
     .. version
     .. ","
     .. target
@@ -284,6 +289,36 @@ local function private_parent_command(path_token)
     .. "if($a.Access[0].InheritanceFlags.ToString() -ne 'ContainerInherit, ObjectInherit'){exit 1};"
     .. "if($a.Access[0].PropagationFlags.ToString() -ne 'None'){exit 1};"
     .. "if($a.Access[0].IsInherited){exit 1}}"
+  return { "powershell", "-NoProfile", "-Command", script }
+end
+
+local function private_file_acl_command(paths, parent)
+  local quoted_paths = {}
+  for _, path in ipairs(paths) do
+    quoted_paths[#quoted_paths + 1] = ps_quote(path)
+  end
+  local script = "$ErrorActionPreference='Stop';"
+    .. "$s=[System.Security.Principal.WindowsIdentity]::GetCurrent().User;"
+    .. "$parent=Get-Acl -LiteralPath "
+    .. ps_quote(parent)
+    .. ";"
+    .. "$paths=@("
+    .. table.concat(quoted_paths, ",")
+    .. ");"
+    .. "foreach($p in $paths){if(-not (Test-Path -LiteralPath $p -PathType Leaf)){exit 1};"
+    .. "$a=Get-Acl -LiteralPath $p;"
+    .. "if($a.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){exit 1};"
+    .. "if(@($a.Access).Count -ne 1){exit 1};"
+    .. "if($a.Access[0].AccessControlType -ne 'Allow'){exit 1};"
+    .. "if($a.Access[0].IdentityReference.Translate("
+    .. "[System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){exit 1};"
+    .. "if($a.Access[0].FileSystemRights.ToString() -ne 'FullControl'){exit 1};"
+    .. "if($a.Access[0].InheritanceFlags.ToString() -ne 'None'){exit 1};"
+    .. "if($a.Access[0].PropagationFlags.ToString() -ne 'None'){exit 1};"
+    .. "if($a.Access[0].IsInherited -ne $true){exit 1}};"
+    .. "if(-not $parent.AreAccessRulesProtected){exit 1};"
+    .. "if(@($parent.Access).Count -ne 1){exit 1};"
+    .. "if($parent.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){exit 1}"
   return { "powershell", "-NoProfile", "-Command", script }
 end
 
@@ -471,6 +506,43 @@ local function reserve_operation(operation, prepared)
   )
 end
 
+local function resolve_windows_cache(operation, prepared_path)
+  if not vim.uv.fs_lstat(prepared_path.final_path) then
+    reserve_operation(operation, prepared_path)
+    return
+  end
+  run_commands(
+    operation,
+    "cache-directory-acl",
+    { private_acl_command(prepared_path.final_path, false, prepared_path.target_path) },
+    function(_, acl_error)
+      if acl_error then
+        finish(operation, "cache privacy verification failed: " .. acl_error, nil, "unmarked")
+        return
+      end
+      local resolved = store.resolve(operation.options)
+      if not resolved then
+        reserve_operation(operation, prepared_path)
+        return
+      end
+      run_commands(operation, "cache-file-acl", {
+        private_file_acl_command(
+          { vim.fs.joinpath(prepared_path.final_path, "install.json"), resolved },
+          prepared_path.final_path
+        ),
+      }, function(_, file_acl_error)
+        if file_acl_error then
+          finish(operation, "cache file privacy verification failed: " .. file_acl_error, nil, "unmarked")
+        else
+          finish(operation, nil, resolved, "cached")
+        end
+      end, "cache file ACL", prepared_path.final_path)
+    end,
+    "cache directory ACL",
+    prepared_path.final_path
+  )
+end
+
 local function prepare_operation(operation)
   if not windows_platform() then
     reserve_operation(operation)
@@ -486,7 +558,7 @@ local function prepare_operation(operation)
       finish(operation, "staging parent privacy setup failed: " .. acl_error, nil, "unmarked")
       return
     end
-    reserve_operation(operation, prepared_path)
+    resolve_windows_cache(operation, prepared_path)
   end, "staging parent ACL", prepared_path.target_path)
 end
 
@@ -508,12 +580,14 @@ function M.ensure(server_type, callback)
     sha256 = release.assets[target].sha256,
     entrypoint = release.assets[target].entrypoint,
   }
-  local resolved = store.resolve(options)
-  if resolved then
-    set_status("ready", target, resolved, nil)
-    return schedule(function()
-      callback(nil, resolved)
-    end)
+  if not windows_platform() then
+    local resolved = store.resolve(options)
+    if resolved then
+      set_status("ready", target, resolved, nil)
+      return schedule(function()
+        callback(nil, resolved)
+      end)
+    end
   end
 
   local key = release.version .. ":" .. target

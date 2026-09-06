@@ -86,6 +86,58 @@ T["resolves an exact deterministic install"] = function()
   vim.fn.delete(path, "rf")
 end
 
+T["rejects cache hits through permissive directories"] = function()
+  if vim.loop.os_uname().sysname == "Windows_NT" then
+    return
+  end
+  local path = root()
+  local opts = options(path)
+  complete_install(path, opts)
+  vim.fn.setfperm(opts.cache_root, "rwxrwxrwx")
+  eq(store.resolve(opts), nil)
+  vim.fn.delete(path, "rf")
+end
+
+T["repairs user-owned cache directory permissions before reserving"] = function()
+  if vim.loop.os_uname().sysname == "Windows_NT" then
+    return
+  end
+  local path = root()
+  local opts = options(path)
+  mkdir_private(target_root(path, opts))
+  vim.fn.setfperm(path, "rwxrwxrwx")
+  vim.fn.setfperm(vim.fs.joinpath(path, opts.version), "rwxrwxrwx")
+  vim.fn.setfperm(target_root(path, opts), "rwxrwxrwx")
+  local reservation = assert(store.reserve(opts))
+  eq(vim.fn.getfperm(path), "rwx------")
+  eq(vim.fn.getfperm(vim.fs.joinpath(path, opts.version)), "rwx------")
+  eq(vim.fn.getfperm(target_root(path, opts)), "rwx------")
+  vim.fn.delete(reservation.path, "rf")
+  vim.fn.delete(path, "rf")
+end
+
+T["supports a symlink to a private cache root"] = function()
+  if vim.loop.os_uname().sysname == "Windows_NT" then
+    return
+  end
+  local physical = root()
+  local path = vim.fn.tempname()
+  vim.uv.fs_symlink(physical, path)
+  local opts = options(path)
+  local reservation = assert(store.reserve(opts))
+  local entry = vim.fs.joinpath(reservation.path, opts.entrypoint)
+  vim.fn.writefile({ "server" }, entry)
+  vim.fn.setfperm(entry, "rwx------")
+  local receipt = store.publish(reservation, opts, function() end)
+  eq(store.resolve(opts), receipt.path)
+  local _, incomplete_error = store.cleanup_incomplete(opts)
+  local _, archive_error = store.cleanup_archives(opts)
+  local _, versions_error = store.cleanup_old_versions(opts)
+  eq({ incomplete_error, archive_error, versions_error }, { nil, nil, nil })
+  vim.fn.delete(path)
+  vim.fn.delete(physical, "rf")
+end
+
 T["rejects invalid options and marker mismatches"] = function()
   local path = root()
   for key, value in pairs({
