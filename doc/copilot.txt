@@ -1,5 +1,5 @@
 *copilot.txt* Fully featured & enhanced replacement for copilot.vim complete with API for interacting with Github Copilot
-                                For NVIM v0.11.0    Last change: 01 July, 2026
+                           For NVIM v0.11.0    Last change: 06 September, 2026
 
 ==============================================================================
 1. copilot.lua                                           *copilot-copilot.lua*
@@ -48,26 +48,15 @@ REQUIREMENTS                                *copilot-copilot.lua-requirements*
 
 The native Copilot Language Server is the default. On supported platforms, the
 first use asynchronously downloads about 75-110 MB depending on the pinned
-release and platform. It is cached under
-`stdpath("data")/copilot.lua/lsp`. Downloads are version-pinned and SHA-256
-verified. A first install or cache miss needs a transport (`curl`, `wget`, or
-PowerShell), hashing, and extraction tool. Unix cache hits and custom paths need
-none; Windows cache hits use PowerShell to validate the cached files' ACLs.
-Successful installs are published as immutable generations and the active
-pointer is updated only after extraction and tree validation complete. Rare
-concurrent first runs may download the same release more than once, but each
-caller can publish only a complete generation; valid published generations are
-never deleted while in use. After a successful pointer publication, only
-semantically older numeric release-version directories are removed, and only
-after their physical cache identity is revalidated. The active version, newer
-versions, custom/non-semver directories, and all generations remain intact when
-publication fails.
-
-ZIP archives are structurally checked before extraction. Central CRC32 and size
-metadata must match local headers, or (when the data-descriptor flag is set) a
-classic signed or unsigned descriptor at the exact end of the compressed data.
-ZIP64 descriptors, padding, ambiguous boundaries, and overlapping records are
-rejected.
+release and platform. It is cached under `stdpath("data")/copilot.lua/lsp`.
+Downloads are version-pinned and SHA-256 verified. A first install or cache
+miss needs a transport (`curl`, `wget`, or PowerShell), hashing, and extraction
+tool. Unix cache hits and custom paths need none; Windows cache hits use
+PowerShell to validate the cached files’ ACLs. Successful installs are
+extracted into private staging and atomically published to a cache path keyed
+by version, platform, and SHA-256. Interrupted staging directories are ignored
+and cleaned later. Concurrent first runs may duplicate a download, but they
+reuse the first complete published install.
 
 Native binaries are supported on Linux x64/arm64 with glibc, macOS x64/arm64,
 and Windows x64/arm64. Musl Linux and other unsupported systems must use
@@ -489,7 +478,7 @@ installed by nvm. Node.js version must be 22 or newer.
 Example:
 
 >lua
-    copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v22.0.0/bin/node", -- Node.js version must be 22 or newer
+      copilot_node_command = vim.fn.expand("$HOME") .. "/.config/nvm/versions/node/v22.0.0/bin/node", -- Node.js version must be 22 or newer
 <
 
 
@@ -576,15 +565,15 @@ An example of this would be:
 
 SERVER ~
 
-
 The native server is used by default. `type` can be either `"binary"` or
 `"nodejs"`. Native mode downloads the pinned server asynchronously on first
 use, caches it in `stdpath("data")/copilot.lua/lsp`, and verifies its SHA-256
-checksum. Published generations are immutable and the active pointer changes
-only after extraction and validation. Rare concurrent first runs may duplicate
-a download, but incomplete generations are never published. Supported native targets are Linux x64/arm64 with glibc, macOS
-x64/arm64, and Windows x64/arm64. Musl Linux and unsupported systems should
-configure `server = { type = "nodejs" }`.
+checksum. Complete installs are cached at a deterministic version, target, and
+SHA-256 path. Publication occurs only after extraction and entrypoint
+validation; incomplete staging directories are never used as cache hits.
+Supported native targets are Linux x64/arm64 with glibc, macOS x64/arm64, and
+Windows x64/arm64. Musl Linux and unsupported systems should configure `server
+= { type = "nodejs" }`.
 
 `custom_server_filepath` is used to specify the server path (filename included)
 of either the `js` file if using `"nodejs"` or to the binary if using
