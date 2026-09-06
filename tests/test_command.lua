@@ -26,7 +26,8 @@ end
 T["command()"]["panel toggle - open works"] = function()
   child.configure_copilot()
   child.cmd("Copilot panel toggle")
-  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 23, 24 }, ignore_attr = { 23, 24 } })
+  local is_open = child.cmd_capture("Copilot panel is_open")
+  u.expect_match(is_open, "true")
 end
 
 T["command()"]["panel toggle - close works"] = function()

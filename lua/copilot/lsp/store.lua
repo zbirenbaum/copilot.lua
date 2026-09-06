@@ -121,7 +121,7 @@ local function ensure_directory(path, allow_link)
       return false
     end
   else
-    vim.fn.mkdir(path, "p", 448)
+    vim.fn.mkdir(path, "p", "448")
     stat = uv.fs_lstat(path)
     if not stat or stat.type ~= "directory" then
       return false
