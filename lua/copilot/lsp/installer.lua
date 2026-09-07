@@ -634,21 +634,31 @@ function M.reset()
 end
 
 local function detect_libc()
+  local ok, process = pcall(vim.system, { "getconf", "GNU_LIBC_VERSION" }, { text = true })
+  if ok and process then
+    local result = process:wait()
+    if result.code == 0 then
+      local output = ((result.stdout or "") .. (result.stderr or "")):lower()
+
+      if output:find("glibc", 1, true) then
+        return "glibc"
+      end
+    end
+  end
+
   local ok, process = pcall(vim.system, { "ldd", "--version" }, { text = true })
-  if not ok or not process then
-    return nil
+  if ok and process then
+    local result = process:wait()
+    if result.code == 0 then
+      local output = ((result.stdout or "") .. (result.stderr or "")):lower()
+
+      if output:find("musl", 1, true) then
+        return "musl"
+      end
+    end
   end
-  local result = process:wait()
-  if result.code ~= 0 then
-    return nil
-  end
-  local output = ((result.stdout or "") .. (result.stderr or "")):lower()
-  if output:find("musl", 1, true) then
-    return "musl"
-  end
-  if output:find("glibc", 1, true) or output:find("gnu libc", 1, true) then
-    return "glibc"
-  end
+
+  return nil
 end
 
 ---@param server_type string

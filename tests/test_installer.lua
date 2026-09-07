@@ -189,15 +189,16 @@ local function run_install(target, responses, completion, setup, sysname, absent
   return canonical_path(root), result
 end
 
-local function with_ldd_probe(stdout, stderr, code, fail, callback)
+local function with_system_probe(probes, callback)
   local original_system = vim.system
-  vim.system = function()
-    if fail then
-      error("ldd failed to start")
+  vim.system = function(command)
+    local probe = probes[command[1]] or {}
+    if probe.fail then
+      error(command[1] .. " failed to start")
     end
     return {
       wait = function()
-        return { stdout = stdout, stderr = stderr, code = code }
+        return { stdout = probe.stdout, stderr = probe.stderr, code = probe.code }
       end,
     }
   end
@@ -281,28 +282,54 @@ T["resolve_target maps platforms and libc probes"] = function()
     eq(target, case[4])
     eq(err, nil)
   end
-  with_ldd_probe("ldd (GNU libc) 2.39", "", 0, false, function()
+  with_system_probe({
+    getconf = { stdout = "glibc 2.39", stderr = "", code = 0 },
+  }, function()
     eq(installer.resolve_target("binary", { sysname = "Linux", machine = "x86_64" }), "linux-x64")
   end)
-  with_ldd_probe("musl libc", "", 0, false, function()
+
+  with_system_probe({
+    getconf = { stdout = "glibc 2.39", stderr = "", code = 1 },
+    ldd = { stdout = "musl libc", stderr = "", code = 0 },
+  }, function()
     local target, err = installer.resolve_target("binary", { sysname = "Linux", machine = "x86_64" })
     eq(target, nil)
     local error_message = assert(err)
     eq(error_message:find('server.type = "nodejs"', 1, true) ~= nil, true)
   end)
-  with_ldd_probe(nil, nil, nil, true, function()
+
+  with_system_probe({
+    getconf = { stdout = "", stderr = "", code = 1 },
+    ldd = { stdout = "musl libc", stderr = "", code = 0 },
+  }, function()
     local target, err = installer.resolve_target("binary", { sysname = "Linux", machine = "x86_64" })
     eq(target, nil)
     local error_message = assert(err)
     eq(error_message:find('server.type = "nodejs"', 1, true) ~= nil, true)
   end)
-  with_ldd_probe("ldd: error", "", 1, false, function()
+
+  with_system_probe({
+    getconf = { fail = true },
+    ldd = { stdout = "", stderr = "", code = 1 },
+  }, function()
     local target, err = installer.resolve_target("binary", { sysname = "Linux", machine = "x86_64" })
     eq(target, nil)
     local error_message = assert(err)
     eq(error_message:find('server.type = "nodejs"', 1, true) ~= nil, true)
   end)
-  with_ldd_probe("ldd version unavailable", "", 0, false, function()
+  with_system_probe({
+    getconf = { stdout = "", stderr = "getconf: Unrecognized variable", code = 2 },
+    ldd = { stdout = "ldd: error", stderr = "", code = 1 },
+  }, function()
+    local target, err = installer.resolve_target("binary", { sysname = "Linux", machine = "x86_64" })
+    eq(target, nil)
+    local error_message = assert(err)
+    eq(error_message:find('server.type = "nodejs"', 1, true) ~= nil, true)
+  end)
+  with_system_probe({
+    getconf = { stdout = "", stderr = "getconf: Unrecognized variable", code = 2 },
+    ldd = { stdout = "ldd version unavailable", stderr = "", code = 0 },
+  }, function()
     local target, err = installer.resolve_target("binary", { sysname = "Linux", machine = "x86_64" })
     eq(target, nil)
     local error_message = assert(err)
