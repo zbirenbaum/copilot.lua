@@ -16,6 +16,10 @@ done
 for contract in \
   'Windows installer ACL regression (${{ matrix.account }},' \
   'account: [standard, elevated]' \
+  'runtime: [powershell, pwsh, renamed-pwsh]' \
+  'neovim: [v0.11.2, stable]' \
+  '-Account standard -Runtime ${{ matrix.runtime }}' \
+  '-Account elevated -Runtime ${{ matrix.runtime }}' \
   'if: matrix.account == '\''standard'\''' \
   'if: matrix.account == '\''elevated'\''' \
   '-Account standard' \

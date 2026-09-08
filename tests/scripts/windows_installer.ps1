@@ -3,7 +3,8 @@ param(
   [Parameter(Mandatory)] [string] $Workspace,
   [Parameter(Mandatory)] [string] $Sandbox,
   [Parameter(Mandatory)] [string] $Nvim,
-  [ValidateSet('standard', 'elevated')] [string] $Account = 'standard'
+  [ValidateSet('standard', 'elevated')] [string] $Account = 'standard',
+  [ValidateSet('powershell', 'pwsh', 'renamed-pwsh')] [string] $Runtime = 'powershell'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -18,7 +19,18 @@ if ($Account -eq 'standard' -and $principal.IsInRole([Security.Principal.Windows
 if ($Account -eq 'elevated' -and -not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
   throw 'Windows installer runtime harness expected an elevated administrator token'
 }
-if (-not (Get-Command powershell -ErrorAction SilentlyContinue)) { throw 'Windows PowerShell 5.1 was not found' }
+$childShell = if ($Runtime -eq 'powershell') { (Get-Command powershell -CommandType Application).Source } else { Join-Path $PSHOME 'pwsh.exe' }
+$env:COPILOT_WINDOWS_RUNTIME = $Runtime
+$env:COPILOT_WINDOWS_SHELL = $childShell
+$expectedEdition = if ($Runtime -eq 'powershell') { 'Desktop' } else { 'Core' }
+
+# Only the download is replaced: production hashes and expands this real ZIP.
+$fixtureSource = Join-Path $Sandbox 'fixture'
+New-Item -ItemType Directory -Force -Path $fixtureSource | Out-Null
+'server' | Set-Content -LiteralPath (Join-Path $fixtureSource 'copilot-language-server.exe') -Encoding ascii
+$env:COPILOT_WINDOWS_FIXTURE = Join-Path $Sandbox 'fixture.zip'
+Compress-Archive -LiteralPath (Join-Path $fixtureSource 'copilot-language-server.exe') -DestinationPath $env:COPILOT_WINDOWS_FIXTURE -Force
+$env:COPILOT_WINDOWS_FIXTURE_SHA256 = (Get-FileHash -LiteralPath $env:COPILOT_WINDOWS_FIXTURE -Algorithm SHA256).Hash.ToLowerInvariant()
 
 function Get-Sid([object] $IdentityReference) {
   $IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value
@@ -64,13 +76,14 @@ function Invoke-Harness([string] $Name, [string] $Separator, [bool] $Insecure, [
   $env:COPILOT_WINDOWS_RESULT = $result
   $env:COPILOT_WINDOWS_SEPARATOR = $Separator
   # This is deliberately inherited by Neovim. The production fix must clear it
-  # only when it launches Windows PowerShell 5.1 children.
+  # when it launches either Windows PowerShell or PowerShell Core children.
   $env:PSModulePath = (Join-Path $PSHOME 'Modules')
   & $Nvim --headless --clean -u NONE -c 'lua dofile(vim.fs.joinpath(vim.env.COPILOT_WINDOWS_WORKSPACE, "tests", "scripts", "windows_installer.lua"))' -c 'qa!'
   if ($LASTEXITCODE -ne 0) { throw "Neovim harness failed for $Name/$Separator with exit code $LASTEXITCODE" }
   $data = Get-Content -LiteralPath $result -Raw | ConvertFrom-Json
   if ($data.PSObject.Properties['failure']) { throw "Lua harness failed for $Name/${Separator}: $($data.failure)" }
   if (-not $data.staging_acl_verified -or -not $data.published_acl_verified -or -not $data.cache_verified -or $data.powershell_calls -lt 2) { throw "real PowerShell preparation/publication/cache validation was not observed for $Name/$Separator" }
+  if ($data.runtime -ne $Runtime -or $data.edition -ne $expectedEdition -or -not $data.hash_verified -or -not $data.extraction_verified) { throw "runtime/hash/extraction verification missing for $Runtime/$Name/$Separator" }
   $version = Join-Path $Cache $versionName
   Assert-PrivateParent $Cache
   Assert-PrivateParent $version
@@ -99,4 +112,4 @@ foreach ($separator in @('forward', 'backslash')) {
   }
 }
 
-Write-Host "Windows installer ACL runtime harness ($Account) passed through $((Get-Command powershell).Source)"
+Write-Host "Windows installer ACL/hash/extraction runtime harness ($Account/$Runtime, $expectedEdition) passed through $childShell"

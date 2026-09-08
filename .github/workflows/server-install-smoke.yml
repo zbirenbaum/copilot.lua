@@ -245,7 +245,7 @@ jobs:
           if ((Get-Content -LiteralPath $env:COPILOT_SMOKE_RESULT -Raw).Trim() -ne $expected) { throw 'cache entrypoint changed' }
 
   windows-acl-runtime:
-    name: Windows installer ACL regression (${{ matrix.account }}, ${{ matrix.neovim }})
+    name: Windows installer ACL regression (${{ matrix.account }}, ${{ matrix.neovim }}, ${{ matrix.runtime }})
     runs-on: windows-2025
     timeout-minutes: 15
     strategy:
@@ -253,6 +253,7 @@ jobs:
       matrix:
         neovim: [v0.11.2, stable]
         account: [standard, elevated]
+        runtime: [powershell, pwsh, renamed-pwsh]
 
     steps:
       - name: Check out runtime harness source
@@ -272,7 +273,7 @@ jobs:
           neovim: true
           version: ${{ matrix.neovim }}
 
-      - name: Run ACL preparation through PowerShell 7, Neovim, and Windows PowerShell (standard user)
+      - name: Run installer runtime harness (standard user)
         if: matrix.account == 'standard'
         shell: pwsh
         run: |
@@ -309,7 +310,7 @@ jobs:
             $credential = [pscredential]::new("$env:COMPUTERNAME\$userName", $password)
             $pwsh = (Get-Command pwsh -CommandType Application).Source
             $script = Join-Path $stage 'tests/scripts/windows_installer.ps1'
-            $arguments = "-NoLogo -NoProfile -File `"$script`" -Workspace `"$stage`" -Sandbox `"$sandbox`" -Nvim `"$nvim`" -Account standard"
+            $arguments = "-NoLogo -NoProfile -File `"$script`" -Workspace `"$stage`" -Sandbox `"$sandbox`" -Nvim `"$nvim`" -Account standard -Runtime ${{ matrix.runtime }}"
             $process = Start-Process -FilePath $pwsh -Credential $credential -LoadUserProfile -WorkingDirectory $sandbox -ArgumentList $arguments -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
             Get-Content -LiteralPath $stdout -ErrorAction SilentlyContinue
             Get-Content -LiteralPath $stderr -ErrorAction SilentlyContinue
@@ -334,7 +335,7 @@ jobs:
           try {
             New-Item -ItemType Directory -Force -Path $sandbox | Out-Null
             $nvim = (Get-Command nvim -CommandType Application).Source
-            & (Join-Path $env:GITHUB_WORKSPACE 'tests/scripts/windows_installer.ps1') -Workspace $env:GITHUB_WORKSPACE -Sandbox $sandbox -Nvim $nvim -Account elevated
+            & (Join-Path $env:GITHUB_WORKSPACE 'tests/scripts/windows_installer.ps1') -Workspace $env:GITHUB_WORKSPACE -Sandbox $sandbox -Nvim $nvim -Account elevated -Runtime ${{ matrix.runtime }}
             if ($LASTEXITCODE -ne 0) { throw "elevated runtime harness failed with exit code $LASTEXITCODE" }
           }
           finally {

@@ -1,6 +1,6 @@
 -- Windows-only regression harness for the installer ACL preparation phase.
--- It executes production PowerShell ACL commands and replaces only transport
--- commands, so it never downloads a server release.
+-- It executes production PowerShell ACL/hash/extraction commands against a local
+-- ZIP fixture. Runtime selection is forced only at the vim.system boundary.
 local function fail(message)
   error(message, 0)
 end
@@ -16,6 +16,17 @@ local function main()
   local root = assert(vim.env.COPILOT_WINDOWS_CACHE_ROOT, "COPILOT_WINDOWS_CACHE_ROOT is required")
   result_path = assert(result_path, "COPILOT_WINDOWS_RESULT is required")
   local separator = assert(vim.env.COPILOT_WINDOWS_SEPARATOR, "COPILOT_WINDOWS_SEPARATOR is required")
+  local runtime = assert(vim.env.COPILOT_WINDOWS_RUNTIME, "COPILOT_WINDOWS_RUNTIME is required")
+  assert(runtime == "powershell" or runtime == "pwsh" or runtime == "renamed-pwsh", "invalid runtime")
+  local shell = assert(vim.env.COPILOT_WINDOWS_SHELL, "COPILOT_WINDOWS_SHELL is required")
+  local edition = runtime == "powershell" and "Desktop" or "Core"
+  local edition_check = "if($PSVersionTable.PSEdition -ne '"
+    .. edition
+    .. "'){throw 'unexpected child PSEdition'};"
+    .. (
+      runtime == "powershell" and "if($PSVersionTable.PSVersion.ToString() -notlike '5.1.*'){throw 'expected 5.1'};"
+      or "if($PSVersionTable.PSVersion.Major -ne 7){throw 'expected PowerShell 7'};"
+    )
   if separator == "forward" then
     root = root:gsub("\\", "/")
   elseif separator ~= "backslash" then
@@ -26,6 +37,7 @@ local function main()
 
   local installer = require("copilot.lsp.installer")
   local release = require("copilot.lsp.release")
+  release.assets["win32-x64"].sha256 = assert(vim.env.COPILOT_WINDOWS_FIXTURE_SHA256)
   local original_system = vim.system
   local verification_env = vim.fn.environ()
   for name in pairs(verification_env) do
@@ -41,12 +53,44 @@ local function main()
     verification_env = env
   end
   local power_shell_calls = 0
+  local hash_verified, extraction_verified = false, false
+  local pending_fallback
   local staging_acl_verified = false
   local observed_staging
   local harness_error
 
   local function ps_quote(value)
     return "'" .. value:gsub("'", "''") .. "'"
+  end
+
+  local function run_shell(command, options, callback)
+    -- Simulate only executable absence, not a failed script. This leaves the
+    -- production fallback responsible for constructing and launching pwsh.
+    if runtime == "pwsh" and command[1] == "powershell" then
+      pending_fallback = command[4]
+      error("powershell unavailable in pwsh runtime harness (ENOENT)")
+    end
+    assert(command[1] == (runtime == "pwsh" and "pwsh" or "powershell"), "unexpected shell selection")
+    if runtime == "pwsh" then
+      assert(pending_fallback == command[4], "pwsh must retry the failed powershell spawn's script")
+      pending_fallback = nil
+    end
+    assert(options.clear_env and options.env, "child environment must be sanitized")
+    for name, value in pairs(options.env) do
+      assert(
+        (
+          type(name) == "number" and not value:lower():match("^psmodulepath=")
+          or type(name) == "string" and name:lower() ~= "psmodulepath"
+        ),
+        "child inherited PSModulePath"
+      )
+    end
+    command = vim.deepcopy(command)
+    -- Absolute resolution also models a Core executable installed as powershell;
+    -- the production command and script remain otherwise unchanged.
+    command[1] = shell
+    command[4] = edition_check .. command[4]
+    return original_system(command, options, callback)
   end
 
   local function verify_staging_acl(path)
@@ -62,7 +106,7 @@ local function main()
       .. "if($r.InheritanceFlags.ToString() -ne 'ContainerInherit, ObjectInherit' "
       .. "-or $r.PropagationFlags.ToString() -ne 'None'){throw 'staging inheritance mismatch'};"
       .. "if(-not $r.IsInherited){throw 'staging ACE is not inherited'}"
-    local result = original_system({ "powershell", "-NoProfile", "-Command", script }, {
+    local result = original_system({ shell, "-NoProfile", "-Command", edition_check .. script }, {
       text = true,
       env = verification_env,
       clear_env = true,
@@ -84,13 +128,13 @@ local function main()
       .. ","
       .. ps_quote(backward)
       .. ");foreach($p in $paths){[System.IO.Directory]::CreateDirectory($p)|Out-Null;"
-      .. "[System.IO.Directory]::SetAccessControl($p,(New-D));$row=[ordered]@{path=$p};"
+      .. "$row=[ordered]@{path=$p;edition=$PSVersionTable.PSEdition};"
       .. "try{Set-Acl -LiteralPath $p -AclObject (New-D);$row.set_acl='succeeded'}"
       .. "catch{$row.set_acl=$_.Exception.Message};"
       .. "try{[System.IO.Directory]::SetAccessControl($p,(New-D));"
       .. "$row.directory_set_access_control='succeeded'}catch{$row.directory_set_access_control=$_.Exception.Message};"
       .. "$out+=[pscustomobject]$row};$out|ConvertTo-Json -Compress"
-    local result = original_system({ "powershell", "-NoProfile", "-Command", script }, {
+    local result = original_system({ shell, "-NoProfile", "-Command", edition_check .. script }, {
       text = true,
       env = verification_env,
       clear_env = true,
@@ -137,7 +181,7 @@ local function main()
       .. " 'entrypoint' 'None';Assert-I "
       .. ps_quote(vim.fs.joinpath(install, "install.json"))
       .. " 'marker' 'None'"
-    local result = original_system({ "powershell", "-NoProfile", "-Command", script }, {
+    local result = original_system({ shell, "-NoProfile", "-Command", edition_check .. script }, {
       text = true,
       env = verification_env,
       clear_env = true,
@@ -147,7 +191,7 @@ local function main()
 
   vim.system = function(command, options, callback)
     local program = command[1]
-    local script = program == "powershell" and command[4] or ""
+    local script = (program == "powershell" or program == "pwsh") and command[4] or ""
     local function respond(result)
       vim.schedule(function()
         callback(result)
@@ -155,9 +199,21 @@ local function main()
       return { kill = function() end }
     end
 
-    if program == "powershell" and script:find("Get%-Acl") then
+    if script:find("Get%-Acl") then
       power_shell_calls = power_shell_calls + 1
-      return original_system(command, options, callback)
+      return run_shell(command, options, callback)
+    end
+    if script:find("Get-FileHash", 1, true) or script:find("Expand-Archive", 1, true) then
+      return run_shell(command, options, function(result)
+        if result.code == 0 then
+          if script:find("Get-FileHash", 1, true) then
+            hash_verified = true
+          else
+            extraction_verified = true
+          end
+        end
+        callback(result)
+      end)
     end
     if program == "curl" then
       local target = vim.fs.joinpath(root, release.version, "win32-x64")
@@ -175,20 +231,13 @@ local function main()
       if not staging_acl_verified and not harness_error then
         harness_error = "download began before a private staging reservation existed"
       end
-      if vim.fn.writefile({ "archive fixture" }, command[9]) ~= 0 then
-        harness_error = "could not write fake archive"
+      if not vim.uv.fs_copyfile(assert(vim.env.COPILOT_WINDOWS_FIXTURE), command[9]) then
+        harness_error = "could not copy ZIP fixture"
       end
       return respond({ code = 0, stdout = "", stderr = "" })
     end
-    if program == "sha256sum" then
-      return respond({ code = 0, stdout = release.assets["win32-x64"].sha256 .. "  " .. command[2], stderr = "" })
-    end
-    if program == "unzip" then
-      local entrypoint = vim.fs.joinpath(command[5], release.assets["win32-x64"].entrypoint)
-      if vim.fn.writefile({ "server" }, entrypoint) ~= 0 then
-        harness_error = "could not write fake server"
-      end
-      return respond({ code = 0, stdout = "", stderr = "" })
+    if program == "sha256sum" or program == "shasum" or program == "openssl" or program == "unzip" then
+      error(program .. " unavailable in PowerShell fallback harness (ENOENT)")
     end
     harness_error = "unexpected installer command: " .. table.concat(command, " ")
     return respond({ code = 91, stdout = "", stderr = "unexpected command in Windows ACL harness" })
@@ -220,17 +269,19 @@ local function main()
   if not published_path or vim.fn.filereadable(published_path) ~= 1 then
     fail("fake transport install did not publish an entrypoint")
   end
+  assert(hash_verified and extraction_verified, "real PowerShell hash/extraction did not complete")
+  assert(vim.fn.readfile(published_path)[1] == "server", "ZIP entrypoint contents mismatch")
   local published_acl_verified, published_acl_error = verify_published_acl(published_path)
   if not published_acl_verified then
     fail("published ACL verification failed: " .. published_acl_error)
   end
   local unexpected_transport
   vim.system = function(command, options, callback)
-    if command[1] ~= "powershell" or not command[4]:find("Get-Acl", 1, true) then
+    if (command[1] ~= "powershell" and command[1] ~= "pwsh") or not command[4]:find("Get-Acl", 1, true) then
       unexpected_transport = command[1]
       error("unexpected cache transport: " .. command[1])
     end
-    return original_system(command, options, callback)
+    return run_shell(command, options, callback)
   end
   done = false
   local cached_path
@@ -254,6 +305,10 @@ local function main()
     vim.json.encode({
       error = install_error,
       powershell_calls = power_shell_calls,
+      runtime = runtime,
+      edition = edition,
+      hash_verified = hash_verified,
+      extraction_verified = extraction_verified,
       separator = separator,
       staging = observed_staging,
       staging_acl_verified = staging_acl_verified,
