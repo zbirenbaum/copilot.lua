@@ -264,14 +264,38 @@ function M.setup()
       desc = "[copilot] (client) stop LSP client on exit",
     })
 
-    vim.api.nvim_create_autocmd("BufFilePost", {
+    local renamed_buffers = {}
+    -- The first :write uses BufWipeout/BufNew instead of BufFilePre/BufFilePost.
+    vim.api.nvim_create_autocmd({ "BufFilePre", "BufWipeout" }, {
       group = M.augroup,
       callback = function(args)
         local bufnr = (args and args.buf) or nil
         if bufnr and M.buf_is_attached(bufnr) then
           logger.trace("buffer filename changed, detaching and re-attaching")
+          -- Flush pending changes and close the document while its old URI is still available.
+          renamed_buffers[bufnr] = args
           M.buf_detach_if_attached(bufnr)
-          M.buf_attach(false, bufnr)
+          vim.schedule(function()
+            if renamed_buffers[bufnr] ~= args then
+              return
+            end
+            renamed_buffers[bufnr] = nil
+            -- A failed :file can fire BufFilePre without a matching BufFilePost.
+            if args.event == "BufFilePre" and generation == setup_generation then
+              M.buf_attach(false, bufnr)
+            end
+          end)
+        end
+      end,
+      desc = "[copilot] (client) before buffer filename changes",
+    })
+
+    vim.api.nvim_create_autocmd({ "BufFilePost", "BufNew" }, {
+      group = M.augroup,
+      callback = function(args)
+        if renamed_buffers[args.buf] then
+          renamed_buffers[args.buf] = nil
+          M.buf_attach(false, args.buf)
         end
       end,
       desc = "[copilot] (client) buffer filename changed",

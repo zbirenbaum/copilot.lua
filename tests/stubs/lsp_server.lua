@@ -149,7 +149,13 @@ function M.server()
     table.insert(M.messages, { method = method, params = params })
     if method == "initialize" then
       handler(nil, {
-        capabilities = {},
+        capabilities = {
+          textDocumentSync = {
+            openClose = true,
+            change = 2,
+            save = { includeText = true },
+          },
+        },
       })
     elseif method == "shutdown" then
       handler(nil, nil)

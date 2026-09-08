@@ -422,6 +422,95 @@ T["client()"]["saving unnamed buffer with :w - detaches and re-attaches"] = func
   u.expect_no_match(messages, "RPC.*Document for URI could not be found")
 end
 
+T["document rename"] = MiniTest.new_set({ parametrize = { { "write" }, { "saveas" }, { "file" } } })
+
+T["failed rename"] = MiniTest.new_set({ parametrize = { { false }, { true } } })
+
+T["failed rename"]["leaves the original document attached"] = function(save_first)
+  child.configure_copilot()
+  MiniTest.expect.equality(child.lua("return vim.wait(1000, function() return c.buf_is_attached(0) end, 10)"), true)
+  local result = child.lua(
+    [[
+    if ... then
+      local saved_filename = vim.fn.tempname() .. ".md"
+      vim.cmd("write " .. vim.fn.fnameescape(saved_filename))
+      vim.fn.delete(saved_filename)
+    end
+    local original_name = vim.api.nvim_buf_get_name(0)
+    local other = vim.api.nvim_create_buf(true, false)
+    local filename = vim.fn.tempname() .. ".md"
+    vim.api.nvim_buf_set_name(other, filename)
+    local ok, err = pcall(vim.cmd, "file " .. vim.fn.fnameescape(filename))
+    local attached = vim.wait(1000, function() return c.buf_is_attached(0) end, 10)
+    return { ok = ok, err = err, attached = attached, name = vim.api.nvim_buf_get_name(0), original_name = original_name }
+  ]],
+    { save_first }
+  )
+  MiniTest.expect.equality(result.ok, false)
+  u.expect_match(result.err, "E95")
+  MiniTest.expect.equality(result.name, result.original_name)
+  MiniTest.expect.equality(result.attached, true)
+end
+
+T["document rename"]["flushes and closes the old URI before opening the new URI"] = function(command)
+  child.config.server_opts_overrides = "flags = { debounce_text_changes = 60000 },"
+  child.configure_copilot()
+  MiniTest.expect.equality(child.lua("return vim.wait(1000, function() return c.buf_is_attached(0) end, 10)"), true)
+
+  local result = child.lua(
+    [[
+    local server = require("tests.stubs.lsp_server")
+    local old_uri = vim.uri_from_bufnr(0)
+    local filename = vim.fn.tempname() .. ".md"
+    server.reset()
+
+    -- Rename in the same event-loop turn, while a didChange is still pending.
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "hello" })
+    vim.cmd((...) .. " " .. vim.fn.fnameescape(filename))
+    local new_uri = vim.uri_from_bufnr(0)
+    vim.fn.delete(filename)
+
+    local notifications = {}
+    local opened_text
+    for _, message in ipairs(server.messages) do
+      if message.method:match("^textDocument/") and message.method ~= "textDocument/didSave" then
+        table.insert(notifications, { message.method, message.params.textDocument.uri })
+        if message.method == "textDocument/didOpen" then
+          opened_text = message.params.textDocument.text
+        end
+      end
+    end
+    return { old_uri = old_uri, new_uri = new_uri, notifications = notifications, opened_text = opened_text }
+  ]],
+    { command }
+  )
+
+  local expected = {
+    { "textDocument/didChange", result.old_uri },
+    { "textDocument/didClose", result.old_uri },
+    { "textDocument/didOpen", result.new_uri },
+  }
+  MiniTest.expect.equality(result.notifications, expected)
+  MiniTest.expect.equality(result.opened_text, "hello\n")
+  MiniTest.expect.equality(child.lua("return c.buf_is_attached(0)"), true)
+end
+
+T["document rename"]["does not reattach a manually detached buffer"] = function(command)
+  child.configure_copilot()
+  MiniTest.expect.equality(child.lua("return vim.wait(1000, function() return c.buf_is_attached(0) end, 10)"), true)
+  child.cmd("Copilot detach")
+  child.lua(
+    [[
+    local filename = vim.fn.tempname() .. ".md"
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "hello" })
+    vim.cmd((...) .. " " .. vim.fn.fnameescape(filename))
+    vim.fn.delete(filename)
+  ]],
+    { command }
+  )
+  MiniTest.expect.equality(child.lua("return c.buf_is_attached(0)"), false)
+end
+
 T["client()"]["should_attach returns false prevents buffer attachment"] = function()
   child.config.should_attach = [[function(bufnr, bufname)
     return false
