@@ -136,7 +136,7 @@ local function fallback_completion(target)
       local entry = vim.fs.joinpath(command[5], release.assets[target].entrypoint)
       vim.fn.writefile({ "server" }, entry)
       vim.fn.setfperm(entry, "rwxr-xr-x")
-    elseif command[1] == "powershell" and (command[4] or ""):find("Expand%-Archive") then
+    elseif (command[1] == "powershell" or command[1] == "pwsh") and (command[4] or ""):find("Expand%-Archive") then
       local destination = (command[4]):match("%-DestinationPath%s+'([^']+)'")
       vim.fn.mkdir(destination, "p")
       local entry = vim.fs.joinpath(destination, release.assets[target].entrypoint)
@@ -443,12 +443,100 @@ T["windows prepares cache version and target parents"] = function()
   eq(result[1], nil)
 end
 
-T["windows PowerShell children do not inherit PowerShell 7 module paths"] = function()
+T["windows falls back to pwsh for ACL download hash and extraction"] = function()
+  local target = "win32-x64"
+  local responses = successful_acl_responses(8)
+  responses[4].stdout = release.assets[target].sha256
+  local root, result = run_install(target, {
+    powershell = { false, false, false, false, false, false, false, false },
+    pwsh = responses,
+    curl = { false },
+    wget = { false },
+    sha256sum = { false },
+    shasum = { false },
+    openssl = { false },
+    unzip = { false },
+  }, fallback_completion(target), nil, "Windows_NT")
+  eq(result[1], nil)
+  eq(
+    result[2],
+    vim.fs.joinpath(root, release.version, target, release.assets[target].sha256, release.assets[target].entrypoint)
+  )
+  eq(vim.fn.readfile(result[2]), { "server" })
+  local count = 0
+  for i, command in ipairs(process_stub.calls) do
+    if command[1] == "pwsh" then
+      count = count + 1
+      eq(process_stub.calls[i - 1][1], "powershell")
+      eq(vim.list_slice(command, 2), vim.list_slice(process_stub.calls[i - 1], 2))
+    end
+  end
+  eq(count, 8)
+end
+
+T["windows reuses a validated cache through pwsh"] = function()
+  local expected
+  local _, result = run_install(
+    "win32-x64",
+    {
+      powershell = { false, false, false },
+      pwsh = successful_acl_responses(3),
+    },
+    nil,
+    function(root)
+      expected = create_hit(root, "win32-x64")
+    end,
+    "Windows_NT"
+  )
+  eq(result, { nil, expected })
+  eq(#process_stub.calls, 6)
+  for i = 1, 6, 2 do
+    eq(process_stub.calls[i][1], "powershell")
+    eq(process_stub.calls[i + 1][1], "pwsh")
+  end
+end
+
+T["windows reports both unavailable PowerShell executables"] = function()
+  local _, result = run_install("win32-x64", {
+    powershell = { false },
+    pwsh = { false },
+  }, nil, nil, "Windows_NT")
+  eq(result[2], nil)
+  eq(result[1]:find("powershell unavailable", 1, true) ~= nil, true)
+  eq(result[1]:find("pwsh unavailable", 1, true) ~= nil, true)
+  eq(#process_stub.calls, 2)
+end
+
+T["windows does not retry a failed ACL script through another runtime"] = function()
+  local _, result = run_install("win32-x64", {
+    powershell = { { code = 1, stdout = "", stderr = "DACL is not protected" } },
+  }, nil, nil, "Windows_NT")
+  eq(result[2], nil)
+  eq(result[1]:find("DACL is not protected", 1, true) ~= nil, true)
+  eq(#process_stub.calls, 1)
+end
+
+T["windows pwsh ACL failures stop before downloading"] = function()
+  local _, result = run_install("win32-x64", {
+    powershell = { false },
+    pwsh = { { code = 1, stdout = "", stderr = "DACL is not protected" } },
+  }, nil, nil, "Windows_NT")
+  eq(result[2], nil)
+  eq(result[1]:find("pwsh failed: DACL is not protected", 1, true) ~= nil, true)
+  eq(#process_stub.calls, 2)
+end
+
+T["windows PowerShell module environments"] = MiniTest.new_set({ parametrize = { { false }, { true } } })
+T["windows PowerShell module environments"]["do not inherit module paths"] = function(use_pwsh)
   local inherited = vim.env.PSModulePath
   local marker = vim.env.COPILOT_ENV_TEST
   vim.env.PSModulePath = "incompatible PowerShell 7 modules"
   vim.env.COPILOT_ENV_TEST = "preserve child environment"
-  local _, result = run_install("win32-x64", nil, nil, nil, "Windows_NT")
+  local plan = successful_plan("win32-x64")
+  if use_pwsh then
+    plan.powershell = { false, false, false, false, false }
+  end
+  local _, result = run_install("win32-x64", plan, nil, nil, "Windows_NT")
   local unchanged = vim.env.PSModulePath
   vim.env.PSModulePath = inherited
   vim.env.COPILOT_ENV_TEST = marker
@@ -465,12 +553,12 @@ T["windows PowerShell children do not inherit PowerShell 7 module paths"] = func
       [[lua io.stdout:write(vim.json.encode({has_modules = vim.env.PSModulePath ~= nil, marker = vim.env.COPILOT_ENV_TEST}))]],
       "-c",
       "qa!",
-    }, process_stub.options[1])
+    }, process_stub.options[use_pwsh and 2 or 1])
     :wait()
   eq(child.code, 0)
   eq(vim.json.decode(child.stdout), { has_modules = false, marker = "preserve child environment" })
   for i, command in ipairs(process_stub.calls) do
-    if command[1] == "powershell" then
+    if command[1] == "powershell" or command[1] == "pwsh" then
       eq(process_stub.options[i].clear_env, true)
     else
       eq(process_stub.options[i].env, nil)
@@ -733,10 +821,11 @@ T["rejects download and publication phase failures"] = function()
   local target = fixture_target()
   local download_powershell = target == "win32-x64" and successful_acl_responses(2) or {}
   download_powershell[#download_powershell + 1] = false
-  local _, result = run_install(target, { curl = { false }, wget = { false }, powershell = download_powershell })
+  local _, result =
+    run_install(target, { curl = { false }, wget = { false }, powershell = download_powershell, pwsh = { false } })
   eq(assert(result[1]):find("download failed at", 1, true) ~= nil, true)
   local download_command = process_stub.calls[#process_stub.calls]
-  eq(download_command[1], "powershell")
+  eq(download_command[1], target == "win32-x64" and "pwsh" or "powershell")
   eq((download_command[4] or ""):find("Invoke-WebRequest", 1, true) ~= nil, true)
   local extraction_powershell = { { code = 1, stdout = "", stderr = "extract failed" } }
   if target == "win32-x64" then
