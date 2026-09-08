@@ -166,7 +166,7 @@ local function run_install(target, responses, completion, setup, sysname, absent
     installer.ensure("binary", function(err, path)
       result = { err, path }
     end)
-    for _ = 1, 8 do
+    for _ = 1, 16 do
       vim.wait(1000, function()
         return result ~= nil or #process_stub.pending > 0
       end)
@@ -423,15 +423,9 @@ T["windows prepares cache version and target parents"] = function()
   installer.ensure("binary", function(err, path)
     result = { err, path }
   end)
-  for _ = 1, 8 do
-    vim.wait(1000, function()
-      return result ~= nil or #process_stub.pending > 0
-    end)
-    if result then
-      break
-    end
-    process_stub.complete_next()
-  end
+  complete_pending(function()
+    return result
+  end, 16)
   restore()
   vim.loop.os_uname = original_uname
   local parent = process_stub.calls[1][4]
@@ -447,6 +441,186 @@ T["windows prepares cache version and target parents"] = function()
   eq(process_stub.calls[2][4]:find("generations", 1, true), nil)
   eq(process_stub.calls[3][1], "curl")
   eq(result[1], nil)
+end
+
+T["windows PowerShell children do not inherit PowerShell 7 module paths"] = function()
+  local inherited = vim.env.PSModulePath
+  local marker = vim.env.COPILOT_ENV_TEST
+  vim.env.PSModulePath = "incompatible PowerShell 7 modules"
+  vim.env.COPILOT_ENV_TEST = "preserve child environment"
+  local _, result = run_install("win32-x64", nil, nil, nil, "Windows_NT")
+  local unchanged = vim.env.PSModulePath
+  vim.env.PSModulePath = inherited
+  vim.env.COPILOT_ENV_TEST = marker
+  eq(result[1], nil)
+  eq(unchanged, "incompatible PowerShell 7 modules")
+  local child = vim
+    .system({
+      vim.v.progpath,
+      "--headless",
+      "--clean",
+      "-u",
+      "NONE",
+      "-c",
+      [[lua io.stdout:write(vim.json.encode({has_modules = vim.env.PSModulePath ~= nil, marker = vim.env.COPILOT_ENV_TEST}))]],
+      "-c",
+      "qa!",
+    }, process_stub.options[1])
+    :wait()
+  eq(child.code, 0)
+  eq(vim.json.decode(child.stdout), { has_modules = false, marker = "preserve child environment" })
+  for i, command in ipairs(process_stub.calls) do
+    if command[1] == "powershell" then
+      eq(process_stub.options[i].clear_env, true)
+    else
+      eq(process_stub.options[i].env, nil)
+      eq(process_stub.options[i].clear_env, nil)
+    end
+  end
+end
+
+T["Unix PowerShell fallbacks keep their module environment"] = function()
+  if original_os_uname().sysname == "Windows_NT" then
+    return
+  end
+  local _, result = run_install("linux-x64", {
+    curl = { false },
+    wget = { false },
+    powershell = { { code = 1, stdout = "", stderr = "download failed" } },
+  }, nil, nil, "Linux")
+  eq(result[1]:find("download failed", 1, true) ~= nil, true)
+  eq(process_stub.calls[3][1], "powershell")
+  eq(process_stub.options[3].env, nil)
+end
+
+T["windows parent ACL writes do not request audit permissions"] = function()
+  local _, result = run_install("win32-x64", nil, nil, nil, "Windows_NT")
+  eq(result[1], nil)
+  local script = process_stub.calls[1][4]
+  eq(script:find("Set-Acl", 1, true), nil)
+  eq(script:find("[System.IO.Directory]::SetAccessControl($p,$d)", 1, true) ~= nil, true)
+  -- Each persist clears the descriptor's modification flags, so reusing it
+  -- would leave the second and third existing directories unhardened.
+  local loop = assert(script:find("foreach($p in $paths)", 1, true))
+  local descriptor = assert(script:find("New-Object System.Security.AccessControl.DirectorySecurity", 1, true))
+  eq(loop < descriptor, true)
+  eq(script:find("[System.IO.Directory]::CreateDirectory($p,$d)", 1, true) ~= nil, true)
+end
+
+T["windows only normalizes ownership of newly created staging files"] = function()
+  local _, result = run_install("win32-x64", nil, nil, nil, "Windows_NT")
+  eq(result[1], nil)
+  local staging = process_stub.calls[2][4]
+  eq(staging:find("SetOwner($s)", 1, true) ~= nil, true)
+  eq(staging:find("SetAccessRuleProtection", 1, true), nil)
+  eq(staging:find("AddAccessRule", 1, true), nil)
+  local files = process_stub.calls[6][4]
+  eq(files:find("SetOwner($s)", 1, true) ~= nil, true)
+  eq(files:find("[System.IO.File]::SetAccessControl", 1, true) ~= nil, true)
+  eq(files:find("install.json", 1, true) ~= nil, true)
+  for i = 7, 8 do
+    eq(process_stub.calls[i][4]:find("SetOwner", 1, true), nil)
+  end
+end
+
+T["windows file owner failure stops before publication"] = function()
+  local responses = successful_acl_responses(2)
+  responses[3] = { code = 1, stdout = "", stderr = "file owner normalization failed" }
+  local plan = successful_plan("win32-x64")
+  plan.powershell = responses
+  local root, result = run_install("win32-x64", plan, nil, nil, "Windows_NT")
+  eq(result[1]:find("file owner normalization failed", 1, true) ~= nil, true)
+  eq(result[2], nil)
+  eq(store.resolve(options(root, "win32-x64")), nil)
+  eq(#process_stub.calls, 6)
+end
+
+T["windows rejects an untrusted racing winner without repairing it"] = function()
+  local root, winner
+  local completion = successful_completion("win32-x64")
+  local responses = successful_acl_responses(3)
+  responses[4] = { code = 1, stdout = "", stderr = "winner owner mismatch" }
+  local plan = successful_plan("win32-x64")
+  plan.powershell = responses
+  local _, result = run_install("win32-x64", plan, function(command)
+    completion(command)
+    if command[1] == "unzip" then
+      winner = create_hit(root, "win32-x64")
+    end
+  end, function(cache)
+    root = cache
+  end, "Windows_NT")
+  eq(result[1]:find("winner owner mismatch", 1, true) ~= nil, true)
+  eq(result[2], nil)
+  eq(vim.fn.filereadable(winner), 1)
+  eq(#process_stub.calls, 7)
+  eq(process_stub.calls[7][4]:find("SetOwner", 1, true), nil)
+end
+
+T["windows ignores late file preparation after the deadline"] = function()
+  local target = "win32-x64"
+  local root = new_cache(target)
+  vim.loop.os_uname = function()
+    return { sysname = "Windows_NT", machine = "AMD64" }
+  end
+  installer._operation_deadline = 100
+  process_stub.start()
+  process_stub.responses = successful_plan(target)
+  process_stub.on_complete = successful_completion(target)
+  local result, callbacks = nil, 0
+  installer.ensure("binary", function(err, path)
+    result, callbacks = { err, path }, callbacks + 1
+  end)
+  for _ = 1, 5 do
+    eq(
+      vim.wait(1000, function()
+        return #process_stub.pending > 0
+      end),
+      true
+    )
+    process_stub.complete_next()
+  end
+  eq(
+    vim.wait(1000, function()
+      return #process_stub.calls == 6
+    end),
+    true
+  )
+  eq(
+    vim.wait(1000, function()
+      return result ~= nil
+    end),
+    true
+  )
+  assert(result)
+  eq(result[1]:find("timed out", 1, true) ~= nil, true)
+  eq(result[2], nil)
+  eq(process_stub.killed, 1)
+  process_stub.complete_next()
+  local drained = false
+  vim.schedule(function()
+    drained = true
+  end)
+  vim.wait(1000, function()
+    return drained
+  end)
+  eq(callbacks, 1)
+  eq(#process_stub.calls, 6)
+  eq(store.resolve(options(root, target)), nil)
+end
+
+T["windows ACL verification commands report the failed contract"] = function()
+  local _, result = run_install("win32-x64", nil, nil, nil, "Windows_NT")
+  eq(result[1], nil)
+  for _, command in ipairs(process_stub.calls) do
+    if command[1] == "powershell" then
+      local script = command[4]
+      eq(script:find("exit 1", 1, true), nil)
+      eq(script:find("owner mismatch", 1, true) ~= nil, true)
+      eq(script:find("ACE count", 1, true) ~= nil, true)
+      eq(script:find(".Sddl", 1, true) ~= nil, true)
+    end
+  end
 end
 
 T["windows validates cache ACLs before reusing an install"] = function()
@@ -488,6 +662,9 @@ T["windows validates cache ACLs before reusing an install"] = function()
   for _, command in ipairs(process_stub.calls) do
     eq(command[1], "powershell")
   end
+  local file_check = process_stub.calls[3][4]
+  local target_path = vim.fs.joinpath(root, release.version, target)
+  eq(file_check:find("$parent=Get-Acl -LiteralPath '" .. target_path .. "';", 1, true) ~= nil, true)
 end
 
 T["windows rejects a cache hit when ACL validation fails"] = function()
@@ -691,7 +868,7 @@ T["wrong publication path is rejected"] = function()
   eq(error_message:find("unexpected entrypoint", 1, true) ~= nil, true)
 end
 
-T["publication timeout recovers the deterministic current install"] = function()
+T["publication timeout only recovers a POSIX current install"] = function()
   local original_publish = store.publish
   local late_callback
   store.publish = function(reservation, opts, callback)
@@ -728,13 +905,18 @@ T["publication timeout recovers the deterministic current install"] = function()
   end)
   restore()
   store.publish = original_publish
-  eq(result[1], nil)
+  if target == "win32-x64" then
+    eq(result[1]:find("timed out", 1, true) ~= nil, true)
+    eq(result[2], nil)
+  else
+    eq(result[1], nil)
+    eq(result[2]:find(release.assets[target].sha256, 1, true) ~= nil, true)
+  end
   eq(callback_count, 1)
   eq(late_callback ~= nil, true)
   late_callback()
   vim.wait(100)
   eq(callback_count, 1)
-  eq(result[2]:find(release.assets[target].sha256, 1, true) ~= nil, true)
   eq(vim.fn.isdirectory(root), 1)
 end
 
@@ -803,7 +985,14 @@ T["preserves POSIX private staging and final permissions"] = function()
   end
 end
 
-T["callbacks remain deduplicated"] = function()
+T["callbacks remain deduplicated"] = MiniTest.new_set({ parametrize = { { false }, { true } } })
+
+T["callbacks remain deduplicated"]["notifies both callers"] = function(force_windows)
+  if force_windows then
+    vim.loop.os_uname = function()
+      return { sysname = "Windows_NT", machine = "AMD64" }
+    end
+  end
   local target = fixture_target()
   new_cache(target)
   local restore = process_stub.start()
@@ -816,15 +1005,9 @@ T["callbacks remain deduplicated"] = function()
   installer.ensure("binary", function(err, path)
     results[#results + 1] = { err, path }
   end)
-  for _ = 1, 8 do
-    vim.wait(1000, function()
-      return #results == 2 or #process_stub.pending > 0
-    end)
-    if #results == 2 then
-      break
-    end
-    process_stub.complete_next()
-  end
+  complete_pending(function()
+    return #results == 2 and results or nil
+  end, 16)
   restore()
   eq(#results, 2)
   eq(results[1][1], nil)
