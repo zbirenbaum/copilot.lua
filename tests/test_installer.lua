@@ -337,6 +337,28 @@ T["resolve_target maps platforms and libc probes"] = function()
   end)
 end
 
+T["resolve_target falls back to glibc ldd when getconf is missing"] = function()
+  with_system_probe({
+    getconf = { fail = true },
+    ldd = { stdout = "ldd (GNU libc) 2.39", stderr = "", code = 0 },
+  }, function()
+    local target, err = installer.resolve_target("binary", { sysname = "Linux", machine = "x86_64" })
+    eq(target, "linux-x64")
+    eq(err, nil)
+  end)
+end
+
+T["resolve_target falls back to glibc ldd when getconf fails"] = function()
+  with_system_probe({
+    getconf = { stdout = "", stderr = "getconf: Unrecognized variable", code = 2 },
+    ldd = { stdout = "ldd (GLIBC) 2.39", stderr = "", code = 0 },
+  }, function()
+    local target, err = installer.resolve_target("binary", { sysname = "Linux", machine = "aarch64" })
+    eq(target, "linux-arm64")
+    eq(err, nil)
+  end)
+end
+
 T["get_entrypoint resolves a deterministic cache hit"] = function()
   local target = fixture_target()
   local root = new_cache(target)

@@ -646,7 +646,7 @@ local function detect_libc()
     end
   end
 
-  local ok, process = pcall(vim.system, { "ldd", "--version" }, { text = true })
+  ok, process = pcall(vim.system, { "ldd", "--version" }, { text = true })
   if ok and process then
     local result = process:wait()
     if result.code == 0 then
@@ -654,6 +654,9 @@ local function detect_libc()
 
       if output:find("musl", 1, true) then
         return "musl"
+      end
+      if output:find("glibc", 1, true) or output:find("gnu libc", 1, true) then
+        return "glibc"
       end
     end
   end
