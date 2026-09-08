@@ -551,7 +551,9 @@ function M.cleanup_old_versions(user_options)
   return removed, nil
 end
 
-function M.publish(reservation, user_options, callback)
+-- prepare_files may asynchronously secure the freshly created payload/marker
+-- before they become visible at the deterministic destination.
+function M.publish(reservation, user_options, callback, prepare_files)
   local receipt = { outcome = "unmarked", path = nil, error = nil, committed = false }
   local done = false
   local function finish(err, path, outcome)
@@ -589,64 +591,64 @@ function M.publish(reservation, user_options, callback)
   end
   local marker =
     vim.json.encode({ version = user_options.version, target = user_options.target, sha256 = user_options.sha256 })
-  if not fs.write_exclusive(vim.fs.joinpath(reservation.path, "install.json"), marker, 384) then
+  local staged_marker = vim.fs.joinpath(reservation.path, "install.json")
+  if not fs.write_exclusive(staged_marker, marker, 384) then
     return finish("could not publish install marker")
   end
-  local function rename()
-    local renamed_ok, renamed_value = pcall(fs.rename, reservation.path, store_paths.final_path)
-    return renamed_ok and renamed_value
-  end
-  local winner = resolve_final(fs, user_options, store_paths)
-  if winner then
-    M.discard(reservation, user_options)
-    receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
-    return finish(nil, winner, "published")
-  end
-  local renamed = rename()
-  if not renamed then
-    winner = resolve_final(fs, user_options, store_paths)
+  local function publish_prepared()
+    local staging_stat = fs.lstat(reservation.path)
+    if not staging_stat or staging_stat.type ~= "directory" then
+      return finish("staging reservation disappeared before publication")
+    end
+    local function rename()
+      local renamed_ok, renamed_value = pcall(fs.rename, reservation.path, store_paths.final_path)
+      return renamed_ok and renamed_value
+    end
+    local winner = resolve_final(fs, user_options, store_paths)
     if winner then
       M.discard(reservation, user_options)
       receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
       return finish(nil, winner, "published")
     end
-    local lock_token, waited_winner, acquire_error = acquire_lock_wait(fs, user_options, store_paths)
-    if waited_winner then
-      M.discard(reservation, user_options)
-      receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
-      return finish(nil, waited_winner, "published")
-    end
-    if acquire_error then
-      return finish(acquire_error)
-    end
-    if not lock_token then
-      return finish("publication conflict at " .. store_paths.final_path)
-    end
-    local function lock_finish(error_message)
-      release_lock(fs, store_paths, lock_token)
-      return finish(error_message)
-    end
-    local function lock_lost()
+    local renamed = rename()
+    if not renamed then
       winner = resolve_final(fs, user_options, store_paths)
       if winner then
         M.discard(reservation, user_options)
-        release_lock(fs, store_paths, lock_token)
         receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
         return finish(nil, winner, "published")
       end
-      return lock_finish("publication conflict: lock ownership lost")
-    end
-    winner = resolve_final(fs, user_options, store_paths)
-    if winner then
-      M.discard(reservation, user_options)
-      release_lock(fs, store_paths, lock_token)
-      receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
-      return finish(nil, winner, "published")
-    end
-    if not owns_lock(fs, lock_path(store_paths), lock_token) then
-      return lock_lost()
-    end
-    if uv.fs_lstat(store_paths.final_path) then
+      local lock_token, waited_winner, acquire_error = acquire_lock_wait(fs, user_options, store_paths)
+      staging_stat = fs.lstat(reservation.path)
+      if not staging_stat or staging_stat.type ~= "directory" then
+        release_lock(fs, store_paths, lock_token)
+        return finish("staging reservation disappeared before publication")
+      end
+      if waited_winner then
+        M.discard(reservation, user_options)
+        receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
+        return finish(nil, waited_winner, "published")
+      end
+      if acquire_error then
+        return finish(acquire_error)
+      end
+      if not lock_token then
+        return finish("publication conflict at " .. store_paths.final_path)
+      end
+      local function lock_finish(error_message)
+        release_lock(fs, store_paths, lock_token)
+        return finish(error_message)
+      end
+      local function lock_lost()
+        winner = resolve_final(fs, user_options, store_paths)
+        if winner then
+          M.discard(reservation, user_options)
+          release_lock(fs, store_paths, lock_token)
+          receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
+          return finish(nil, winner, "published")
+        end
+        return lock_finish("publication conflict: lock ownership lost")
+      end
       winner = resolve_final(fs, user_options, store_paths)
       if winner then
         M.discard(reservation, user_options)
@@ -657,22 +659,21 @@ function M.publish(reservation, user_options, callback)
       if not owns_lock(fs, lock_path(store_paths), lock_token) then
         return lock_lost()
       end
-      if not remove_path(store_paths.final_path) then
-        return lock_finish("could not remove invalid deterministic destination")
+      if uv.fs_lstat(store_paths.final_path) then
+        winner = resolve_final(fs, user_options, store_paths)
+        if winner then
+          M.discard(reservation, user_options)
+          release_lock(fs, store_paths, lock_token)
+          receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
+          return finish(nil, winner, "published")
+        end
+        if not owns_lock(fs, lock_path(store_paths), lock_token) then
+          return lock_lost()
+        end
+        if not remove_path(store_paths.final_path) then
+          return lock_finish("could not remove invalid deterministic destination")
+        end
       end
-    end
-    winner = resolve_final(fs, user_options, store_paths)
-    if winner then
-      M.discard(reservation, user_options)
-      release_lock(fs, store_paths, lock_token)
-      receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
-      return finish(nil, winner, "published")
-    end
-    if not owns_lock(fs, lock_path(store_paths), lock_token) then
-      return lock_lost()
-    end
-    renamed = rename()
-    if not renamed then
       winner = resolve_final(fs, user_options, store_paths)
       if winner then
         M.discard(reservation, user_options)
@@ -680,16 +681,50 @@ function M.publish(reservation, user_options, callback)
         receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
         return finish(nil, winner, "published")
       end
-      return lock_finish("could not publish deterministic destination")
+      if not owns_lock(fs, lock_path(store_paths), lock_token) then
+        return lock_lost()
+      end
+      renamed = rename()
+      if not renamed then
+        winner = resolve_final(fs, user_options, store_paths)
+        if winner then
+          M.discard(reservation, user_options)
+          release_lock(fs, store_paths, lock_token)
+          receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
+          return finish(nil, winner, "published")
+        end
+        return lock_finish("could not publish deterministic destination")
+      end
+      release_lock(fs, store_paths, lock_token)
     end
-    release_lock(fs, store_paths, lock_token)
+    local final_entry = resolve_final(fs, user_options, store_paths)
+    if not final_entry then
+      return finish("published deterministic destination is invalid")
+    end
+    receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
+    return finish(nil, final_entry, "published")
   end
-  local final_entry = resolve_final(fs, user_options, store_paths)
-  if not final_entry then
-    return finish("published deterministic destination is invalid")
+  if not prepare_files then
+    return publish_prepared()
   end
-  receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
-  return finish(nil, final_entry, "published")
+  local resumed = false
+  local prepared_receipt
+  local prepared_ok, prepare_error = pcall(prepare_files, { staged_entry, staged_marker }, function(error_message)
+    if resumed then
+      return
+    end
+    resumed = true
+    if error_message then
+      prepared_receipt = finish(error_message)
+    else
+      prepared_receipt = publish_prepared()
+    end
+  end)
+  if not prepared_ok and not resumed then
+    resumed = true
+    return finish(tostring(prepare_error))
+  end
+  return prepared_receipt
 end
 
 return M

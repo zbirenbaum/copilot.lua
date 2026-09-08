@@ -85,6 +85,10 @@ end
 
 local finish
 
+local function windows_platform()
+  return vim.loop.os_uname().sysname == "Windows_NT"
+end
+
 local function run_commands(operation, phase, commands, callback, stage, owned_path)
   local token = begin_phase(operation, phase)
   local index = 0
@@ -105,7 +109,26 @@ local function run_commands(operation, phase, commands, callback, stage, owned_p
     local completed = false
     local process
     local ok
-    ok, process = pcall(vim.system, command, { text = true, timeout = process_timeout }, function(result)
+    local options = { text = true, timeout = process_timeout }
+    if windows_platform() and command[1] == "powershell" then
+      -- Neovim may inherit PowerShell 7 modules that Windows PowerShell cannot load.
+      options.env = vim.fn.environ()
+      for name in pairs(options.env) do
+        if name:lower() == "psmodulepath" then
+          options.env[name] = nil
+        end
+      end
+      options.clear_env = true
+      -- Before 0.11.3, clear_env bypasses vim.system's dictionary conversion.
+      if vim.fn.has("nvim-0.11.3") == 0 then
+        local env = {}
+        for name, value in pairs(options.env) do
+          env[#env + 1] = name .. "=" .. value
+        end
+        options.env = env
+      end
+    end
+    ok, process = pcall(vim.system, command, options, function(result)
       if completed then
         return
       end
@@ -198,7 +221,7 @@ local function arm_deadline(operation)
     if operations[operation.key] ~= operation or operation.terminal then
       return
     end
-    if operation.phase == "publish" and operation.reservation then
+    if not windows_platform() and operation.phase == "publish" and operation.reservation then
       local committed = store.current(operation.options)
       if type(committed) == "string" then
         finish(operation, nil, committed, "published")
@@ -209,49 +232,55 @@ local function arm_deadline(operation)
   end, M._operation_deadline or operation_timeout)
 end
 
-local function windows_platform()
-  return vim.loop.os_uname().sysname == "Windows_NT"
-end
-
-local function private_acl_command(path, apply, parent)
+local function private_acl_command(path, normalize_owner, parent)
   local quoted = ps_quote(path)
-  local script = "$ErrorActionPreference='Stop';$p=" .. quoted .. ";$a=Get-Acl -LiteralPath $p;"
-  if apply then
-    script = script .. "$a.SetAccessRuleProtection($true,$false);$a.Access|ForEach-Object{$a.RemoveAccessRule($_)};"
-  end
+  local script = "$ErrorActionPreference='Stop';$p=" .. quoted .. ";"
   script = script .. "$s=[System.Security.Principal.WindowsIdentity]::GetCurrent().User;"
   if parent then
     script = script .. "$parent=Get-Acl -LiteralPath " .. ps_quote(parent) .. ";"
   end
-  if apply then
+  if normalize_owner then
+    -- Elevated tokens default new objects to Administrators ownership. Change
+    -- only the owner of our fresh reservation, preserving its inherited DACL.
     script = script
-      .. "$r=New-Object System.Security.AccessControl.FileSystemAccessRule($s,'FullControl',"
-      .. "'ContainerInherit,ObjectInherit','None','Allow');$a.AddAccessRule($r);"
-      .. "Set-Acl -LiteralPath $p -AclObject $a;"
+      .. "if((Get-Item -LiteralPath $p -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){"
+      .. "throw ('reservation is a reparse point: '+$p)};"
+      .. "$d=New-Object System.Security.AccessControl.DirectorySecurity;$d.SetOwner($s);"
+      .. "[System.IO.Directory]::SetAccessControl($p,$d);"
   end
   script = script
-    .. "$c=Get-Acl -LiteralPath $p;"
-    .. "if($c.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){exit 1};"
-    .. "if(@($c.Access).Count -ne 1){exit 1};"
-    .. "if(@($c.Access|Where-Object{$_.AccessControlType -ne 'Allow'}).Count -ne 0){exit 1};"
+    .. "$c=Get-Acl -LiteralPath $p;$detail=$p+'; ACL='+$c.Sddl;"
+    .. "if($parent){$detail+='; parent ACL='+$parent.Sddl};"
+    .. "if($c.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){"
+    .. "throw ('owner mismatch (expected '+$s.Value+'): '+$detail)};"
+    .. "if(@($c.Access).Count -ne 1){throw ('unexpected ACE count: '+$detail)};"
+    .. "if(@($c.Access|Where-Object{$_.AccessControlType -ne 'Allow'}).Count -ne 0){"
+    .. "throw ('unexpected ACE type: '+$detail)};"
     .. "if(@($c.Access|Where-Object{"
     .. "$_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value "
-    .. "-ne $s.Value}).Count -ne 0){exit 1};"
-    .. "if($c.Access[0].FileSystemRights.ToString() -ne 'FullControl'){exit 1};"
-    .. "if($c.Access[0].InheritanceFlags.ToString() -ne 'ContainerInherit, ObjectInherit'){exit 1};"
-    .. "if($c.Access[0].PropagationFlags.ToString() -ne 'None'){exit 1};"
-    .. "if($parent -and (-not $parent.AreAccessRulesProtected)){exit 1};"
-    .. "if($parent -and @($parent.Access).Count -ne 1){exit 1};"
-    .. "if($parent -and $parent.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){exit 1};"
-    .. "if($parent -and $parent.Access[0].AccessControlType -ne 'Allow'){exit 1};"
+    .. "-ne $s.Value}).Count -ne 0){throw ('unexpected ACE identity: '+$detail)};"
+    .. "if($c.Access[0].FileSystemRights.ToString() -ne 'FullControl'){throw ('unexpected ACE rights: '+$detail)};"
+    .. "if($c.Access[0].InheritanceFlags.ToString() -ne 'ContainerInherit, ObjectInherit'){"
+    .. "throw ('unexpected ACE inheritance flags: '+$detail)};"
+    .. "if($c.Access[0].PropagationFlags.ToString() -ne 'None'){throw ('unexpected ACE propagation: '+$detail)};"
+    .. "if($parent -and (-not $parent.AreAccessRulesProtected)){throw ('parent DACL is not protected: '+$detail)};"
+    .. "if($parent -and @($parent.Access).Count -ne 1){throw ('unexpected parent ACE count: '+$detail)};"
+    .. "if($parent -and $parent.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){"
+    .. "throw ('parent owner mismatch: '+$detail)};"
+    .. "if($parent -and $parent.Access[0].AccessControlType -ne 'Allow'){"
+    .. "throw ('unexpected parent ACE type: '+$detail)};"
     .. "if($parent -and $parent.Access[0].IdentityReference.Translate("
-    .. "[System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){exit 1};"
-    .. "if($parent -and $parent.Access[0].FileSystemRights.ToString() -ne 'FullControl'){exit 1};"
-    .. "if($parent -and $parent.Access[0].InheritanceFlags.ToString() -ne 'ContainerInherit, ObjectInherit'){exit 1};"
-    .. "if($parent -and $parent.Access[0].PropagationFlags.ToString() -ne 'None'){exit 1};"
-    .. "if($parent -and ($parent.Access[0].IsInherited -ne $false)){exit 1};"
-    .. "if($parent -and ($c.Access[0].IsInherited -ne $true)){exit 1};"
-    .. "if((-not $parent) -and ($c.Access[0].IsInherited -ne $false)){exit 1}"
+    .. "[System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){"
+    .. "throw ('unexpected parent ACE identity: '+$detail)};"
+    .. "if($parent -and $parent.Access[0].FileSystemRights.ToString() -ne 'FullControl'){"
+    .. "throw ('unexpected parent ACE rights: '+$detail)};"
+    .. "if($parent -and $parent.Access[0].InheritanceFlags.ToString() -ne 'ContainerInherit, ObjectInherit'){"
+    .. "throw ('unexpected parent ACE inheritance flags: '+$detail)};"
+    .. "if($parent -and $parent.Access[0].PropagationFlags.ToString() -ne 'None'){"
+    .. "throw ('unexpected parent ACE propagation: '+$detail)};"
+    .. "if($parent -and ($parent.Access[0].IsInherited -ne $false)){throw ('parent ACE is inherited: '+$detail)};"
+    .. "if($parent -and ($c.Access[0].IsInherited -ne $true)){throw ('ACE is not inherited: '+$detail)};"
+    .. "if((-not $parent) -and ($c.Access[0].IsInherited -ne $false)){throw ('ACE is inherited: '+$detail)}"
   return {
     "powershell",
     "-NoProfile",
@@ -264,12 +293,13 @@ local function private_parent_command(path_token)
   local cache = ps_quote(path_token.cache_root)
   local version = ps_quote(path_token.version_path)
   local target = ps_quote(path_token.target_path)
+  -- Set-Acl copies audit information too, which can require SeSecurityPrivilege.
+  -- Direct persistence writes only modified sections; use a fresh descriptor
+  -- for each path because persistence clears its modification flags.
   local script = "$ErrorActionPreference='Stop';"
     .. "$s=[System.Security.Principal.WindowsIdentity]::GetCurrent().User;"
     .. "$r=New-Object System.Security.AccessControl.FileSystemAccessRule($s,'FullControl',"
     .. "'ContainerInherit,ObjectInherit','None','Allow');"
-    .. "$d=New-Object System.Security.AccessControl.DirectorySecurity;"
-    .. "$d.SetOwner($s);$d.SetAccessRuleProtection($true,$false);$d.AddAccessRule($r);"
     .. "$paths=@("
     .. cache
     .. ","
@@ -277,22 +307,28 @@ local function private_parent_command(path_token)
     .. ","
     .. target
     .. ");"
-    .. "foreach($p in $paths){if(Test-Path -LiteralPath $p){Set-Acl -LiteralPath $p -AclObject $d}"
+    .. "foreach($p in $paths){$d=New-Object System.Security.AccessControl.DirectorySecurity;"
+    .. "$d.SetOwner($s);$d.SetAccessRuleProtection($true,$false);$d.AddAccessRule($r);"
+    .. "if(Test-Path -LiteralPath $p){[System.IO.Directory]::SetAccessControl($p,$d)}"
     .. "else{[System.IO.Directory]::CreateDirectory($p,$d)|Out-Null}};"
-    .. "foreach($p in $paths){$a=Get-Acl -LiteralPath $p;"
-    .. "if($a.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){exit 1};"
-    .. "if(-not $a.AreAccessRulesProtected){exit 1};if(@($a.Access).Count -ne 1){exit 1};"
-    .. "if($a.Access[0].AccessControlType -ne 'Allow'){exit 1};"
+    .. "foreach($p in $paths){$a=Get-Acl -LiteralPath $p;$detail=$p+'; ACL='+$a.Sddl;"
+    .. "if($a.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){"
+    .. "throw ('owner mismatch (expected '+$s.Value+'): '+$detail)};"
+    .. "if(-not $a.AreAccessRulesProtected){throw ('DACL is not protected: '+$detail)};"
+    .. "if(@($a.Access).Count -ne 1){throw ('unexpected ACE count: '+$detail)};"
+    .. "if($a.Access[0].AccessControlType -ne 'Allow'){throw ('unexpected ACE type: '+$detail)};"
     .. "if($a.Access[0].IdentityReference.Translate("
-    .. "[System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){exit 1};"
-    .. "if($a.Access[0].FileSystemRights.ToString() -ne 'FullControl'){exit 1};"
-    .. "if($a.Access[0].InheritanceFlags.ToString() -ne 'ContainerInherit, ObjectInherit'){exit 1};"
-    .. "if($a.Access[0].PropagationFlags.ToString() -ne 'None'){exit 1};"
-    .. "if($a.Access[0].IsInherited){exit 1}}"
+    .. "[System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){"
+    .. "throw ('unexpected ACE identity: '+$detail)};"
+    .. "if($a.Access[0].FileSystemRights.ToString() -ne 'FullControl'){throw ('unexpected ACE rights: '+$detail)};"
+    .. "if($a.Access[0].InheritanceFlags.ToString() -ne 'ContainerInherit, ObjectInherit'){"
+    .. "throw ('unexpected ACE inheritance flags: '+$detail)};"
+    .. "if($a.Access[0].PropagationFlags.ToString() -ne 'None'){throw ('unexpected ACE propagation: '+$detail)};"
+    .. "if($a.Access[0].IsInherited){throw ('ACE is inherited: '+$detail)}}"
   return { "powershell", "-NoProfile", "-Command", script }
 end
 
-local function private_file_acl_command(paths, parent)
+local function private_file_acl_command(paths, parent, normalize_owner)
   local quoted_paths = {}
   for _, path in ipairs(paths) do
     quoted_paths[#quoted_paths + 1] = ps_quote(path)
@@ -305,20 +341,32 @@ local function private_file_acl_command(paths, parent)
     .. "$paths=@("
     .. table.concat(quoted_paths, ",")
     .. ");"
-    .. "foreach($p in $paths){if(-not (Test-Path -LiteralPath $p -PathType Leaf)){exit 1};"
-    .. "$a=Get-Acl -LiteralPath $p;"
-    .. "if($a.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){exit 1};"
-    .. "if(@($a.Access).Count -ne 1){exit 1};"
-    .. "if($a.Access[0].AccessControlType -ne 'Allow'){exit 1};"
+    .. "foreach($p in $paths){if(-not (Test-Path -LiteralPath $p -PathType Leaf)){throw ('file missing: '+$p)};"
+  if normalize_owner then
+    script = script
+      .. "if((Get-Item -LiteralPath $p -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){"
+      .. "throw ('staged file is a reparse point: '+$p)};"
+      .. "$d=New-Object System.Security.AccessControl.FileSecurity;$d.SetOwner($s);"
+      .. "[System.IO.File]::SetAccessControl($p,$d);"
+  end
+  script = script
+    .. "$a=Get-Acl -LiteralPath $p;$detail=$p+'; ACL='+$a.Sddl;"
+    .. "if($a.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){"
+    .. "throw ('owner mismatch (expected '+$s.Value+'): '+$detail)};"
+    .. "if(@($a.Access).Count -ne 1){throw ('unexpected ACE count: '+$detail)};"
+    .. "if($a.Access[0].AccessControlType -ne 'Allow'){throw ('unexpected ACE type: '+$detail)};"
     .. "if($a.Access[0].IdentityReference.Translate("
-    .. "[System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){exit 1};"
-    .. "if($a.Access[0].FileSystemRights.ToString() -ne 'FullControl'){exit 1};"
-    .. "if($a.Access[0].InheritanceFlags.ToString() -ne 'None'){exit 1};"
-    .. "if($a.Access[0].PropagationFlags.ToString() -ne 'None'){exit 1};"
-    .. "if($a.Access[0].IsInherited -ne $true){exit 1}};"
-    .. "if(-not $parent.AreAccessRulesProtected){exit 1};"
-    .. "if(@($parent.Access).Count -ne 1){exit 1};"
-    .. "if($parent.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){exit 1}"
+    .. "[System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){"
+    .. "throw ('unexpected ACE identity: '+$detail)};"
+    .. "if($a.Access[0].FileSystemRights.ToString() -ne 'FullControl'){throw ('unexpected ACE rights: '+$detail)};"
+    .. "if($a.Access[0].InheritanceFlags.ToString() -ne 'None'){throw ('unexpected ACE inheritance flags: '+$detail)};"
+    .. "if($a.Access[0].PropagationFlags.ToString() -ne 'None'){throw ('unexpected ACE propagation: '+$detail)};"
+    .. "if($a.Access[0].IsInherited -ne $true){throw ('ACE is not inherited: '+$detail)}};"
+    .. "$detail+='; parent ACL='+$parent.Sddl;"
+    .. "if(-not $parent.AreAccessRulesProtected){throw ('parent DACL is not protected: '+$detail)};"
+    .. "if(@($parent.Access).Count -ne 1){throw ('unexpected parent ACE count: '+$detail)};"
+    .. "if($parent.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){"
+    .. "throw ('parent owner mismatch: '+$detail)}"
   return { "powershell", "-NoProfile", "-Command", script }
 end
 
@@ -340,15 +388,49 @@ local function publish(operation)
         nil,
         outcome
       )
-    else
+    elseif not windows_platform() then
       finish(operation, nil, path, outcome)
+    else
+      -- Publication may adopt another installer's winner. Never repair that
+      -- destination: validate its actual directory and files before using it.
+      run_commands(operation, "published-directory-acl", {
+        private_acl_command(vim.fs.dirname(path), false, operation.reservation.target_path),
+      }, function(_, directory_error)
+        if directory_error then
+          finish(operation, directory_error, nil, "published")
+          return
+        end
+        run_commands(operation, "published-file-acl", {
+          private_file_acl_command(
+            { path, vim.fs.joinpath(vim.fs.dirname(path), "install.json") },
+            operation.reservation.target_path
+          ),
+        }, function(_, file_error)
+          if file_error then
+            finish(operation, file_error, nil, "published")
+          else
+            finish(operation, nil, path, "published")
+          end
+        end, "published file ACL", path)
+      end, "published directory ACL", path)
+    end
+  end
+  local prepare_files
+  if windows_platform() then
+    prepare_files = function(paths, done)
+      run_commands(operation, "staged-file-acl", {
+        private_file_acl_command(paths, operation.reservation.target_path, true),
+      }, function(_, file_error)
+        token = begin_phase(operation, "publish")
+        done(file_error)
+      end, "staged file ACL", operation.staging)
     end
   end
   local receipt = store.publish(operation.reservation, operation.options, function(err, path, outcome)
     schedule(function()
       handle_result(err, path, outcome)
     end)
-  end)
+  end, prepare_files)
   if receipt then
     handle_result(receipt.error, receipt.path, receipt.outcome)
   end
@@ -492,7 +574,7 @@ local function reserve_operation(operation, prepared)
   run_commands(
     operation,
     "reservation-acl",
-    { private_acl_command(operation.staging, false, operation.reservation.target_path) },
+    { private_acl_command(operation.staging, true, operation.reservation.target_path) },
     function(_, acl_error)
       if acl_error then
         finish(operation, "reservation privacy verification failed: " .. acl_error, nil, "unmarked")
@@ -528,7 +610,7 @@ local function resolve_windows_cache(operation, prepared_path)
       run_commands(operation, "cache-file-acl", {
         private_file_acl_command(
           { vim.fs.joinpath(prepared_path.final_path, "install.json"), resolved },
-          prepared_path.final_path
+          prepared_path.target_path
         ),
       }, function(_, file_acl_error)
         if file_acl_error then

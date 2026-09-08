@@ -422,7 +422,16 @@ T["client()"]["saving unnamed buffer with :w - detaches and re-attaches"] = func
   u.expect_no_match(messages, "RPC.*Document for URI could not be found")
 end
 
-T["document rename"] = MiniTest.new_set({ parametrize = { { "write" }, { "saveas" }, { "file" } } })
+T["document rename"] = MiniTest.new_set({
+  parametrize = {
+    { "write", "unix", "hello\n" },
+    { "write", "dos", "hello\r\n" },
+    { "saveas", "unix", "hello\n" },
+    { "saveas", "dos", "hello\r\n" },
+    { "file", "unix", "hello\n" },
+    { "file", "dos", "hello\r\n" },
+  },
+})
 
 T["failed rename"] = MiniTest.new_set({ parametrize = { { false }, { true } } })
 
@@ -452,8 +461,13 @@ T["failed rename"]["leaves the original document attached"] = function(save_firs
   MiniTest.expect.equality(result.attached, true)
 end
 
-T["document rename"]["flushes and closes the old URI before opening the new URI"] = function(command)
+T["document rename"]["flushes and closes the old URI before opening the new URI"] = function(
+  command,
+  fileformat,
+  expected_text
+)
   child.config.server_opts_overrides = "flags = { debounce_text_changes = 60000 },"
+  child.bo.fileformat = fileformat
   child.configure_copilot()
   MiniTest.expect.equality(child.lua("return vim.wait(1000, function() return c.buf_is_attached(0) end, 10)"), true)
 
@@ -491,7 +505,7 @@ T["document rename"]["flushes and closes the old URI before opening the new URI"
     { "textDocument/didOpen", result.new_uri },
   }
   MiniTest.expect.equality(result.notifications, expected)
-  MiniTest.expect.equality(result.opened_text, "hello\n")
+  MiniTest.expect.equality(result.opened_text, expected_text)
   MiniTest.expect.equality(child.lua("return c.buf_is_attached(0)"), true)
 end
 
