@@ -4,12 +4,14 @@ local store = require("copilot.lsp.store")
 local base_filereadable = vim.fn.filereadable
 local base_executable = vim.fn.executable
 local base_rm = vim.fs.rm
+local base_rename = vim.uv.fs_rename
 local T = MiniTest.new_set({
   hooks = {
     post_case = function()
       vim.fn.filereadable = base_filereadable
       vim.fn.executable = base_executable
       vim.fs.rm = base_rm
+      vim.uv.fs_rename = base_rename
     end,
   },
 })
@@ -684,6 +686,71 @@ T["renames before removing an invalid destination and retries once"] = function(
   eq(result[1], nil)
   eq(calls, 2)
   vim.fn.delete(path, "rf")
+end
+
+for _, case in ipairs({
+  { name = "returned OS error", detail = "second rename denied", code = "EACCES" },
+  { name = "thrown error", detail = "second rename threw", throws = true },
+  { name = "default filesystem adapter", detail = "second adapter rename denied", code = "EPERM", default = true },
+}) do
+  T["reports final rename diagnostics for " .. case.name] = function()
+    local path = root()
+    local opts = options(path)
+    local reservation = reserve_with_entry(path, opts)
+    local attempts, callbacks = 0, 0
+    local result
+    local function rename(source, target)
+      if source ~= reservation.path or target ~= reservation.final_path then
+        return base_rename(source, target)
+      end
+      attempts = attempts + 1
+      if attempts == 1 then
+        return nil, "first rename conflict", "EEXIST"
+      end
+      if case.throws then
+        error(case.detail, 0)
+      end
+      return nil, case.detail, case.code
+    end
+    if case.default then
+      vim.uv.fs_rename = rename
+    else
+      opts._fs = { rename = rename }
+    end
+    local receipt = store.publish(reservation, opts, function(err, entry, outcome)
+      callbacks = callbacks + 1
+      result = { err, entry, outcome }
+    end)
+    vim.uv.fs_rename = base_rename
+    eq(callbacks, 0)
+    eq(
+      vim.wait(500, function()
+        return result ~= nil
+      end),
+      true
+    )
+    vim.wait(20)
+    eq(callbacks, 1)
+    eq(attempts, 2)
+    eq(result, { receipt.error, nil, "unmarked" })
+    eq(receipt.outcome, "unmarked")
+    eq(receipt.path, nil)
+    eq(receipt.committed, false)
+    eq(store.resolve(opts), nil)
+    eq(vim.fn.isdirectory(reservation.path), 1)
+    eq(vim.fn.filereadable(vim.fs.joinpath(reservation.path, "install.json")), 1)
+    eq(vim.uv.fs_lstat(reservation.final_path), nil)
+    eq(vim.uv.fs_lstat(reservation.final_path .. ".lock"), nil)
+    eq(receipt.error:find("could not publish deterministic destination", 1, true), 1)
+    eq(receipt.error:find(case.detail, 1, true) ~= nil, true)
+    eq(receipt.error:find(reservation.final_path, 1, true) ~= nil, true)
+    if case.code then
+      eq(receipt.error:find(case.code, 1, true) ~= nil, true)
+    end
+    eq(receipt.error:find("first rename conflict", 1, true), nil)
+    eq(receipt.error:find("EEXIST", 1, true), nil)
+    vim.fn.delete(path, "rf")
+  end
 end
 
 T["preserves a valid deterministic destination"] = function()

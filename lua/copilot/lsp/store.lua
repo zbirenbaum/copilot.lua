@@ -94,7 +94,7 @@ local function filesystem(options)
     read = override.read or default_read,
     write_exclusive = override.write_exclusive or default_write_exclusive,
     rename = override.rename or function(source, target)
-      return uv.fs_rename(source, target) == true
+      return uv.fs_rename(source, target)
     end,
     mkdtemp = override.mkdtemp or uv.fs_mkdtemp,
     scandir = override.scandir or uv.fs_scandir,
@@ -601,8 +601,12 @@ function M.publish(reservation, user_options, callback, prepare_files)
       return finish("staging reservation disappeared before publication")
     end
     local function rename()
-      local renamed_ok, renamed_value = pcall(fs.rename, reservation.path, store_paths.final_path)
-      return renamed_ok and renamed_value
+      local renamed_ok, renamed_value, rename_error, rename_code =
+        pcall(fs.rename, reservation.path, store_paths.final_path)
+      if not renamed_ok then
+        return false, renamed_value
+      end
+      return renamed_value, rename_error, rename_code
     end
     local winner = resolve_final(fs, user_options, store_paths)
     if winner then
@@ -684,7 +688,8 @@ function M.publish(reservation, user_options, callback, prepare_files)
       if not owns_lock(fs, lock_path(store_paths), lock_token) then
         return lock_lost()
       end
-      renamed = rename()
+      local rename_error, rename_code
+      renamed, rename_error, rename_code = rename()
       if not renamed then
         winner = resolve_final(fs, user_options, store_paths)
         if winner then
@@ -693,7 +698,12 @@ function M.publish(reservation, user_options, callback, prepare_files)
           receipt.cleanup_removed, receipt.cleanup_error = M.cleanup_old_versions(user_options)
           return finish(nil, winner, "published")
         end
-        return lock_finish("could not publish deterministic destination")
+        return lock_finish(
+          "could not publish deterministic destination at "
+            .. store_paths.final_path
+            .. (rename_error ~= nil and ": " .. tostring(rename_error) or "")
+            .. (rename_code ~= nil and " (" .. tostring(rename_code) .. ")" or "")
+        )
       end
       release_lock(fs, store_paths, lock_token)
     end

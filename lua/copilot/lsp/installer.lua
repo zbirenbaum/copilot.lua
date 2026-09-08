@@ -93,15 +93,17 @@ local function run_commands(operation, phase, commands, callback, stage, owned_p
   local token = begin_phase(operation, phase)
   local index = 0
   local errors = {}
-  local function next_command(last_error)
+  local function next_command(last_error, fallback_command)
     if not phase_active(operation, phase, token) then
       return
     end
     if last_error then
       errors[#errors + 1] = last_error
     end
-    index = index + 1
-    local command = commands[index]
+    if not fallback_command then
+      index = index + 1
+    end
+    local command = fallback_command or commands[index]
     if not command then
       callback(nil, string.format("%s failed at %s (%s): %s", stage, owned_path, stage, table.concat(errors, "; ")))
       return
@@ -110,8 +112,8 @@ local function run_commands(operation, phase, commands, callback, stage, owned_p
     local process
     local ok
     local options = { text = true, timeout = process_timeout }
-    if windows_platform() and command[1] == "powershell" then
-      -- Neovim may inherit PowerShell 7 modules that Windows PowerShell cannot load.
+    if windows_platform() and (command[1] == "powershell" or command[1] == "pwsh") then
+      -- Let each runtime discover its own modules instead of inheriting another edition's.
       options.env = vim.fn.environ()
       for name in pairs(options.env) do
         if name:lower() == "psmodulepath" then
@@ -149,7 +151,11 @@ local function run_commands(operation, phase, commands, callback, stage, owned_p
     end)
     if not ok or not process then
       completed = true
-      next_command(string.format("%s unavailable", command[1]))
+      local fallback
+      if windows_platform() and command[1] == "powershell" then
+        fallback = vim.list_extend({ "pwsh" }, vim.list_slice(command, 2))
+      end
+      next_command(string.format("%s unavailable", command[1]), fallback)
     else
       operation.active_process = process
     end
@@ -232,6 +238,17 @@ local function arm_deadline(operation)
   end, M._operation_deadline or operation_timeout)
 end
 
+local function ps_set_acl(kind)
+  -- A Core executable may be exposed as powershell.exe; inspect the runtime,
+  -- not its name. Both APIs persist only the descriptor's modified sections.
+  return "if($PSVersionTable.PSEdition -eq 'Core'){"
+    .. "[System.IO.FileSystemAclExtensions]::SetAccessControl([System.IO."
+    .. kind
+    .. "Info]::new($p),$d)}else{[System.IO."
+    .. kind
+    .. "]::SetAccessControl($p,$d)};"
+end
+
 local function private_acl_command(path, normalize_owner, parent)
   local quoted = ps_quote(path)
   local script = "$ErrorActionPreference='Stop';$p=" .. quoted .. ";"
@@ -246,7 +263,7 @@ local function private_acl_command(path, normalize_owner, parent)
       .. "if((Get-Item -LiteralPath $p -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){"
       .. "throw ('reservation is a reparse point: '+$p)};"
       .. "$d=New-Object System.Security.AccessControl.DirectorySecurity;$d.SetOwner($s);"
-      .. "[System.IO.Directory]::SetAccessControl($p,$d);"
+      .. ps_set_acl("Directory")
   end
   script = script
     .. "$c=Get-Acl -LiteralPath $p;$detail=$p+'; ACL='+$c.Sddl;"
@@ -309,7 +326,10 @@ local function private_parent_command(path_token)
     .. ");"
     .. "foreach($p in $paths){$d=New-Object System.Security.AccessControl.DirectorySecurity;"
     .. "$d.SetOwner($s);$d.SetAccessRuleProtection($true,$false);$d.AddAccessRule($r);"
-    .. "if(Test-Path -LiteralPath $p){[System.IO.Directory]::SetAccessControl($p,$d)}"
+    .. "if(Test-Path -LiteralPath $p){"
+    .. ps_set_acl("Directory")
+    .. "}elseif($PSVersionTable.PSEdition -eq 'Core'){"
+    .. "[System.IO.FileSystemAclExtensions]::Create([System.IO.DirectoryInfo]::new($p),$d)}"
     .. "else{[System.IO.Directory]::CreateDirectory($p,$d)|Out-Null}};"
     .. "foreach($p in $paths){$a=Get-Acl -LiteralPath $p;$detail=$p+'; ACL='+$a.Sddl;"
     .. "if($a.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){"
@@ -347,7 +367,7 @@ local function private_file_acl_command(paths, parent, normalize_owner)
       .. "if((Get-Item -LiteralPath $p -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){"
       .. "throw ('staged file is a reparse point: '+$p)};"
       .. "$d=New-Object System.Security.AccessControl.FileSecurity;$d.SetOwner($s);"
-      .. "[System.IO.File]::SetAccessControl($p,$d);"
+      .. ps_set_acl("File")
   end
   script = script
     .. "$a=Get-Acl -LiteralPath $p;$detail=$p+'; ACL='+$a.Sddl;"
