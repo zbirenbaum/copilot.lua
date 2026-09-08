@@ -400,6 +400,81 @@ T["windows prepares cache version and target parents"] = function()
   eq(result[1], nil)
 end
 
+T["windows PowerShell children do not inherit PowerShell 7 module paths"] = function()
+  local inherited = vim.env.PSModulePath
+  local marker = vim.env.COPILOT_ENV_TEST
+  vim.env.PSModulePath = "incompatible PowerShell 7 modules"
+  vim.env.COPILOT_ENV_TEST = "preserve child environment"
+  local _, result = run_install("win32-x64", nil, nil, nil, "Windows_NT")
+  local unchanged = vim.env.PSModulePath
+  vim.env.PSModulePath = inherited
+  vim.env.COPILOT_ENV_TEST = marker
+  eq(result[1], nil)
+  eq(unchanged, "incompatible PowerShell 7 modules")
+  local child = vim
+    .system({
+      vim.v.progpath,
+      "--headless",
+      "--clean",
+      "-u",
+      "NONE",
+      "-c",
+      [[lua io.stdout:write(vim.json.encode({has_modules = vim.env.PSModulePath ~= nil, marker = vim.env.COPILOT_ENV_TEST}))]],
+      "-c",
+      "qa!",
+    }, process_stub.options[1])
+    :wait()
+  eq(child.code, 0)
+  eq(vim.json.decode(child.stdout), { has_modules = false, marker = "preserve child environment" })
+  for i, command in ipairs(process_stub.calls) do
+    if command[1] == "powershell" then
+      eq(process_stub.options[i].clear_env, true)
+    else
+      eq(process_stub.options[i].env, nil)
+      eq(process_stub.options[i].clear_env, nil)
+    end
+  end
+end
+
+T["Unix PowerShell fallbacks keep their module environment"] = function()
+  local _, result = run_install("linux-x64", {
+    curl = { false },
+    wget = { false },
+    powershell = { { code = 1, stdout = "", stderr = "download failed" } },
+  }, nil, nil, "Linux")
+  eq(result[1]:find("download failed", 1, true) ~= nil, true)
+  eq(process_stub.calls[3][1], "powershell")
+  eq(process_stub.options[3].env, nil)
+end
+
+T["windows parent ACL writes do not request audit permissions"] = function()
+  local _, result = run_install("win32-x64", nil, nil, nil, "Windows_NT")
+  eq(result[1], nil)
+  local script = process_stub.calls[1][4]
+  eq(script:find("Set-Acl", 1, true), nil)
+  eq(script:find("[System.IO.Directory]::SetAccessControl($p,$d)", 1, true) ~= nil, true)
+  -- Each persist clears the descriptor's modification flags, so reusing it
+  -- would leave the second and third existing directories unhardened.
+  local loop = assert(script:find("foreach($p in $paths)", 1, true))
+  local descriptor = assert(script:find("New-Object System.Security.AccessControl.DirectorySecurity", 1, true))
+  eq(loop < descriptor, true)
+  eq(script:find("[System.IO.Directory]::CreateDirectory($p,$d)", 1, true) ~= nil, true)
+end
+
+T["windows ACL verification commands report the failed contract"] = function()
+  local _, result = run_install("win32-x64", nil, nil, nil, "Windows_NT")
+  eq(result[1], nil)
+  for _, command in ipairs(process_stub.calls) do
+    if command[1] == "powershell" then
+      local script = command[4]
+      eq(script:find("exit 1", 1, true), nil)
+      eq(script:find("owner mismatch", 1, true) ~= nil, true)
+      eq(script:find("ACE count", 1, true) ~= nil, true)
+      eq(script:find(".Sddl", 1, true) ~= nil, true)
+    end
+  end
+end
+
 T["windows validates cache ACLs before reusing an install"] = function()
   local target = "win32-x64"
   local root = new_cache(target)
@@ -439,6 +514,9 @@ T["windows validates cache ACLs before reusing an install"] = function()
   for _, command in ipairs(process_stub.calls) do
     eq(command[1], "powershell")
   end
+  local file_check = process_stub.calls[3][4]
+  local target_path = vim.fs.joinpath(root, release.version, target)
+  eq(file_check:find("$parent=Get-Acl -LiteralPath '" .. target_path .. "';", 1, true) ~= nil, true)
 end
 
 T["windows rejects a cache hit when ACL validation fails"] = function()

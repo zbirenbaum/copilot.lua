@@ -9,6 +9,7 @@ on:
       - "lua/copilot/lsp/release.lua"
       - "lua/copilot/lsp/adapters/**"
       - "lua/copilot/lsp/**"
+      - "tests/scripts/windows_installer.*"
 
 permissions:
   contents: read
@@ -98,6 +99,17 @@ jobs:
           @'
           vim.opt.runtimepath:prepend(vim.env.GITHUB_WORKSPACE)
           local installer = require("copilot.lsp.installer")
+          local unexpected_transport
+          local system = vim.system
+          if vim.env.COPILOT_SMOKE_OFFLINE then
+            vim.system = function(command, ...)
+              if command[1] ~= "powershell" or not command[4]:find("Get-Acl", 1, true) then
+                unexpected_transport = command[1]
+                error("unexpected cache transport: " .. command[1])
+              end
+              return system(command, ...)
+            end
+          end
           local done, install_err, entrypoint = false, nil, nil
           installer.ensure("binary", function(err, path)
             install_err, entrypoint, done = err, path, true
@@ -107,6 +119,8 @@ jobs:
           end, 50), "installer timed out")
           assert(not install_err, install_err)
           assert(entrypoint and vim.fn.filereadable(entrypoint) == 1, "entrypoint missing")
+          vim.system = system
+          assert(not unexpected_transport, "unexpected cache transport: " .. tostring(unexpected_transport))
           local process = vim.system({ entrypoint, "--stdio" }, { text = true })
           local exited = vim.wait(1000, function()
             return process:is_closing()
@@ -204,18 +218,6 @@ jobs:
           done
           printf 'PATH=%s:%s\n' "$bin_dir" "$PATH" >> "$GITHUB_ENV"
 
-      - name: Install failing transport wrappers (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $binDir = Join-Path $env:RUNNER_TEMP 'copilot-failing-transports'
-          New-Item -ItemType Directory -Force -Path $binDir | Out-Null
-          foreach ($command in @('curl', 'wget', 'powershell', 'sha256sum', 'shasum', 'openssl', 'unzip', 'chmod')) {
-            "@echo unexpected transport invocation: $command`r`n@exit /b 91" | Set-Content -LiteralPath (Join-Path $binDir "$command.cmd") -Encoding ascii
-          }
-          "PATH=$binDir;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
       - name: Reuse cache without network (Unix)
         if: runner.os != 'Windows'
         shell: bash
@@ -234,8 +236,88 @@ jobs:
         env:
           COPILOT_SMOKE_RESULT: ${{ runner.temp }}\copilot-server-smoke-result
           COPILOT_SMOKE_EXPECT: ${{ runner.temp }}\copilot-server-smoke-result
+          COPILOT_SMOKE_OFFLINE: "1"
         run: |
           $ErrorActionPreference = 'Stop'
           $expected = (Get-Content -LiteralPath $env:COPILOT_SMOKE_EXPECT -Raw).Trim()
+          Remove-Item -LiteralPath $env:COPILOT_SMOKE_RESULT
           nvim --headless --clean -u NONE -c "lua dofile(vim.env.COPILOT_SMOKE_SCRIPT)" -c 'qa!'
           if ((Get-Content -LiteralPath $env:COPILOT_SMOKE_RESULT -Raw).Trim() -ne $expected) { throw 'cache entrypoint changed' }
+
+  windows-acl-runtime:
+    name: Windows installer ACL regression (non-admin, ${{ matrix.neovim }})
+    runs-on: windows-2025
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        neovim: [v0.11.2, stable]
+
+    steps:
+      - name: Check out runtime harness source
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            lua
+            plugin
+            tests/scripts/windows_installer.lua
+            tests/scripts/windows_installer.ps1
+          sparse-checkout-cone-mode: false
+
+      - name: Install stable Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: ${{ matrix.neovim }}
+
+      - name: Run ACL preparation through PowerShell 7, Neovim, and Windows PowerShell
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          $passwordText = [guid]::NewGuid().ToString('N') + 'aA1!'
+          Write-Host "::add-mask::$passwordText"
+          $userName = 'copilotacl' + [guid]::NewGuid().ToString('N').Substring(0, 8)
+          $sandbox = Join-Path $env:RUNNER_TEMP ("copilot-acl-" + [guid]::NewGuid().ToString('N'))
+          $stage = Join-Path $sandbox 'stage'
+          $stdout = Join-Path $sandbox 'runtime.stdout.log'
+          $stderr = Join-Path $sandbox 'runtime.stderr.log'
+          $runnerSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+          try {
+            New-Item -ItemType Directory -Force -Path $stage | Out-Null
+            Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'lua') -Destination $stage -Recurse
+            Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'plugin') -Destination $stage -Recurse
+            New-Item -ItemType Directory -Force -Path (Join-Path $stage 'tests/scripts') | Out-Null
+            Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'tests/scripts/windows_installer.lua') -Destination (Join-Path $stage 'tests/scripts')
+            Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'tests/scripts/windows_installer.ps1') -Destination (Join-Path $stage 'tests/scripts')
+            $nvimSource = (Get-Command nvim -CommandType Application).Source
+            $nvimRoot = Split-Path (Split-Path $nvimSource -Parent) -Parent
+            Copy-Item -LiteralPath $nvimRoot -Destination (Join-Path $stage 'nvim') -Recurse
+            $nvim = Join-Path $stage 'nvim/bin/nvim.exe'
+            if (-not (Test-Path -LiteralPath $nvim)) { throw "staged Neovim missing: $nvim" }
+            $password = ConvertTo-SecureString $passwordText -AsPlainText -Force
+            New-LocalUser -Name $userName -Password $password -AccountNeverExpires | Out-Null
+            Add-LocalGroupMember -SID 'S-1-5-32-545' -Member $userName
+            $userSid = ([Security.Principal.NTAccount]::new("$env:COMPUTERNAME\$userName")).Translate([Security.Principal.SecurityIdentifier]).Value
+            icacls $sandbox /inheritance:r /grant:r "*${runnerSid}:(OI)(CI)F" "*${userSid}:(OI)(CI)F" '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-18:(OI)(CI)F' | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw 'could not establish sandbox ACL' }
+            icacls $stage /inheritance:r /grant:r "*${runnerSid}:(OI)(CI)F" "*${userSid}:(OI)(CI)RX" '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-18:(OI)(CI)F' | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw 'could not establish read-only staged source ACL' }
+            $credential = [pscredential]::new("$env:COMPUTERNAME\$userName", $password)
+            $pwsh = (Get-Command pwsh -CommandType Application).Source
+            $script = Join-Path $stage 'tests/scripts/windows_installer.ps1'
+            $arguments = "-NoLogo -NoProfile -File `"$script`" -Workspace `"$stage`" -Sandbox `"$sandbox`" -Nvim `"$nvim`""
+            $process = Start-Process -FilePath $pwsh -Credential $credential -LoadUserProfile -WorkingDirectory $sandbox -ArgumentList $arguments -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+            Get-Content -LiteralPath $stdout -ErrorAction SilentlyContinue
+            Get-Content -LiteralPath $stderr -ErrorAction SilentlyContinue
+            if ($process.ExitCode -ne 0) { throw "non-admin runtime harness failed with exit code $($process.ExitCode)" }
+          }
+          finally {
+            if (Test-Path -LiteralPath $sandbox) {
+              icacls $sandbox /setowner "*$runnerSid" /T /C | Out-Null
+              icacls $sandbox /grant:r "*${runnerSid}:(OI)(CI)F" /T /C | Out-Null
+            }
+            if (Get-LocalUser -Name $userName -ErrorAction SilentlyContinue) { Remove-LocalUser -Name $userName }
+            Remove-Item -LiteralPath $sandbox -Recurse -Force -ErrorAction SilentlyContinue
+          }

@@ -4,6 +4,27 @@ set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
 workflow="$root/.github/workflows/server-install-smoke.yml"
 
+for runtime_file in \
+  'tests/scripts/windows_installer.lua' \
+  'tests/scripts/windows_installer.ps1'; do
+  if [[ ! -f "$root/$runtime_file" ]]; then
+    printf 'Missing Windows installer runtime harness: %s\n' "$runtime_file" >&2
+    exit 1
+  fi
+done
+
+for contract in \
+  'Windows installer ACL regression (non-admin,' \
+  'tests/scripts/windows_installer.lua' \
+  'tests/scripts/windows_installer.ps1' \
+  'Start-Process -FilePath $pwsh -Credential $credential -LoadUserProfile -WorkingDirectory $sandbox' \
+  'tests/scripts/windows_installer.*'; do
+  grep -Fq -- "$contract" "$workflow" || {
+    printf 'Missing Windows runtime-harness contract: %s\n' "$contract" >&2
+    exit 1
+  }
+done
+
 expected='          if ($install.Name -cnotmatch '\''^[0-9a-f]{64}$'\'') { throw "unexpected install digest: $($install.Name)" }'
 grep -Fqx -- "$expected" "$workflow" || {
   printf 'Missing exact Windows install-digest contract\n' >&2
