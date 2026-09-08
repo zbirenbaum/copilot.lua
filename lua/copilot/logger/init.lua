@@ -23,8 +23,17 @@ local function get_timestamp_with_ms()
   return string.format("%s.%03d", os.date("%Y-%m-%d %H:%M:%S", seconds), milliseconds)
 end
 
+---@param msg string|table
+---@return string
+local function format_message(msg)
+  if type(msg) == "table" then
+    return type(msg.message) == "string" and msg.message or vim.inspect(msg)
+  end
+  return msg
+end
+
 ---@param log_level integer --vim.log.levels
----@param msg string
+---@param msg string|table
 ---@param ... any
 ---@return string log_msg
 local function format_log(log_level, msg, ...)
@@ -36,7 +45,8 @@ local function format_log(log_level, msg, ...)
   end
 
   -- we add an id as this process is asynchronous and the logs end up in a different order
-  local log_msg = string.format("%s [%d] [%s]: %s", get_timestamp_with_ms(), M.logger_id, log_level_name, msg)
+  local log_msg =
+    string.format("%s [%d] [%s]: %s", get_timestamp_with_ms(), M.logger_id, log_level_name, format_message(msg))
 
   local args = { ... }
   for _, v in ipairs(args) do
@@ -46,12 +56,12 @@ local function format_log(log_level, msg, ...)
   return log_msg
 end
 
----@param msg string
+---@param msg string|table
 ---@param ... any
 ---@return string log_msg
 local function format_notify(msg, ...)
   -- we add an id as this process is asynchronous and the logs end up in a different order
-  local log_msg = string.format("[Copilot.lua] %s", msg)
+  local log_msg = string.format("[Copilot.lua] %s", format_message(msg))
 
   local args = { ... }
   for _, v in ipairs(args) do
@@ -62,7 +72,7 @@ local function format_notify(msg, ...)
 end
 
 ---@param log_level integer -- one of the vim.log.levels
----@param msg string
+---@param msg string|table
 ---@param ... any
 local function notify_log(log_level, msg, ...)
   local log_msg = format_notify(msg, ...)
@@ -78,7 +88,7 @@ end
 
 ---@param log_level integer -- one of the vim.log.levels
 ---@param log_file string
----@param msg string
+---@param msg string|table
 ---@param ... any
 local function write_log(log_level, log_file, msg, ...)
   local log_msg = format_log(log_level, msg, ...) .. "\n"
@@ -100,7 +110,7 @@ local function write_log(log_level, log_file, msg, ...)
 end
 
 ---@param log_level integer -- one of the vim.log.levels
----@param msg string
+---@param msg string|table
 ---@param ... any
 function M.log(log_level, msg, ...)
   if M.file_log_level <= log_level then
@@ -112,37 +122,37 @@ function M.log(log_level, msg, ...)
   end
 end
 
----@param msg string
+---@param msg string|table
 ---@param ... any
 function M.debug(msg, ...)
   M.log(vim.log.levels.DEBUG, msg, ...)
 end
 
----@param msg string
+---@param msg string|table
 ---@param ... any
 function M.trace(msg, ...)
   M.log(vim.log.levels.TRACE, msg, ...)
 end
 
----@param msg string
+---@param msg string|table
 ---@param ... any
 function M.error(msg, ...)
   M.log(vim.log.levels.ERROR, msg, ...)
 end
 
----@param msg string
+---@param msg string|table
 ---@param ... any
 function M.warn(msg, ...)
   M.log(vim.log.levels.WARN, msg, ...)
 end
 
----@param msg string
+---@param msg string|table
 ---@param ... any
 function M.info(msg, ...)
   M.log(vim.log.levels.INFO, msg, ...)
 end
 
----@param msg string
+---@param msg string|table
 ---@param ... any
 function M.notify(msg, ...)
   notify_log(vim.log.levels.INFO, msg, ...)

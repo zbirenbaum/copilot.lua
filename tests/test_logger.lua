@@ -14,6 +14,72 @@ local T = MiniTest.new_set({
 
 T["logger()"] = MiniTest.new_set()
 
+for _, case in ipairs({
+  { name = "string messages", msg = "Document URI not found", expected = "Document URI not found" },
+  {
+    name = "RPC error messages",
+    msg = { code = -32603, message = "Document URI not found" },
+    expected = "Document URI not found",
+  },
+  { name = "tables without messages", msg = { code = -32603 }, expected = "{\n  code = -32603\n}" },
+  {
+    name = "tables with non-string messages",
+    msg = { message = { reason = "missing document" } },
+    expected = '{\n  message = {\n    reason = "missing document"\n  }\n}',
+  },
+  { name = "empty tables", msg = {}, expected = "{}" },
+}) do
+  T["logger()"]["formats " .. case.name .. " in notifications and files"] = function()
+    local result = child.lua(
+      [[
+      local msg = ...
+      local logger = require("copilot.logger")
+      local path = vim.fn.tempname()
+      logger.setup({
+        file = path,
+        file_log_level = vim.log.levels.ERROR,
+        print_log_level = vim.log.levels.ERROR,
+      })
+      local notification
+      vim.notify = function(text, level)
+        notification = { text = text, level = level }
+      end
+      logger.error(msg, { retry = false })
+      local contents
+      local completed = vim.wait(1000, function()
+        if vim.fn.filereadable(path) == 1 then
+          contents = table.concat(vim.fn.readfile(path), "\n")
+        end
+        return notification ~= nil and contents ~= nil and contents ~= ""
+      end, 10)
+      vim.fn.delete(path)
+      assert(completed, "log outputs did not complete")
+      return { notification = notification, file_message = contents:match("%[ERROR%]: (.*)") }
+    ]],
+      { case.msg }
+    )
+    local expected = case.expected .. "\n{\n  retry = false\n}"
+    eq(result.notification, { text = "[Copilot.lua] " .. expected, level = vim.log.levels.ERROR })
+    eq(result.file_message, expected)
+  end
+end
+
+T["logger()"]["notify formats RPC errors when log output is disabled"] = function()
+  local result = child.lua([[
+    local logger = require("copilot.logger")
+    logger.file_log_level = vim.log.levels.OFF
+    logger.print_log_level = vim.log.levels.OFF
+    local notification
+    vim.notify = function(msg, level)
+      notification = { text = msg, level = level }
+    end
+    logger.notify({ code = -32603, message = "Document URI not found" })
+    assert(vim.wait(1000, function() return notification ~= nil end, 10))
+    return notification
+  ]])
+  eq(result, { text = "[Copilot.lua] Document URI not found", level = vim.log.levels.INFO })
+end
+
 T["logger()"]["setup configures log file and levels"] = function()
   local result = child.lua([[
     local logger = require("copilot.logger")

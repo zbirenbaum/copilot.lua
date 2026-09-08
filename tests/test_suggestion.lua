@@ -15,6 +15,56 @@ local T = MiniTest.new_set({
 
 T["suggestion()"] = MiniTest.new_set()
 
+for _, detach in ipairs({ false, true }) do
+  local name = detach and "skips delayed completion after LSP detach" or "sends delayed completion while attached"
+  T["suggestion()"][name] = function()
+    child.config.suggestion = child.config.suggestion .. "auto_trigger = true, debounce = 30,"
+    if detach then
+      child.lua([[
+        vim.api.nvim_create_autocmd("LspAttach", {
+          buffer = 0,
+          callback = function(args)
+            vim.schedule(function()
+              vim.lsp.buf_detach_client(args.buf, args.data.client_id)
+            end)
+          end,
+        })
+      ]])
+    end
+    child.configure_copilot()
+    child.lua([[
+      assert(vim.wait(2000, function() return require("copilot.auth").is_authenticated() end, 10))
+      require("tests.stubs.lsp_server").reset()
+      local timer_start = vim.fn.timer_start
+      vim.fn.timer_start = function(timeout, callback)
+        _G.attached_when_scheduled = require("copilot.client").buf_is_attached(0)
+        return timer_start(timeout, function(timer)
+          callback(timer)
+          _G.suggestion_timer_fired = true
+        end)
+      end
+    ]])
+    child.type_keys("i7")
+    local result = child.lua([[
+      assert(vim.wait(2000, function() return _G.suggestion_timer_fired end, 10), "suggestion timer did not fire")
+      local requests = 0
+      for _, message in ipairs(require("tests.stubs.lsp_server").messages) do
+        if message.method == "getCompletions" then
+          requests = requests + 1
+        end
+      end
+      return {
+        attached_when_scheduled = _G.attached_when_scheduled,
+        attached_when_fired = require("copilot.client").buf_is_attached(0),
+        requests = requests,
+      }
+    ]])
+    MiniTest.expect.equality(result.attached_when_scheduled, true)
+    MiniTest.expect.equality(result.attached_when_fired, not detach)
+    MiniTest.expect.equality(result.requests, detach and 0 or 1)
+  end
+end
+
 T["suggestion()"]["suggestion works"] = function()
   child.o.lines, child.o.columns = 10, 15
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"

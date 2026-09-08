@@ -408,6 +408,11 @@ local function trigger(bufnr, timer)
     return
   end
 
+  if not is_enabled() then
+    logger.trace("suggestion trigger, buffer detached")
+    return
+  end
+
   complete(handle_trigger_request)
 end
 
