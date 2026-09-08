@@ -43,6 +43,13 @@ function M.start()
   active_restore = restore
   ---@diagnostic disable-next-line: duplicate-set-field
   vim.system = function(command, options, callback)
+    if command[1] == "getconf" then
+      return {
+        wait = function()
+          return { code = 0, stdout = "glibc 2.39", stderr = "" }
+        end,
+      }
+    end
     if command[1] == "ldd" then
       return {
         wait = function()
