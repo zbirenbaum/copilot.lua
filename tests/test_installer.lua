@@ -936,7 +936,14 @@ T["preserves POSIX private staging and final permissions"] = function()
   end
 end
 
-T["callbacks remain deduplicated"] = function()
+T["callbacks remain deduplicated"] = MiniTest.new_set({ parametrize = { { false }, { true } } })
+
+T["callbacks remain deduplicated"]["notifies both callers"] = function(force_windows)
+  if force_windows then
+    vim.loop.os_uname = function()
+      return { sysname = "Windows_NT", machine = "AMD64" }
+    end
+  end
   local target = fixture_target()
   new_cache(target)
   local restore = process_stub.start()
@@ -949,15 +956,9 @@ T["callbacks remain deduplicated"] = function()
   installer.ensure("binary", function(err, path)
     results[#results + 1] = { err, path }
   end)
-  for _ = 1, 8 do
-    vim.wait(1000, function()
-      return #results == 2 or #process_stub.pending > 0
-    end)
-    if #results == 2 then
-      break
-    end
-    process_stub.complete_next()
-  end
+  complete_pending(function()
+    return #results == 2 and results or nil
+  end, 16)
   restore()
   eq(#results, 2)
   eq(results[1][1], nil)
