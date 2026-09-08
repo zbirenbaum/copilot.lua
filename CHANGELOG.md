@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.4](https://github.com/zbirenbaum/copilot.lua/compare/v3.1.3...v3.1.4) (2026-09-08)
+
+
+### Bug Fixes
+
+* support PowerShell 7 in the Windows installer ([7c52618](https://github.com/zbirenbaum/copilot.lua/commit/7c52618251a5cd14a85322fe501088a5507f7a36))
+
 ## [3.1.3](https://github.com/zbirenbaum/copilot.lua/compare/v3.1.2...v3.1.3) (2026-09-08)
 
 
