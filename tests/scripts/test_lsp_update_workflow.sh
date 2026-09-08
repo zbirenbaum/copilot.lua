@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Workflow contract strings deliberately preserve shell and Actions expressions.
+# shellcheck disable=SC2016
 set -euo pipefail
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
@@ -64,11 +66,8 @@ assert_contains '      group: copilot-lsp-update'
 assert_contains '      cancel-in-progress: false'
 assert_exactly 1 '    concurrency:'
 assert_not_contains_exact 'concurrency:'
-assert_contains 'pull_request:'
-assert_contains 'types: [closed]'
-assert_contains "github.event.pull_request.merged == true"
-assert_contains "github.event.pull_request.head.repo.full_name == github.repository"
-assert_contains "github.event.pull_request.head.ref == 'create-pull-request/update-copilot-lsp'"
+assert_not_contains 'pull_request:'
+assert_not_contains 'tag_copilot_lsp_update:'
 assert_contains 'fetch-depth: 0'
 assert_contains 'id: release'
 assert_contains 'git show-ref --verify --quiet "refs/tags/v$manifest_version"'
@@ -78,8 +77,7 @@ assert_contains 'next-patch'
 assert_contains '.release-please-manifest.json'
 assert_contains 'update-lsp-metadata.sh'
 assert_contains 'lua/copilot/lsp/release.lua'
-assert_contains 'github.event.pull_request.merge_commit_sha'
-assert_contains 'lsp-release.sh tag'
+assert_not_contains 'lsp-release.sh tag'
 assert_contains 'name: Set up Neovim and dependencies'
 assert_contains 'make deps'
 assert_contains 'name: Validate generated update'
@@ -91,8 +89,8 @@ assert_contains 'bash .github/scripts/lsp-release.sh needs-lsp-update'
 assert_contains 'actionlint'
 assert_contains 'name: Validate generated update'
 assert_contains 'name: Refresh tags before version bump'
-assert_contains 'name: Refresh tags before tagging'
-assert_at_least 3 'git fetch --tags --force'
+assert_at_least 2 'git fetch --tags --force'
+assert_contains 'ruby tests/scripts/test_release_workflow.rb'
 assert_contains 'gh api --paginate'
 assert_contains 'GH_TOKEN: ${{ github.token }}'
 assert_contains 'copilot-selected-release.json'
