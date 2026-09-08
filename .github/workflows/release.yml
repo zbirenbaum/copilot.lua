@@ -8,14 +8,110 @@ on:
     branches:
       - master
   workflow_dispatch:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened]
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+  pull-requests: read
 
 jobs:
   release:
     name: release
     runs-on: ubuntu-latest
+    if: >-
+      github.repository == 'zbirenbaum/copilot.lua' &&
+      github.ref == 'refs/heads/master' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: release-${{ github.repository }}-${{ github.ref }}
+      cancel-in-progress: false
     steps:
-      - uses: googleapis/release-please-action@v5
+      - name: Publish merged normal releases
+        id: publish
+        uses: googleapis/release-please-action@v5
+        with:
+          target-branch: master
+          skip-github-pull-request: true
+
+      - name: Checkout current master
+        id: checkout
+        uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Set up release tooling runtime
+        id: node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install pinned release tooling outside repository
+        id: release_deps
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/release-please" --no-save --package-lock=false --ignore-scripts release-please@17.6.0
+          echo "NODE_PATH=$RUNNER_TEMP/release-please/node_modules" >> "$GITHUB_ENV"
+
+      - name: Fetch current tags
+        id: tags
+        run: git fetch origin --tags
+
+      - name: Reconcile LSP release boundary
+        id: reconcile
+        run: bash .github/scripts/lsp-release.sh reconcile
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Verify master has not advanced
+        id: current
+        run: |
+          set -euo pipefail
+          head=$(git rev-parse HEAD)
+          remote=$(git ls-remote --exit-code origin refs/heads/master)
+          if [[ ${remote%%$'\t'*} != "$head" ]]; then
+            echo 'master advanced after checkout; rerun Release on current master' >&2
+            exit 1
+          fi
+
+      - name: Generate release PRs after verified publication
+        id: generate
+        run: node .github/scripts/release-pr.cjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+  validate_lsp_pr:
+    name: Validate LSP release PR
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.repository == 'zbirenbaum/copilot.lua' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'create-pull-request/update-copilot-lsp'
+    steps:
+      - name: Checkout trusted current master
+        id: checkout
+        uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate against current published base
+        id: validate
+        run: |
+          set -euo pipefail
+          git fetch origin --tags +refs/heads/master:refs/remotes/origin/master
+          git fetch origin "$PR_HEAD_SHA"
+          bash .github/scripts/lsp-release.sh check-pr origin/master "$PR_HEAD_SHA"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
