@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.1.3](https://github.com/zbirenbaum/copilot.lua/compare/v3.1.2...v3.1.3) (2026-09-08)
+
+
+### Bug Fixes
+
+* detect glibc using getconf instead of ldd ([#738](https://github.com/zbirenbaum/copilot.lua/issues/738)) ([e70fc4d](https://github.com/zbirenbaum/copilot.lua/commit/e70fc4d22e4efda40bbf76e312167d6957d31a0c))
+* format table errors and skip detached suggestion requests ([80ba003](https://github.com/zbirenbaum/copilot.lua/commit/80ba003cdf08d84d72209faf2e432b8a5d02997a)), closes [#732](https://github.com/zbirenbaum/copilot.lua/issues/732)
+* synchronize document URIs on first save and rename ([08fd666](https://github.com/zbirenbaum/copilot.lua/commit/08fd666a92afa9b39d02eaf5cf9c6b7d10aa68a3))
+* Windows installer PowerShell and ACL handling ([#741](https://github.com/zbirenbaum/copilot.lua/issues/741)) ([896b2af](https://github.com/zbirenbaum/copilot.lua/commit/896b2afd4fc50294f1bb5a30daf72c3aa9c5148b)), closes [#739](https://github.com/zbirenbaum/copilot.lua/issues/739)
+
 ## [3.1.0](https://github.com/zbirenbaum/copilot.lua/compare/v3.0.4...v3.1.0) (2026-09-06)
 
 
