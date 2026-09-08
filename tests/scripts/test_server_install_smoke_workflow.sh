@@ -14,7 +14,12 @@ for runtime_file in \
 done
 
 for contract in \
-  'Windows installer ACL regression (non-admin,' \
+  'Windows installer ACL regression (${{ matrix.account }},' \
+  'account: [standard, elevated]' \
+  'if: matrix.account == '\''standard'\''' \
+  'if: matrix.account == '\''elevated'\''' \
+  '-Account standard' \
+  '-Account elevated' \
   'tests/scripts/windows_installer.lua' \
   'tests/scripts/windows_installer.ps1' \
   'Start-Process -FilePath $pwsh -Credential $credential -LoadUserProfile -WorkingDirectory $sandbox' \

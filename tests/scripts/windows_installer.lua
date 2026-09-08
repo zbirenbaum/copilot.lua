@@ -101,27 +101,64 @@ local function main()
     return result.stdout
   end
 
+  local function verify_published_acl(path)
+    local install = vim.fs.dirname(path)
+    local target = vim.fs.dirname(install)
+    local version = vim.fs.dirname(target)
+    local script = "$ErrorActionPreference='Stop';$s=[System.Security.Principal.WindowsIdentity]::GetCurrent().User;"
+      .. "$parents=@("
+      .. ps_quote(root)
+      .. ","
+      .. ps_quote(version)
+      .. ","
+      .. ps_quote(target)
+      .. ");"
+      .. "function Assert-P($p){$a=Get-Acl -LiteralPath $p;"
+      .. "if($a.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){"
+      .. "throw 'parent owner mismatch'};"
+      .. "if(-not $a.AreAccessRulesProtected){throw 'parent DACL mismatch'};"
+      .. "if(@($a.Access).Count -ne 1){throw 'parent ACE count mismatch'};$r=$a.Access[0];"
+      .. "if($r.AccessControlType -ne 'Allow' -or $r.IdentityReference.Translate("
+      .. "[System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value "
+      .. "-or $r.FileSystemRights.ToString() -ne 'FullControl' "
+      .. "-or $r.InheritanceFlags.ToString() -ne 'ContainerInherit, ObjectInherit' "
+      .. "-or $r.PropagationFlags.ToString() -ne 'None' -or $r.IsInherited){throw 'parent ACE mismatch'}};"
+      .. "function Assert-I($p,$leaf,$flags){$a=Get-Acl -LiteralPath $p;"
+      .. "if($a.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){"
+      .. "throw ($leaf+' owner mismatch')};if(@($a.Access).Count -ne 1){throw ($leaf+' ACE count mismatch')};"
+      .. "$r=$a.Access[0];if($r.AccessControlType -ne 'Allow' -or $r.IdentityReference.Translate("
+      .. "[System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value "
+      .. "-or $r.FileSystemRights.ToString() -ne 'FullControl' -or $r.InheritanceFlags.ToString() -ne $flags "
+      .. "-or $r.PropagationFlags.ToString() -ne 'None' -or -not $r.IsInherited){throw ($leaf+' ACE mismatch')}};"
+      .. "foreach($p in $parents){Assert-P $p};Assert-I "
+      .. ps_quote(install)
+      .. " 'install' 'ContainerInherit, ObjectInherit';Assert-I "
+      .. ps_quote(path)
+      .. " 'entrypoint' 'None';Assert-I "
+      .. ps_quote(vim.fs.joinpath(install, "install.json"))
+      .. " 'marker' 'None'"
+    local result = original_system({ "powershell", "-NoProfile", "-Command", script }, {
+      text = true,
+      env = verification_env,
+      clear_env = true,
+    }):wait()
+    return result.code == 0, result.stderr or result.stdout or "unknown error"
+  end
+
   vim.system = function(command, options, callback)
     local program = command[1]
     local script = program == "powershell" and command[4] or ""
-    local is_transport = program == "curl"
-      or program == "wget"
-      or program == "unzip"
-      or program == "sha256sum"
-      or program == "shasum"
-      or program == "openssl"
-      or (
-        program == "powershell"
-        and (script:find("Invoke%-WebRequest") or script:find("Get%-FileHash") or script:find("Expand%-Archive"))
-      )
-
-    if not is_transport then
-      if program == "powershell" then
-        power_shell_calls = power_shell_calls + 1
-      end
-      return original_system(command, options, callback)
+    local function respond(result)
+      vim.schedule(function()
+        callback(result)
+      end)
+      return { kill = function() end }
     end
 
+    if program == "powershell" and script:find("Get%-Acl") then
+      power_shell_calls = power_shell_calls + 1
+      return original_system(command, options, callback)
+    end
     if program == "curl" then
       local target = vim.fs.joinpath(root, release.version, "win32-x64")
       for name, kind in vim.fs.dir(target) do
@@ -138,18 +175,30 @@ local function main()
       if not staging_acl_verified and not harness_error then
         harness_error = "download began before a private staging reservation existed"
       end
+      if vim.fn.writefile({ "archive fixture" }, command[9]) ~= 0 then
+        harness_error = "could not write fake archive"
+      end
+      return respond({ code = 0, stdout = "", stderr = "" })
     end
-
-    vim.schedule(function()
-      callback({ code = 91, stdout = "", stderr = "transport disabled by Windows ACL harness" })
-    end)
-    return { kill = function() end }
+    if program == "sha256sum" then
+      return respond({ code = 0, stdout = release.assets["win32-x64"].sha256 .. "  " .. command[2], stderr = "" })
+    end
+    if program == "unzip" then
+      local entrypoint = vim.fs.joinpath(command[5], release.assets["win32-x64"].entrypoint)
+      if vim.fn.writefile({ "server" }, entrypoint) ~= 0 then
+        harness_error = "could not write fake server"
+      end
+      return respond({ code = 0, stdout = "", stderr = "" })
+    end
+    harness_error = "unexpected installer command: " .. table.concat(command, " ")
+    return respond({ code = 91, stdout = "", stderr = "unexpected command in Windows ACL harness" })
   end
 
   installer.cache_root_override = root
   local done, install_error
-  installer.ensure("binary", function(err)
-    install_error = err
+  local published_path
+  installer.ensure("binary", function(err, path)
+    install_error, published_path = err, path
     done = true
   end)
   if not vim.wait(30000, function()
@@ -165,25 +214,16 @@ local function main()
   if not staging_acl_verified then
     fail("installer never reached its download transport; installer returned: " .. tostring(install_error))
   end
-  if not install_error or not install_error:find("download failed", 1, true) then
-    fail("transport failure was not surfaced: " .. tostring(install_error))
+  if install_error then
+    fail("fake transport install failed: " .. tostring(install_error))
   end
-
-  -- Seed a local cache fixture without downloading or executing a server.
-  local store = require("copilot.lsp.store")
-  local asset = release.assets["win32-x64"]
-  local cache_options = {
-    cache_root = root,
-    version = release.version,
-    target = "win32-x64",
-    sha256 = asset.sha256,
-    entrypoint = asset.entrypoint,
-  }
-  local reservation = assert(store.reserve(cache_options))
-  assert(vim.fn.writefile({ "server fixture" }, vim.fs.joinpath(reservation.path, asset.entrypoint)) == 0)
-  local receipt = assert(store.publish(reservation, cache_options, function() end))
-  assert(not receipt.error, receipt.error)
-  assert(receipt.path, "fixture was not published")
+  if not published_path or vim.fn.filereadable(published_path) ~= 1 then
+    fail("fake transport install did not publish an entrypoint")
+  end
+  local published_acl_verified, published_acl_error = verify_published_acl(published_path)
+  if not published_acl_verified then
+    fail("published ACL verification failed: " .. published_acl_error)
+  end
   local unexpected_transport
   vim.system = function(command, options, callback)
     if command[1] ~= "powershell" or not command[4]:find("Get-Acl", 1, true) then
@@ -206,8 +246,8 @@ local function main()
   vim.system = original_system
   assert(not unexpected_transport, "cache invoked transport: " .. tostring(unexpected_transport))
   assert(not install_error, install_error)
-  assert(cached_path == receipt.path, "cache returned an unexpected path")
-  assert(vim.fn.delete(vim.fs.dirname(receipt.path), "rf") == 0, "could not remove cache fixture")
+  assert(cached_path == published_path, "cache returned an unexpected path")
+  assert(vim.fn.delete(vim.fs.dirname(published_path), "rf") == 0, "could not remove published test fixture")
   local diagnostic = acl_persistence_diagnostic()
 
   vim.fn.writefile({
@@ -217,6 +257,7 @@ local function main()
       separator = separator,
       staging = observed_staging,
       staging_acl_verified = staging_acl_verified,
+      published_acl_verified = published_acl_verified,
       cache_verified = true,
       diagnostic = diagnostic,
     }),

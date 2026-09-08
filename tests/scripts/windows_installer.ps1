@@ -2,7 +2,8 @@
 param(
   [Parameter(Mandatory)] [string] $Workspace,
   [Parameter(Mandatory)] [string] $Sandbox,
-  [Parameter(Mandatory)] [string] $Nvim
+  [Parameter(Mandatory)] [string] $Nvim,
+  [ValidateSet('standard', 'elevated')] [string] $Account = 'standard'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -11,8 +12,11 @@ Set-StrictMode -Version Latest
 if ($PSVersionTable.PSVersion.Major -lt 7) { throw 'run this harness from PowerShell 7 or newer' }
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = [Security.Principal.WindowsPrincipal]::new($identity)
-if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-  throw 'Windows installer runtime harness must run as a non-admin user'
+if ($Account -eq 'standard' -and $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+  throw 'Windows installer runtime harness expected a non-admin user'
+}
+if ($Account -eq 'elevated' -and -not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+  throw 'Windows installer runtime harness expected an elevated administrator token'
 }
 if (-not (Get-Command powershell -ErrorAction SilentlyContinue)) { throw 'Windows PowerShell 5.1 was not found' }
 
@@ -66,7 +70,7 @@ function Invoke-Harness([string] $Name, [string] $Separator, [bool] $Insecure, [
   if ($LASTEXITCODE -ne 0) { throw "Neovim harness failed for $Name/$Separator with exit code $LASTEXITCODE" }
   $data = Get-Content -LiteralPath $result -Raw | ConvertFrom-Json
   if ($data.PSObject.Properties['failure']) { throw "Lua harness failed for $Name/${Separator}: $($data.failure)" }
-  if (-not $data.staging_acl_verified -or -not $data.cache_verified -or $data.powershell_calls -lt 2) { throw "real PowerShell preparation/cache validation was not observed for $Name/$Separator" }
+  if (-not $data.staging_acl_verified -or -not $data.published_acl_verified -or -not $data.cache_verified -or $data.powershell_calls -lt 2) { throw "real PowerShell preparation/publication/cache validation was not observed for $Name/$Separator" }
   $version = Join-Path $Cache $versionName
   Assert-PrivateParent $Cache
   Assert-PrivateParent $version
@@ -76,10 +80,23 @@ function Invoke-Harness([string] $Name, [string] $Separator, [bool] $Insecure, [
 }
 
 foreach ($separator in @('forward', 'backslash')) {
-  $clean = Invoke-Harness -Name 'clean' -Separator $separator -Insecure $false
-  [void](Invoke-Harness -Name 'clean-repeat' -Separator $separator -Insecure $false -Cache $clean)
-  $cache = Invoke-Harness -Name 'insecure' -Separator $separator -Insecure $true
-  [void](Invoke-Harness -Name 'insecure-repeat' -Separator $separator -Insecure $false -Cache $cache)
+  $clean = Join-Path $Sandbox "clean-$separator-cache"
+  $cache = Join-Path $Sandbox "insecure-$separator-cache"
+  try {
+    [void](Invoke-Harness -Name 'clean' -Separator $separator -Insecure $false -Cache $clean)
+    [void](Invoke-Harness -Name 'clean-repeat' -Separator $separator -Insecure $false -Cache $clean)
+    [void](Invoke-Harness -Name 'insecure' -Separator $separator -Insecure $true -Cache $cache)
+    [void](Invoke-Harness -Name 'insecure-repeat' -Separator $separator -Insecure $false -Cache $cache)
+  }
+  finally {
+    # Each account removes only cache roots it created. In particular, the
+    # standard-user process performs this cleanup under its own token.
+    foreach ($knownCache in @($clean, $cache)) {
+      if ($knownCache -and (Test-Path -LiteralPath $knownCache)) {
+        Remove-Item -LiteralPath $knownCache -Recurse -Force -ErrorAction SilentlyContinue
+      }
+    }
+  }
 }
 
-Write-Host "Windows installer ACL runtime harness passed through $((Get-Command powershell).Source)"
+Write-Host "Windows installer ACL runtime harness ($Account) passed through $((Get-Command powershell).Source)"

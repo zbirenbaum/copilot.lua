@@ -221,7 +221,7 @@ local function arm_deadline(operation)
     if operations[operation.key] ~= operation or operation.terminal then
       return
     end
-    if operation.phase == "publish" and operation.reservation then
+    if not windows_platform() and operation.phase == "publish" and operation.reservation then
       local committed = store.current(operation.options)
       if type(committed) == "string" then
         finish(operation, nil, committed, "published")
@@ -232,21 +232,21 @@ local function arm_deadline(operation)
   end, M._operation_deadline or operation_timeout)
 end
 
-local function private_acl_command(path, apply, parent)
+local function private_acl_command(path, normalize_owner, parent)
   local quoted = ps_quote(path)
-  local script = "$ErrorActionPreference='Stop';$p=" .. quoted .. ";$a=Get-Acl -LiteralPath $p;"
-  if apply then
-    script = script .. "$a.SetAccessRuleProtection($true,$false);$a.Access|ForEach-Object{$a.RemoveAccessRule($_)};"
-  end
+  local script = "$ErrorActionPreference='Stop';$p=" .. quoted .. ";"
   script = script .. "$s=[System.Security.Principal.WindowsIdentity]::GetCurrent().User;"
   if parent then
     script = script .. "$parent=Get-Acl -LiteralPath " .. ps_quote(parent) .. ";"
   end
-  if apply then
+  if normalize_owner then
+    -- Elevated tokens default new objects to Administrators ownership. Change
+    -- only the owner of our fresh reservation, preserving its inherited DACL.
     script = script
-      .. "$r=New-Object System.Security.AccessControl.FileSystemAccessRule($s,'FullControl',"
-      .. "'ContainerInherit,ObjectInherit','None','Allow');$a.AddAccessRule($r);"
-      .. "[System.IO.Directory]::SetAccessControl($p,$a);"
+      .. "if((Get-Item -LiteralPath $p -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){"
+      .. "throw ('reservation is a reparse point: '+$p)};"
+      .. "$d=New-Object System.Security.AccessControl.DirectorySecurity;$d.SetOwner($s);"
+      .. "[System.IO.Directory]::SetAccessControl($p,$d);"
   end
   script = script
     .. "$c=Get-Acl -LiteralPath $p;$detail=$p+'; ACL='+$c.Sddl;"
@@ -328,7 +328,7 @@ local function private_parent_command(path_token)
   return { "powershell", "-NoProfile", "-Command", script }
 end
 
-local function private_file_acl_command(paths, parent)
+local function private_file_acl_command(paths, parent, normalize_owner)
   local quoted_paths = {}
   for _, path in ipairs(paths) do
     quoted_paths[#quoted_paths + 1] = ps_quote(path)
@@ -342,6 +342,14 @@ local function private_file_acl_command(paths, parent)
     .. table.concat(quoted_paths, ",")
     .. ");"
     .. "foreach($p in $paths){if(-not (Test-Path -LiteralPath $p -PathType Leaf)){throw ('file missing: '+$p)};"
+  if normalize_owner then
+    script = script
+      .. "if((Get-Item -LiteralPath $p -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){"
+      .. "throw ('staged file is a reparse point: '+$p)};"
+      .. "$d=New-Object System.Security.AccessControl.FileSecurity;$d.SetOwner($s);"
+      .. "[System.IO.File]::SetAccessControl($p,$d);"
+  end
+  script = script
     .. "$a=Get-Acl -LiteralPath $p;$detail=$p+'; ACL='+$a.Sddl;"
     .. "if($a.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -ne $s.Value){"
     .. "throw ('owner mismatch (expected '+$s.Value+'): '+$detail)};"
@@ -380,15 +388,49 @@ local function publish(operation)
         nil,
         outcome
       )
-    else
+    elseif not windows_platform() then
       finish(operation, nil, path, outcome)
+    else
+      -- Publication may adopt another installer's winner. Never repair that
+      -- destination: validate its actual directory and files before using it.
+      run_commands(operation, "published-directory-acl", {
+        private_acl_command(vim.fs.dirname(path), false, operation.reservation.target_path),
+      }, function(_, directory_error)
+        if directory_error then
+          finish(operation, directory_error, nil, "published")
+          return
+        end
+        run_commands(operation, "published-file-acl", {
+          private_file_acl_command(
+            { path, vim.fs.joinpath(vim.fs.dirname(path), "install.json") },
+            operation.reservation.target_path
+          ),
+        }, function(_, file_error)
+          if file_error then
+            finish(operation, file_error, nil, "published")
+          else
+            finish(operation, nil, path, "published")
+          end
+        end, "published file ACL", path)
+      end, "published directory ACL", path)
+    end
+  end
+  local prepare_files
+  if windows_platform() then
+    prepare_files = function(paths, done)
+      run_commands(operation, "staged-file-acl", {
+        private_file_acl_command(paths, operation.reservation.target_path, true),
+      }, function(_, file_error)
+        token = begin_phase(operation, "publish")
+        done(file_error)
+      end, "staged file ACL", operation.staging)
     end
   end
   local receipt = store.publish(operation.reservation, operation.options, function(err, path, outcome)
     schedule(function()
       handle_result(err, path, outcome)
     end)
-  end)
+  end, prepare_files)
   if receipt then
     handle_result(receipt.error, receipt.path, receipt.outcome)
   end
@@ -532,7 +574,7 @@ local function reserve_operation(operation, prepared)
   run_commands(
     operation,
     "reservation-acl",
-    { private_acl_command(operation.staging, false, operation.reservation.target_path) },
+    { private_acl_command(operation.staging, true, operation.reservation.target_path) },
     function(_, acl_error)
       if acl_error then
         finish(operation, "reservation privacy verification failed: " .. acl_error, nil, "unmarked")

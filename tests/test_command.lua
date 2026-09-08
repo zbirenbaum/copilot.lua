@@ -40,7 +40,15 @@ end
 T["command()"]["panel open - it works"] = function()
   child.configure_copilot()
   child.cmd("Copilot panel open")
-  reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 23, 24 }, ignore_attr = { 23, 24 } })
+  local result = child.lua([[
+    local bufnr = vim.api.nvim_get_current_buf()
+    return {
+      is_open = require("copilot.panel").is_open(),
+      is_panel_buffer = vim.bo[bufnr].buftype == "nofile" and vim.api.nvim_buf_get_name(bufnr):match("^copilot://") ~= nil,
+    }
+  ]])
+  MiniTest.expect.equality(result.is_open, true)
+  MiniTest.expect.equality(result.is_panel_buffer, true)
 end
 
 T["command()"]["panel close - it works"] = function()

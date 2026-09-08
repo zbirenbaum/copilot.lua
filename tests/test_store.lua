@@ -130,6 +130,127 @@ T["resolves an exact deterministic install"] = function()
   vim.fn.delete(path, "rf")
 end
 
+T["prepares newly created files before publishing and resumes only once"] = function()
+  local path = root()
+  local opts = options(path)
+  local reservation = reserve_with_entry(path, opts)
+  local resume, prepared_files, callback_result
+  local callbacks = 0
+  local receipt = store.publish(reservation, opts, function(err, entry, outcome)
+    callbacks = callbacks + 1
+    callback_result = { err, entry, outcome }
+  end, function(files, done)
+    prepared_files, resume = files, done
+  end)
+  eq(receipt, nil)
+  eq(prepared_files, {
+    vim.fs.joinpath(reservation.path, opts.entrypoint),
+    vim.fs.joinpath(reservation.path, "install.json"),
+  })
+  eq(vim.fn.filereadable(prepared_files[2]), 1)
+  eq(store.resolve(opts), nil)
+  eq(callback_result, nil)
+  resume(nil)
+  resume("duplicate completion")
+  eq(
+    vim.wait(500, function()
+      return callback_result ~= nil
+    end),
+    true
+  )
+  eq(callback_result, { nil, vim.fs.joinpath(final_path(path, opts), opts.entrypoint), "published" })
+  eq(callbacks, 1)
+  vim.fn.delete(path, "rf")
+end
+
+T["file preparation failure leaves the install unpublished"] = function()
+  local path = root()
+  local opts = options(path)
+  local reservation = reserve_with_entry(path, opts)
+  local receipt = store.publish(reservation, opts, function() end, function(_, done)
+    done("owner normalization failed")
+  end)
+  eq(receipt.error, "owner normalization failed")
+  eq(receipt.outcome, "unmarked")
+  eq(store.resolve(opts), nil)
+  eq(vim.fn.isdirectory(reservation.path), 1)
+  vim.fn.delete(path, "rf")
+end
+
+T["file preparation exceptions fail without publication"] = function()
+  local path = root()
+  local opts = options(path)
+  local reservation = reserve_with_entry(path, opts)
+  local receipt = store.publish(reservation, opts, function() end, function()
+    error("preparation failed")
+  end)
+  eq(receipt.error:find("preparation failed", 1, true) ~= nil, true)
+  eq(receipt.outcome, "unmarked")
+  eq(store.resolve(opts), nil)
+  vim.fn.delete(path, "rf")
+end
+
+T["discarded preparation cannot resume and adopt a winner"] = function()
+  local path = root()
+  local opts = options(path)
+  local reservation = reserve_with_entry(path, opts)
+  local resume, result
+  store.publish(reservation, opts, function(err, entry, outcome)
+    result = { err, entry, outcome }
+  end, function(_, done)
+    resume = done
+  end)
+  eq(store.discard(reservation, opts), true)
+  local _, winner = complete_install(path, opts)
+  resume(nil)
+  vim.wait(500, function()
+    return result ~= nil
+  end)
+  eq(result[1], "staging reservation disappeared before publication")
+  eq(result[2], nil)
+  eq(result[3], "unmarked")
+  eq(store.resolve(opts), winner)
+  vim.fn.delete(path, "rf")
+end
+
+T["discarded reservation cannot publish after waiting for a lock"] = function()
+  local path = root()
+  local opts = options(path)
+  local reservation = reserve_with_entry(path, opts)
+  local winner
+  opts._fs = {
+    rename = function()
+      mkdir_private(final_path(path, opts) .. ".lock")
+      vim.defer_fn(function()
+        store.discard(reservation, opts)
+        winner = select(2, complete_install(path, opts))
+      end, 10)
+      return false
+    end,
+  }
+  local result = publish(reservation, opts)
+  eq(result[1], "staging reservation disappeared before publication")
+  eq(result[2], nil)
+  eq(result[3], "unmarked")
+  eq(store.resolve(opts), winner)
+  vim.fn.delete(path, "rf")
+end
+
+T["does not prepare files when the install marker already exists"] = function()
+  local path = root()
+  local opts = options(path)
+  local reservation = reserve_with_entry(path, opts)
+  vim.fn.writefile({ "pre-existing marker" }, vim.fs.joinpath(reservation.path, "install.json"))
+  local prepared = false
+  local receipt = store.publish(reservation, opts, function() end, function()
+    prepared = true
+  end)
+  eq(receipt.error, "could not publish install marker")
+  eq(prepared, false)
+  eq(store.resolve(opts), nil)
+  vim.fn.delete(path, "rf")
+end
+
 T["rejects cache hits through permissive directories"] = function()
   if vim.loop.os_uname().sysname == "Windows_NT" then
     return
