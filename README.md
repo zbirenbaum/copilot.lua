@@ -593,3 +593,9 @@ server_opts_overrides = {
 ```
 
 Refer to your plugins documentation for changes.
+
+---
+
+The Git history as of September 9, 2026, including the previously bundled Copilot
+Language Server files, is preserved in [copilot.lua-history](https://github.com/AntoineGS/copilot.lua-history)
+for reference. Continue using this repository for current development and installation.
