@@ -1,5 +1,5 @@
 *copilot.txt* Fully featured & enhanced replacement for copilot.vim complete with API for interacting with Github Copilot
-                           For NVIM v0.11.0    Last change: 06 September, 2026
+                           For NVIM v0.11.0    Last change: 10 September, 2026
 
 ==============================================================================
 1. copilot.lua                                           *copilot-copilot.lua*
@@ -640,6 +640,12 @@ Set the same for copilot in `server_opts_overrides`:
 <
 
 Refer to your plugins documentation for changes.
+
+------------------------------------------------------------------------------
+The Git history as of September 9, 2026, including the previously bundled
+Copilot Language Server files, is preserved in copilot.lua-history
+<https://github.com/AntoineGS/copilot.lua-history> for reference. Continue
+using this repository for current development and installation.
 
 ==============================================================================
 2. Links                                                       *copilot-links*
