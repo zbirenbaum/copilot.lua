@@ -81,8 +81,43 @@ mkdir "$tmp/bin"
 cat >"$tmp/bin/gh" <<'STUB'
 #!/usr/bin/env bash
 set -euo pipefail
+if [[ "$1" == release && "$2" == create ]]; then
+  shift 2
+  tag=$1
+  shift
+  repo= title= target= previous= verify=false generated=false
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --repo) repo=$2; shift 2 ;;
+      --title) title=$2; shift 2 ;;
+      --target) target=$2; shift 2 ;;
+      --notes-start-tag) previous=$2; shift 2 ;;
+      --verify-tag) verify=true; shift ;;
+      --generate-notes) generated=true; shift ;;
+      *) exit 92 ;;
+    esac
+  done
+  [[ "$repo" == test/project && "$title" == "$tag" && "$verify" == true && "$generated" == true ]] || exit 93
+  sha=$(git ls-remote --tags origin "refs/tags/$tag" | cut -f1)
+  [[ -n "$sha" && "$target" == "$sha" ]] || exit 94
+  git rev-parse --verify "refs/tags/$previous^{commit}" >/dev/null
+  jq -cn --arg tag "$tag" --arg sha "$sha" --arg previous "$previous" '{$tag,$sha,$previous}' >>"$RELEASE_CALLS"
+  [[ ${CREATE_ERROR:-0} == 0 ]] || exit 1
+  jq -e --arg tag "$tag" '[.[][] | select(.tag_name == $tag)] | length == 0' "$RELEASES_FILE" >/dev/null || exit 95
+  jq --arg tag "$tag" '. [0] += [{tag_name:$tag,draft:false,prerelease:false}]' "$RELEASES_FILE" >"$RELEASES_FILE.tmp"
+  mv "$RELEASES_FILE.tmp" "$RELEASES_FILE"
+  exit
+fi
 [[ "$1" == api && "$2" == repos/test/project/* ]] || exit 90
 case "$2" in
+  */releases\?*)
+    [[ ${RELEASE_ERROR:-0} == 0 ]] || exit 1
+    if [[ -n ${RELEASE_JSON:-} ]]; then
+      printf '%s\n' "$RELEASE_JSON"
+    else
+      cat "$RELEASES_FILE"
+    fi
+    ;;
   */pulls*)
     [[ ${PR_ERROR:-0} == 0 ]] || exit 1
     printf '[%s]\n' "$PR_JSON"
@@ -100,6 +135,9 @@ esac
 STUB
 chmod +x "$tmp/bin/gh"
 export PATH="$tmp/bin:$PATH" GH_TOKEN=test GITHUB_REPOSITORY=test/project
+export RELEASES_FILE="$tmp/releases.json" RELEASE_CALLS="$tmp/release-calls.jsonl"
+printf '[[]]\n' >"$RELEASES_FILE"
+touch "$RELEASE_CALLS"
 
 run_helper() { (cd "$repo" && bash "$script" "$@"); }
 repo=$(new_fixture ordered)
@@ -149,9 +187,73 @@ git clone "$repo-origin.git" "$tmp/retry" >/dev/null
 repo="$tmp/retry"
 HIDE_TAG=v3.0.4 assert_fails 'publication not visible' run_helper reconcile
 assert_eq "$merge_sha" "$(git -C "$repo" rev-parse v3.0.4)" 'visibility fails after push'
+assert_eq '' "$(cat "$RELEASE_CALLS")" 'no release before verified tag publication'
 run_helper reconcile
 assert_eq "$merge_sha" "$(git -C "$repo" rev-parse v3.0.4)" 'tag merge rather than later HEAD'
+assert_eq v3.0.4 "$(jq -r '.[0][0].tag_name' "$RELEASES_FILE")" 'existing tag gets a GitHub release'
+assert_eq "$merge_sha" "$(jq -r '.sha' "$RELEASE_CALLS")" 'release uses merge commit, not later HEAD'
+assert_eq v3.0.3 "$(jq -r '.previous' "$RELEASE_CALLS")" 'release notes start at previous plugin boundary'
 run_helper reconcile
+assert_eq 1 "$(wc -l <"$RELEASE_CALLS" | tr -d ' ')" 'rerun does not duplicate publication'
+
+# A tag-only state from a failed release creation is repaired on a fresh run.
+printf '[[]]\n' >"$RELEASES_FILE"
+CREATE_ERROR=1 assert_fails 'release creation failure propagates' run_helper reconcile
+assert_eq "$merge_sha" "$(git -C "$repo" rev-parse v3.0.4)" 'failed release creation preserves tag'
+assert_eq 0 "$(jq '[.[][]] | length' "$RELEASES_FILE")" 'failed creation leaves missing release'
+run_helper reconcile
+assert_eq v3.0.4 "$(jq -r '.[0][0].tag_name' "$RELEASES_FILE")" 'retry repairs tag-only publication'
+
+# Existing releases must not turn API failures or draft conflicts into writes.
+calls=$(cat "$RELEASE_CALLS")
+RELEASE_ERROR=1 assert_fails 'release API error' run_helper reconcile
+for invalid in 'not JSON' '{}' '[[{}]]' '[[{"tag_name":"v3.0.4","draft":true,"prerelease":false}]]' '[[{"tag_name":"v3.0.4","draft":false,"prerelease":true}]]'; do
+  RELEASE_JSON=$invalid assert_fails 'invalid or unpublished release state' run_helper reconcile
+done
+assert_eq "$calls" "$(cat "$RELEASE_CALLS")" 'failed release lookups never attempt publication'
+
+# Recovery must validate provenance even when the tag already exists.
+printf '[[]]\n' >"$RELEASES_FILE"
+PR_JSON='[]' assert_fails 'tag-only recovery requires LSP provenance' run_helper reconcile
+PR_ERROR=1 assert_fails 'tag-only recovery requires working provenance API' run_helper reconcile
+assert_eq "$calls" "$(cat "$RELEASE_CALLS")" 'unverified recovery never publishes'
+run_helper reconcile
+
+# Release Please owns normal releases: preserve their existing notes and state
+# without requiring LSP provenance. Releases may be on a later API page.
+normal_repo=$(new_fixture normal)
+saved_repo=$repo
+repo=$normal_repo
+git -C "$repo" tag v3.0.3
+git -C "$repo" push origin HEAD:master --tags >/dev/null
+normal='[[],[{"tag_name":"v3.0.3","draft":false,"prerelease":false,"body":"Normal release notes"}]]'
+printf '%s\n' "$normal" >"$RELEASES_FILE"
+calls=$(cat "$RELEASE_CALLS")
+PR_ERROR=1 run_helper reconcile
+assert_eq "$normal" "$(cat "$RELEASES_FILE")" 'normal release preserved'
+assert_eq "$calls" "$(cat "$RELEASE_CALLS")" 'normal release not republished'
+
+# New tag publication must create the release in the same invocation. A tag
+# pointing to the wrong ancestor must not become a release during recovery.
+printf '{".":"3.0.4"}\n' >"$repo/.release-please-manifest.json"
+printf 'new metadata\n' >>"$repo/lua/copilot/lsp/release.lua"
+git -C "$repo" add .
+git -C "$repo" commit -m 'update LSP' >/dev/null
+fresh_sha=$(git -C "$repo" rev-parse HEAD)
+PR_JSON=$(jq --arg sha "$fresh_sha" '.[0].merge_commit_sha = $sha' <<<"$good_pr")
+git -C "$repo" tag v3.0.4 HEAD^
+git -C "$repo" push origin HEAD:master --tags >/dev/null
+assert_fails 'tag-only release must point to verified LSP merge' run_helper reconcile
+assert_eq "$calls" "$(cat "$RELEASE_CALLS")" 'wrong tag never gets a release'
+git -C "$repo" push origin :refs/tags/v3.0.4 >/dev/null
+git -C "$repo" tag -d v3.0.4 >/dev/null
+run_helper reconcile
+assert_eq "$fresh_sha" "$(git -C "$repo" rev-parse v3.0.4)" 'new tag at LSP merge'
+assert_eq 'v3.0.3 v3.0.4' "$(jq -r '[.[][] | .tag_name] | sort | join(" ")' "$RELEASES_FILE")" 'new LSP release coexists with normal release'
+assert_eq 'Normal release notes' "$(jq -r '.[][] | select(.tag_name == "v3.0.3") | .body' "$RELEASES_FILE")" 'publication preserves normal release notes'
+repo=$saved_repo
+PR_JSON=$good_pr
+printf '[[{"tag_name":"v3.0.4","draft":false,"prerelease":false}]]\n' >"$RELEASES_FILE"
 
 # A tag on a different history cannot establish a published boundary.
 saved_repo=$repo

@@ -83,17 +83,21 @@ test('reproduces old unguarded reload bootstrapping across historical breaking c
 });
 
 for (const [message, expected] of [['fix: current fix', '3.0.4'], ['feat: new feature', '3.1.0'], ['feat!: genuine break', '4.0.0']]) {
-  test(`real Manifest preserves ${expected} versioning and excludes old breaking history`, async t => {
-    const f = fixture(t, {message, advanceAfterConstruction: true});
-    await generate(f.github, f.cwd);
-    assert.equal(f.state.writes.length, 1);
-    assert.equal(f.state.writes[0].version, expected);
-    assert.ok(!f.state.writes[0].pr.body.includes('historical breaking change'));
-    assert.ok(!f.state.seen.includes('b'.repeat(40)));
-    assert.equal(f.state.reads, 1, 'The validated Manifest must not be reconstructed');
-    assert.equal(f.state.tagReads, 1, 'Reuse captured tags instead of stale live listing');
-    assert.equal(f.state.version, '3.0.4', 'Remote advanced after construction');
-  });
+  for (const published of [false, true]) {
+    test(`real Manifest preserves ${expected} after ${published ? 'release' : 'tag-only'} boundary and excludes old breaking history`, async t => {
+      const releases = [{tagName: 'v3.0.2', sha: 'c'.repeat(40), notes: 'Older normal release'}];
+      if (published) releases.unshift({tagName: 'v3.0.3', sha: 'boundary', notes: 'LSP update'});
+      const f = fixture(t, {message, advanceAfterConstruction: true, releases});
+      await generate(f.github, f.cwd);
+      assert.equal(f.state.writes.length, 1);
+      assert.equal(f.state.writes[0].version, expected);
+      assert.ok(!f.state.writes[0].pr.body.includes('historical breaking change'));
+      assert.ok(!f.state.seen.includes('b'.repeat(40)));
+      assert.equal(f.state.reads, 1, 'The validated Manifest must not be reconstructed');
+      assert.equal(f.state.tagReads, 1, 'Reuse captured tags instead of stale live listing');
+      assert.equal(f.state.version, '3.0.4', 'Remote advanced after construction');
+    });
+  }
 }
 
 test('no commits after boundary produces no PR', async t => {

@@ -62,7 +62,7 @@ jobs:
         id: tags
         run: git fetch origin --tags
 
-      - name: Reconcile LSP release boundary
+      - name: Reconcile LSP tag and GitHub release
         id: reconcile
         run: bash .github/scripts/lsp-release.sh reconcile
         env:

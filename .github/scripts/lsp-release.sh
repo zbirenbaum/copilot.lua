@@ -91,15 +91,37 @@ check_pr() {
   git cat-file -e "$head:lua/copilot/lsp/release.lua" || die "Missing LSP metadata"
 }
 
+# Use a successful, paginated list to distinguish absence from API/auth failures.
+# A draft or prerelease for a stable boundary requires explicit reconciliation.
+release_state() {
+  local tag=$1 releases
+  releases=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --paginate --slurp) || die "Unable to list GitHub releases"
+  jq -er --arg tag "$tag" '
+    if type == "array" and all(.[]; type == "array" and all(.[];
+      (.tag_name | type == "string") and (.draft | type == "boolean") and (.prerelease | type == "boolean"))) then
+      [.[][] | select(.tag_name == $tag)] |
+      if length == 0 then "missing"
+      elif length == 1 and .[0].draft == false and .[0].prerelease == false then "published"
+      else error("Conflicting release state") end
+    else error("Invalid release list") end
+  ' <<<"$releases" || die "Unable to verify GitHub release for $tag"
+}
+
 reconcile() {
-  local head version tag remote sha parent prs existing
+  local head version tag remote sha parent prs existing state
   head=$(git rev-parse --verify HEAD) || die "Invalid HEAD"
   version=$(ref_version "$head") || die "Invalid HEAD manifest"
   tag="v$version"
   remote=$(git ls-remote --tags origin "refs/tags/$tag") || die "Unable to read remote tags"
+  state=$(release_state "$tag") || die "Unable to read release state"
   if [[ -n "$remote" ]]; then
     published_boundary "$tag" "$head"
-    return
+    # Normal Release Please releases and completed LSP releases are left intact.
+    if [[ "$state" == published ]]; then
+      return
+    fi
+  elif [[ "$state" == published ]]; then
+    die "GitHub release exists without remote tag $tag"
   fi
   sha=$(git log --first-parent --format=%H -1 "$head" -- .release-please-manifest.json) || die "Unable to locate manifest change"
   [[ -n "$sha" ]] || die "No manifest change found"
@@ -121,8 +143,17 @@ reconcile() {
   else
     git tag "$tag" "$sha"
   fi
-  git push origin "refs/tags/$tag"
+  if [[ -z "$remote" ]]; then
+    git push origin "refs/tags/$tag"
+  fi
   published_boundary "$tag" "$head"
+  # Keep release creation in the serialized writer. Token-created tag pushes do
+  # not trigger another workflow; retries must also repair pre-existing tags.
+  gh release create "$tag" --repo "$GITHUB_REPOSITORY" --verify-tag \
+    --target "$sha" --title "$tag" --generate-notes \
+    --notes-start-tag "v$(ref_version "$parent")" || die "Unable to publish GitHub release for $tag"
+  state=$(release_state "$tag") || die "Unable to read published release state"
+  [[ "$state" == published ]] || die "GitHub release is not published for $tag"
 }
 
 command=${1:-}

@@ -1,6 +1,6 @@
 # Release maintenance
 
-`Release` is the sole automated LSP tag publisher. Its serialized writer first
+`Release` is the sole automated LSP tag and GitHub Release publisher. Its serialized writer first
 publishes merged normal Release Please releases, verifies/reconciles the current
 master boundary, checks that master has not advanced, then generates release PRs
 through the pinned `release-please@17.6.0` public API. Generation constructs one
@@ -8,6 +8,16 @@ Manifest, validates its retained root version and the observed tag SHA against t
 checkout, retains that tag observation, and requires history to reach the boundary.
 Conflicting release objects or missing/truncated history fail before PR writes.
 Manual dispatch must select `master`; other branches and forks cannot run the writer.
+
+LSP reconciliation publishes a stable GitHub Release for the verified updater
+merge's tag, with generated notes starting at the previous manifest version's tag.
+It also repairs a missing release when the current tag already exists, after
+validating the same PR provenance, patch allocation, and exact tag commit. Existing
+published releases (including normal Release Please releases) are preserved.
+Release API failures, malformed responses, drafts, and prereleases for the current
+stable tag stop the writer before PR generation; they are not treated as absence.
+Publication happens directly in this job because tags pushed with `GITHUB_TOKEN`
+do not trigger another workflow.
 
 Require the **Validate LSP release PR** check and **Require branches to be up to
 date before merging** in master protection. This change does not configure those
@@ -25,6 +35,12 @@ bypass a pending required check.
   again. The next run checks the latest snapshot; there is no sleep/retry loop.
 - If GitHub's tag API has not yet exposed a just-pushed tag, rerun after it is
   visible. Reconciliation verifies existing tags and never moves them.
+- If a tag was pushed but GitHub Release creation failed, dispatch `Release` on
+  `master` again. It repairs the current manifest version's missing LSP release and
+  preserves completed releases on subsequent runs. This also repairs the current
+  tag-only LSP boundary when the fix is first deployed. Older missing releases are
+  not backfilled automatically; they require a separate, reviewed backfill at their
+  existing tags. When backfilling, avoid marking an older version as latest.
 - If provenance, ancestry, or a version boundary fails validation, investigate the
   failing commit/PR and restore a valid published boundary through the normal
   reviewed release process. Do not force tags or bypass the check.
