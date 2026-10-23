@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.18](https://github.com/zbirenbaum/copilot.lua/compare/v3.1.17...v3.1.18) (2026-10-23)
+
+
+### Bug Fixes
+
+* **ci:** pin LuaLS version for typechecking ([bae5beb](https://github.com/zbirenbaum/copilot.lua/commit/bae5beb4bd902498ba80add63db5a7e7e6ffb4d8))
+
 ## [3.1.4](https://github.com/zbirenbaum/copilot.lua/compare/v3.1.3...v3.1.4) (2026-09-08)
 
 
