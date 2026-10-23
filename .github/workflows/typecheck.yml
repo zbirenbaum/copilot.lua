@@ -11,5 +11,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: stevearc/nvim-typecheck-action@v2
         with:
+          # Avoid the installer's unauthenticated latest-release API lookup.
+          luals-version: "3.19.2"
           level: Warning
           configpath: ".luarc.json"
