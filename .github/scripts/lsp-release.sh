@@ -107,6 +107,23 @@ release_state() {
   ' <<<"$releases" || die "Unable to verify GitHub release for $tag"
 }
 
+wait_for_release() {
+  local tag=$1 attempt state
+  # Creation can succeed before the release list reflects it. Allow 30 seconds
+  # for visibility, but propagate API errors and conflicting states immediately.
+  for attempt in {1..7}; do
+    state=$(release_state "$tag") || die "Unable to read published release state"
+    if [[ "$state" == published ]]; then
+      return
+    fi
+    if (( attempt < 7 )); then
+      printf 'Waiting for GitHub release %s to appear (%s/7)\n' "$tag" "$attempt" >&2
+      sleep 5
+    fi
+  done
+  die "GitHub release is not published for $tag after visibility retries"
+}
+
 reconcile() {
   local head version tag remote sha parent prs existing state
   head=$(git rev-parse --verify HEAD) || die "Invalid HEAD"
@@ -152,8 +169,7 @@ reconcile() {
   gh release create "$tag" --repo "$GITHUB_REPOSITORY" --verify-tag \
     --target "$sha" --title "$tag" --generate-notes \
     --notes-start-tag "v$(ref_version "$parent")" || die "Unable to publish GitHub release for $tag"
-  state=$(release_state "$tag") || die "Unable to read published release state"
-  [[ "$state" == published ]] || die "GitHub release is not published for $tag"
+  wait_for_release "$tag"
 }
 
 command=${1:-}

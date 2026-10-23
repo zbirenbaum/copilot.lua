@@ -18,6 +18,10 @@ Release API failures, malformed responses, drafts, and prereleases for the curre
 stable tag stop the writer before PR generation; they are not treated as absence.
 Publication happens directly in this job because tags pushed with `GITHUB_TOKEN`
 do not trigger another workflow.
+After successful creation, the writer checks publication visibility up to seven
+times, five seconds apart, to tolerate a temporarily stale GitHub release list.
+Only a missing release is retried; API errors and conflicting states fail immediately.
+If visibility still times out, rerun `Release` on `master` once the release appears.
 
 Require the **Validate LSP release PR** check and **Require branches to be up to
 date before merging** in master protection. This change does not configure those

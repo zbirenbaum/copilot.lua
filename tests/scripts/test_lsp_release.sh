@@ -76,7 +76,8 @@ assert_fails_with 'legacy tag command removed' 'Usage:' bash -c 'cd "$1" && bash
 untagged_repo=$(new_fixture untagged)
 assert_fails "missing stable plugin tag" bash -c 'cd "$1" && bash "$2" next-patch' _ "$untagged_repo" "$script"
 
-# Only gh is mocked: Git refs, pushes and rejected pushes use real repositories.
+# Git refs, pushes and rejected pushes use real repositories. Mock GitHub and
+# sleep so delayed API visibility can be exercised without real polling delays.
 mkdir "$tmp/bin"
 cat >"$tmp/bin/gh" <<'STUB'
 #!/usr/bin/env bash
@@ -106,12 +107,29 @@ if [[ "$1" == release && "$2" == create ]]; then
   jq -e --arg tag "$tag" '[.[][] | select(.tag_name == $tag)] | length == 0' "$RELEASES_FILE" >/dev/null || exit 95
   jq --arg tag "$tag" '. [0] += [{tag_name:$tag,draft:false,prerelease:false}]' "$RELEASES_FILE" >"$RELEASES_FILE.tmp"
   mv "$RELEASES_FILE.tmp" "$RELEASES_FILE"
+  if [[ -n ${POST_CREATE_STATE:-} ]]; then
+    printf '0\n' >"$VISIBILITY_READS"
+  fi
   exit
 fi
 [[ "$1" == api && "$2" == repos/test/project/* ]] || exit 90
 case "$2" in
   */releases\?*)
     [[ ${RELEASE_ERROR:-0} == 0 ]] || exit 1
+    if [[ -n ${POST_CREATE_STATE:-} && -f "$VISIBILITY_READS" ]]; then
+      reads=$(cat "$VISIBILITY_READS")
+      printf '%s\n' "$((reads + 1))" >"$VISIBILITY_READS"
+      case "$POST_CREATE_STATE" in
+        delayed)
+          if (( reads < 2 )); then printf '[[]]\n'; exit; fi ;;
+        missing) printf '[[]]\n'; exit ;;
+        error) exit 1 ;;
+        malformed) printf 'not JSON\n'; exit ;;
+        draft|prerelease)
+          jq --arg field "$POST_CREATE_STATE" '.[0][0][$field] = true' "$RELEASES_FILE"
+          exit ;;
+      esac
+    fi
     if [[ -n ${RELEASE_JSON:-} ]]; then
       printf '%s\n' "$RELEASE_JSON"
     else
@@ -134,8 +152,18 @@ case "$2" in
 esac
 STUB
 chmod +x "$tmp/bin/gh"
+cat >"$tmp/bin/sleep" <<'STUB'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $# == 1 && "$1" == 5 ]] || exit 96
+printf '%s\n' "$1" >>"$SLEEP_CALLS"
+# Also bound broken polling loops so the suite cannot hang.
+[[ $(wc -l <"$SLEEP_CALLS") -le 6 ]] || exit 97
+STUB
+chmod +x "$tmp/bin/sleep"
 export PATH="$tmp/bin:$PATH" GH_TOKEN=test GITHUB_REPOSITORY=test/project
 export RELEASES_FILE="$tmp/releases.json" RELEASE_CALLS="$tmp/release-calls.jsonl"
+export VISIBILITY_READS="$tmp/visibility-reads" SLEEP_CALLS="$tmp/sleep-calls"
 printf '[[]]\n' >"$RELEASES_FILE"
 touch "$RELEASE_CALLS"
 
@@ -204,6 +232,35 @@ assert_eq 0 "$(jq '[.[][]] | length' "$RELEASES_FILE")" 'failed creation leaves 
 run_helper reconcile
 assert_eq v3.0.4 "$(jq -r '.[0][0].tag_name' "$RELEASES_FILE")" 'retry repairs tag-only publication'
 
+# A successful create can precede visibility in GitHub's release list. Poll only
+# that missing state; never repeat the create or hide API/conflict failures.
+for state in delayed missing error malformed draft prerelease; do
+  printf '[[]]\n' >"$RELEASES_FILE"
+  rm -f "$VISIBILITY_READS"
+  : >"$SLEEP_CALLS"
+  before=$(wc -l <"$RELEASE_CALLS")
+  case "$state" in
+    delayed)
+      POST_CREATE_STATE=$state run_helper reconcile
+      assert_eq 3 "$(cat "$VISIBILITY_READS")" 'wait until release becomes visible'
+      assert_eq 2 "$(wc -l <"$SLEEP_CALLS" | tr -d ' ')" 'space visibility checks'
+      ;;
+    missing)
+      POST_CREATE_STATE=$state assert_fails_with 'visibility timeout' 'GitHub release is not published for v3.0.4' run_helper reconcile
+      assert_eq 7 "$(cat "$VISIBILITY_READS")" 'visibility polling is bounded'
+      assert_eq 6 "$(wc -l <"$SLEEP_CALLS" | tr -d ' ')" 'no sleep after final check'
+      ;;
+    *)
+      POST_CREATE_STATE=$state assert_fails_with "post-create $state" 'Unable to read published release state' run_helper reconcile
+      assert_eq 1 "$(cat "$VISIBILITY_READS")" 'invalid observations fail immediately'
+      assert_eq '' "$(cat "$SLEEP_CALLS")" 'invalid observations are never retried'
+      ;;
+  esac
+  assert_eq "$((before + 1))" "$(wc -l <"$RELEASE_CALLS" | tr -d ' ')" 'polling never republishes'
+done
+rm -f "$VISIBILITY_READS"
+: >"$SLEEP_CALLS"
+
 # Existing releases must not turn API failures or draft conflicts into writes.
 calls=$(cat "$RELEASE_CALLS")
 RELEASE_ERROR=1 assert_fails 'release API error' run_helper reconcile
@@ -247,7 +304,7 @@ assert_fails 'tag-only release must point to verified LSP merge' run_helper reco
 assert_eq "$calls" "$(cat "$RELEASE_CALLS")" 'wrong tag never gets a release'
 git -C "$repo" push origin :refs/tags/v3.0.4 >/dev/null
 git -C "$repo" tag -d v3.0.4 >/dev/null
-run_helper reconcile
+POST_CREATE_STATE=delayed run_helper reconcile
 assert_eq "$fresh_sha" "$(git -C "$repo" rev-parse v3.0.4)" 'new tag at LSP merge'
 assert_eq 'v3.0.3 v3.0.4' "$(jq -r '[.[][] | .tag_name] | sort | join(" ")' "$RELEASES_FILE")" 'new LSP release coexists with normal release'
 assert_eq 'Normal release notes' "$(jq -r '.[][] | select(.tag_name == "v3.0.3") | .body' "$RELEASES_FILE")" 'publication preserves normal release notes'
