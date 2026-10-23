@@ -177,6 +177,7 @@ require('copilot').setup({
     auto_trigger = false,
     hide_during_completion = true,
     debounce = 15,
+    max_lines = nil, -- limit suggestion to this many lines (nil = unlimited)
     trigger_on_accept = true,
     keymap = {
       accept = "<M-l>",
