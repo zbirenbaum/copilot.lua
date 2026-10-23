@@ -111,7 +111,7 @@ check(up['steps'].none? { |s| s['run'].to_s.match?(/lsp-release\.sh (tag|reconci
   check(job['steps'].any? { |s| s['run'].to_s.lines.map(&:strip).include?('node --test tests/scripts/test_release_pr.cjs') }, 'Run real Manifest tests in updater and Lint CI')
 end
 [writer, up, l['jobs'].fetch('release_automation')].each do |job|
-  check(step(job, 'node')['uses'] == 'actions/setup-node@v6' && step(job, 'node').dig('with', 'node-version') == 22, 'Explicit Node test/tool runtime')
+  check(step(job, 'node')['uses'] == 'actions/setup-node@v7' && step(job, 'node').dig('with', 'node-version') == 22, 'Explicit Node test/tool runtime')
   install = step(job, 'release_deps')['run']
   check(install.lines.map(&:strip).include?('npm install --prefix "$RUNNER_TEMP/release-please" --no-save --package-lock=false --ignore-scripts release-please@17.6.0'), 'Pin public API dependency, disable scripts, install outside repository')
   check(install.lines.map(&:strip).include?('echo "NODE_PATH=$RUNNER_TEMP/release-please/node_modules" >> "$GITHUB_ENV"'), 'Expose temporary dependency to following steps')
