@@ -4,41 +4,41 @@
 ---@field entrypoint string
 
 return {
-  version = "1.558.0",
+  version = "1.560.0",
   assets = {
     ["darwin-arm64"] = {
-      filename = "copilot-language-server-darwin-arm64-1.558.0.zip",
-      sha256 = "337eb72ac44e6fc2f6e839ec298d1d311aa895312b57e761caafc1af738f5b9a",
+      filename = "copilot-language-server-darwin-arm64-1.560.0.zip",
+      sha256 = "6dc699b21165ae6edc8721254dee20bf23462f7fb225035204b11bb983d3c9ae",
       entrypoint = "copilot-language-server",
     },
     ["darwin-x64"] = {
-      filename = "copilot-language-server-darwin-x64-1.558.0.zip",
-      sha256 = "4425d3a87ed69d2b645dc33a17e4c637d8f2f11e8b98ae3963a4e33f29250ff7",
+      filename = "copilot-language-server-darwin-x64-1.560.0.zip",
+      sha256 = "c995e4fc715dc14ab57a821c0390eacc64580aa916ecd1d41e060da73bebdd05",
       entrypoint = "copilot-language-server",
     },
     js = {
-      filename = "copilot-language-server-js-1.558.0.zip",
-      sha256 = "6d3c5354cd56a46d9543a4f8829eb3bc02073b6081555f1a8593acf2597b0579",
+      filename = "copilot-language-server-js-1.560.0.zip",
+      sha256 = "bfbdcc0dab5e777aebe796f9b6991e1475414d30b9ae80c24954d542fe4c76cf",
       entrypoint = "language-server.js",
     },
     ["linux-arm64"] = {
-      filename = "copilot-language-server-linux-arm64-1.558.0.zip",
-      sha256 = "d3273f3bbff29c03fe4417a5a568e64db34c3d799fe91c69c1d6b702cd8baa2e",
+      filename = "copilot-language-server-linux-arm64-1.560.0.zip",
+      sha256 = "dc11c84ee91f25c86fc83ab05facc7edf43d1c6125ad2df83204e8f9da3ca260",
       entrypoint = "copilot-language-server",
     },
     ["linux-x64"] = {
-      filename = "copilot-language-server-linux-x64-1.558.0.zip",
-      sha256 = "3fe6d39b7c33bcca6769b712100e3ceb0970fd17b7fc1e9cb81a43649cfe76d6",
+      filename = "copilot-language-server-linux-x64-1.560.0.zip",
+      sha256 = "a307faf7c3ce7774ad1a8b4c73d1649ab8e0e83837acc57338a932368b3731d9",
       entrypoint = "copilot-language-server",
     },
     ["win32-arm64"] = {
-      filename = "copilot-language-server-win32-arm64-1.558.0.zip",
-      sha256 = "b3f4de65139c61fc8f2ffbe80880892f8033da6a29f357dc4fd5cd56c505e474",
+      filename = "copilot-language-server-win32-arm64-1.560.0.zip",
+      sha256 = "c97410dfd95560f3e802948215bd2eb1498a2a1a25d2f3791048b871b644e737",
       entrypoint = "copilot-language-server.exe",
     },
     ["win32-x64"] = {
-      filename = "copilot-language-server-win32-x64-1.558.0.zip",
-      sha256 = "ded87835e821f121d0e172bb12ae68fa01182ca67fb71e0909eb4e4ad1772c9d",
+      filename = "copilot-language-server-win32-x64-1.560.0.zip",
+      sha256 = "a33899488c71cd96e527dd50ef0c163356f26b5c43a1189cff6d2398cad2c27d",
       entrypoint = "copilot-language-server.exe",
     },
   },
