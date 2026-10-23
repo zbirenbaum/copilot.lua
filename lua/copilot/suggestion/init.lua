@@ -385,6 +385,32 @@ local function complete(callback)
   end
 end
 
+---@param text string
+---@param max_lines integer
+---@return string
+local function truncate_lines(text, max_lines)
+  local newline
+  for _ = 1, max_lines do
+    newline = string.find(text, "\n", (newline or 0) + 1, true)
+    if not newline then
+      return text
+    end
+  end
+  return string.sub(text, 1, newline - 1)
+end
+
+---@param suggestions copilot_get_completions_data_completion[]
+local function apply_max_lines(suggestions)
+  local max_lines = config.suggestion.max_lines
+  if not max_lines then
+    return
+  end
+  for _, suggestion in ipairs(suggestions) do
+    suggestion.text = truncate_lines(suggestion.text, max_lines)
+    suggestion.displayText = truncate_lines(suggestion.displayText, max_lines)
+  end
+end
+
 ---@param data copilot_get_completions_data
 local function handle_trigger_request(err, data)
   if err then
@@ -393,6 +419,7 @@ local function handle_trigger_request(err, data)
   logger.trace("suggestion handle trigger request", data)
   local ctx = get_ctx()
   ctx.suggestions = data and data.completions or {}
+  apply_max_lines(ctx.suggestions)
   ctx.choice = 1
   ctx.shown_choices = {}
   M.update_preview()
@@ -436,6 +463,8 @@ local function get_suggestions_cycling_callback(ctx, err, data)
   for _, suggestion in ipairs(ctx.suggestions) do
     seen[suggestion.text] = true
   end
+
+  apply_max_lines(data.completions or {})
 
   for _, suggestion in ipairs(data.completions or {}) do
     if not seen[suggestion.text] then

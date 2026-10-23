@@ -50,6 +50,28 @@ T["config()"]["validate rejects invalid suggestion type"] = function()
   eq(result, false)
 end
 
+T["config()"]["validate accepts max_lines number or nil, rejects other types"] = function()
+  local result = child.lua([[
+    local config = require("copilot.config")
+    local function validate_with(max_lines)
+      local c = vim.tbl_deep_extend("force", {}, config)
+      c.suggestion = vim.tbl_deep_extend("force", {}, config.suggestion)
+      c.suggestion.max_lines = max_lines
+      return pcall(config.validate, c)
+    end
+    return {
+      number_ok = validate_with(1),
+      nil_ok = validate_with(nil),
+      string_bad = validate_with("1"),
+      boolean_bad = validate_with(true),
+    }
+  ]])
+  eq(result.number_ok, true)
+  eq(result.nil_ok, true)
+  eq(result.string_bad, false)
+  eq(result.boolean_bad, false)
+end
+
 T["config()"]["merge_with_user_configs applies user overrides"] = function()
   local result = child.lua([[
     local config = require("copilot.config")
