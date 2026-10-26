@@ -321,6 +321,41 @@ T["suggestion()"]["suggestion with indentation mismatch"] = function()
   reference_screenshot(child.get_screenshot(), nil, { ignore_text = { 9, 10 }, ignore_attr = { 9, 10 } })
 end
 
+T["suggestion()"]["max_lines truncates the preview"] = function()
+  child.o.lines, child.o.columns = 10, 20
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true, max_lines = 1,"
+  child.cmd("e range_offset.txt")
+  child.configure_copilot()
+  child.type_keys("idef bar():", "<Esc>", "o  i")
+  child.wait_for_suggestion()
+
+  local virt = child.lua([[
+    local ns_id = vim.api.nvim_get_namespaces()["copilot.suggestion"]
+    local marks = vim.api.nvim_buf_get_extmarks(0, ns_id, 0, -1, { details = true })
+    local details = marks[1] and marks[1][4] or {}
+    return {
+      virt_text = details.virt_text and details.virt_text[1][1] or nil,
+      virt_lines_count = details.virt_lines and #details.virt_lines or 0,
+    }
+  ]])
+  MiniTest.expect.equality(virt.virt_text, "f foo():")
+  MiniTest.expect.equality(virt.virt_lines_count, 0)
+end
+
+T["suggestion()"]["max_lines limits accept to the first lines"] = function()
+  child.o.lines, child.o.columns = 10, 20
+  child.config.suggestion = child.config.suggestion .. "auto_trigger = true, max_lines = 1,"
+  child.cmd("e range_offset.txt")
+  child.configure_copilot()
+  child.type_keys("idef bar():", "<Esc>", "o  i")
+  child.wait_for_suggestion()
+  child.lua('require("copilot.suggestion").accept()')
+  child.lua("vim.wait(200, function() return false end, 10)")
+
+  local lines = child.lua([[return vim.api.nvim_buf_get_lines(0, 0, -1, false)]])
+  MiniTest.expect.equality(lines, { "def bar():", "  if foo():" })
+end
+
 T["suggestion()"]["suggestion with range offset"] = function()
   child.o.lines, child.o.columns = 10, 20
   child.config.suggestion = child.config.suggestion .. "auto_trigger = true,"
