@@ -5,7 +5,7 @@
 ---@field auto_trigger boolean Whether to trigger the suggestion automatically
 ---@field hide_during_completion boolean Whether to hide the suggestion during completion
 ---@field debounce integer Debounce time in milliseconds
----@field max_lines integer|nil Maximum number of lines of a suggestion to show and accept (nil means unlimited)
+---@field max_lines integer|nil Positive maximum number of lines of a suggestion to show and accept (nil means unlimited)
 ---@field trigger_on_accept boolean To either trigger the suggestion on accept or pass the keystroke to the buffer
 ---@field suggestion_notification SuggestionNotification|nil Callback function whenever a suggestion is triggered
 ---@field keymap SuggestionKeymapConfig Keymap for the suggestion
@@ -45,7 +45,9 @@ function suggestion.validate(config)
   vim.validate("auto_trigger", config.auto_trigger, "boolean")
   vim.validate("hide_during_completion", config.hide_during_completion, "boolean")
   vim.validate("debounce", config.debounce, { "number", "nil" })
-  vim.validate("max_lines", config.max_lines, { "number", "nil" })
+  vim.validate("max_lines", config.max_lines, function(value)
+    return type(value) == "number" and value > 0 and value < math.huge and value % 1 == 0
+  end, true, "positive integer or nil")
   vim.validate("trigger_on_accept", config.trigger_on_accept, "boolean")
   vim.validate("suggestion_notification", config.suggestion_notification, { "function", "nil" })
   vim.validate("keymap", config.keymap, "table")

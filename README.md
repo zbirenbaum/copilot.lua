@@ -264,6 +264,21 @@ When `auto_trigger` is `true`, copilot starts suggesting as soon as you enter in
 When `auto_trigger` is `false`, use the `next`, `prev` or `accept` keymap to trigger copilot suggestion.
 When `trigger_on_accept` is `false`, the keypress will be passed to the buffer as-is, instead of triggering completion.
 
+Set `suggestion.max_lines` to a positive integer to keep only the first N lines of each inline suggestion,
+including the current line. The default, `nil`, leaves suggestions unlimited. For single-line suggestions:
+
+```lua
+require("copilot").setup({
+  suggestion = {
+    max_lines = 1,
+  },
+})
+```
+
+The limit applies to both the preview and the text inserted by `accept`, including suggestions selected
+with `next` or `prev`. Lines beyond the limit are discarded, not merely hidden. `accept_word` and
+`accept_line` operate on the shortened suggestion. Panel suggestions are unaffected.
+
 To toggle auto trigger for the current buffer, use `require("copilot.suggestion").toggle_auto_trigger()`.
 
 Copilot suggestion is automatically hidden when `popupmenu-completion` is open. In case you use a custom
