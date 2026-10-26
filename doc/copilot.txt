@@ -1,5 +1,5 @@
 *copilot.txt* Fully featured & enhanced replacement for copilot.vim complete with API for interacting with Github Copilot
-                           For NVIM v0.11.0    Last change: 10 September, 2026
+                             For NVIM v0.11.0    Last change: 26 October, 2026
 
 ==============================================================================
 1. copilot.lua                                           *copilot-copilot.lua*
@@ -20,25 +20,25 @@ with modern plugins, this repository was created.
 
 TABLE OF CONTENTS                      *copilot-copilot.lua-table-of-contents*
 
-- |copilot-requirements|
-- |copilot-install|
-    - |copilot-authentication|
-        - |copilot-authentication-with-alternate-github-instances|
-- |copilot-setup-and-configuration|
-    - |copilot-panel|
-    - |copilot-suggestion|
-    - |copilot-highlight-groups|
-    - |copilot-filetypes|
-    - |copilot-logger|
-    - |copilot-copilot_node_command|
-    - |copilot-server_opts_overrides|
-    - |copilot-workspace_folders|
-    - |copilot-root_dir|
-    - |copilot-should_attach|
-    - |copilot-server|
-- |copilot-commands|
-- |copilot-integrations|
-- |copilot-faq|
+- |copilot-copilot.lua-requirements|
+- |copilot-copilot.lua-install|
+    - Authentication
+        - Authentication with Alternate GitHub Instances
+- |copilot-copilot.lua-setup-and-configuration|
+    - panel
+    - suggestion
+    - Highlight Groups
+    - filetypes
+    - logger
+    - copilot_node_command
+    - server_opts_overrides
+    - workspace_folders
+    - root_dir
+    - should_attach
+    - server
+- |copilot-copilot.lua-commands|
+- |copilot-copilot.lua-integrations|
+- |copilot-copilot.lua-faq|
 
 
 REQUIREMENTS                                *copilot-copilot.lua-requirements*
@@ -220,12 +220,12 @@ Default configuration ~
           logger.debug("not attaching, buffer is not 'buflisted'")
           return false
         end
-    
+
         if vim.bo[buf_id].buftype ~= "" then
           logger.debug("not attaching, buffer 'buftype' is " .. vim.bo[buf_id].buftype)
           return false
         end
-    
+
         return true
       end,
       server = {
@@ -269,6 +269,23 @@ insert mode. When `auto_trigger` is `false`, use the `next`, `prev` or `accept`
 keymap to trigger copilot suggestion. When `trigger_on_accept` is `false`, the
 keypress will be passed to the buffer as-is, instead of triggering completion.
 
+Set `suggestion.max_lines` to a positive integer to keep only the first N lines
+of each inline suggestion, including the current line. The default, `nil`,
+leaves suggestions unlimited. For single-line suggestions:
+
+>lua
+    require("copilot").setup({
+      suggestion = {
+        max_lines = 1,
+      },
+    })
+<
+
+The limit applies to both the preview and the text inserted by `accept`,
+including suggestions selected with `next` or `prev`. Lines beyond the limit
+are discarded, not merely hidden. `accept_word` and `accept_line` operate on
+the shortened suggestion. Panel suggestions are unaffected.
+
 To toggle auto trigger for the current buffer, use
 `require("copilot.suggestion").toggle_auto_trigger()`.
 
@@ -283,7 +300,7 @@ Example using nvim-cmp ~
     cmp.event:on("menu_opened", function()
       vim.b.copilot_suggestion_hidden = true
     end)
-    
+
     cmp.event:on("menu_closed", function()
       vim.b.copilot_suggestion_hidden = false
     end)
@@ -298,7 +315,7 @@ Example using blink.cmp ~
         vim.b.copilot_suggestion_hidden = true
       end,
     })
-    
+
     vim.api.nvim_create_autocmd("User", {
       pattern = "BlinkCmpMenuClose",
       callback = function()
@@ -334,11 +351,11 @@ Copilot uses two highlight groups to style its suggestions:
   Highlight Group         Used For                Default Link
   ----------------------- ----------------------- -----------------------
   CopilotSuggestion       Inline ghost text       Comment
-                          suggestions             
+                          suggestions
 
   CopilotAnnotation       Annotations in the      Comment
-                          panel and inline        
-                          suggestions             
+                          panel and inline
+                          suggestions
   -----------------------------------------------------------------------
 If these highlight groups are not defined by your colorscheme, they will
 default to linking to `Comment`. To customize them, set the highlights
@@ -557,7 +574,7 @@ An example of this would be:
         if string.match(bufname, "env") then
           return false
         end
-    
+
         return true
       end
     }
