@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.2.0](https://github.com/zbirenbaum/copilot.lua/compare/v3.1.18...v3.2.0) (2026-10-26)
+
+
+### Features
+
+* **suggestion:** add max_lines option to limit suggestion length ([2c55753](https://github.com/zbirenbaum/copilot.lua/commit/2c557538a533b84c2fa9204ee5a581b8cd62aaa1))
+* **suggestion:** add max_lines option to limit suggestion length ([ba978c3](https://github.com/zbirenbaum/copilot.lua/commit/ba978c38e91154248080854c85b44772dd135833)), closes [#617](https://github.com/zbirenbaum/copilot.lua/issues/617)
+
+
+### Bug Fixes
+
+* **suggestion:** protect against non positive values to be safe ([2339958](https://github.com/zbirenbaum/copilot.lua/commit/23399580e0d96f6ad21b4f0cc9116d7578cabf19))
+
 ## [3.1.4](https://github.com/zbirenbaum/copilot.lua/compare/v3.1.3...v3.1.4) (2026-09-08)
 
 
