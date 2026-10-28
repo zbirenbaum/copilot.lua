@@ -1,6 +1,7 @@
 local release = require("copilot.lsp.release")
 local logger = require("copilot.logger")
 local store = require("copilot.lsp.store")
+local platform = require("copilot.lsp.platform")
 
 local M = { cache_root_override = nil }
 
@@ -86,7 +87,7 @@ end
 local finish
 
 local function windows_platform()
-  return vim.loop.os_uname().sysname == "Windows_NT"
+  return platform.is_windows()
 end
 
 local function run_commands(operation, phase, commands, callback, stage, owned_path)
@@ -785,7 +786,8 @@ function M.resolve_target(server_type, uname, musl)
   if uname.sysname == "Linux" and musl ~= false and musl ~= "glibc" then
     return nil, 'could not identify Linux libc; use server.type = "nodejs"'
   end
-  local platform = ({ Linux = "linux", Darwin = "darwin", Windows_NT = "win32" })[uname.sysname]
+  local platform_name = platform.is_windows(uname.sysname) and "win32"
+    or ({ Linux = "linux", Darwin = "darwin" })[uname.sysname]
   local architecture = ({
     x86_64 = "x64",
     amd64 = "x64",
@@ -794,8 +796,8 @@ function M.resolve_target(server_type, uname, musl)
     arm64 = "arm64",
     ARM64 = "arm64",
   })[uname.machine]
-  if platform and architecture then
-    return platform .. "-" .. architecture
+  if platform_name and architecture then
+    return platform_name .. "-" .. architecture
   end
   return nil, 'unsupported native target; use server.type = "nodejs"'
 end
