@@ -275,6 +275,9 @@ T["resolve_target maps platforms and libc probes"] = function()
     { "binary", { sysname = "Linux", machine = "aarch64" }, false, "linux-arm64" },
     { "binary", { sysname = "Darwin", machine = "arm64" }, nil, "darwin-arm64" },
     { "binary", { sysname = "Windows_NT", machine = "AMD64" }, nil, "win32-x64" },
+    { "binary", { sysname = "MINGW32_NT-10.0", machine = "x86_64" }, nil, "win32-x64" },
+    { "binary", { sysname = "MINGW64_NT-10.0-26200", machine = "x86_64" }, nil, "win32-x64" },
+    { "binary", { sysname = "MSYS_NT-10.0", machine = "x86_64" }, nil, "win32-x64" },
     { "nodejs", { sysname = "Plan9", machine = "mips" }, nil, "js" },
   }
   for _, case in ipairs(cases) do
@@ -282,6 +285,10 @@ T["resolve_target maps platforms and libc probes"] = function()
     eq(target, case[4])
     eq(err, nil)
   end
+  local unsupported_target, unsupported_err =
+    installer.resolve_target("binary", { sysname = "FreeBSD", machine = "amd64" })
+  eq(unsupported_target, nil)
+  eq(assert(unsupported_err):find("unsupported native target", 1, true) ~= nil, true)
   with_system_probe({
     getconf = { stdout = "glibc 2.39", stderr = "", code = 0 },
   }, function()
@@ -501,6 +508,17 @@ T["windows reports both unavailable PowerShell executables"] = function()
     powershell = { false },
     pwsh = { false },
   }, nil, nil, "Windows_NT")
+  eq(result[2], nil)
+  eq(result[1]:find("powershell unavailable", 1, true) ~= nil, true)
+  eq(result[1]:find("pwsh unavailable", 1, true) ~= nil, true)
+  eq(#process_stub.calls, 2)
+end
+
+T["MinGW Neovim builds use the Windows PowerShell installer"] = function()
+  local _, result = run_install("win32-x64", {
+    powershell = { false },
+    pwsh = { false },
+  }, nil, nil, "MINGW32_NT-10.0")
   eq(result[2], nil)
   eq(result[1]:find("powershell unavailable", 1, true) ~= nil, true)
   eq(result[1]:find("pwsh unavailable", 1, true) ~= nil, true)

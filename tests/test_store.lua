@@ -265,6 +265,28 @@ T["rejects cache hits through permissive directories"] = function()
   vim.fn.delete(path, "rf")
 end
 
+T["treats MinGW sysnames as Windows and skips POSIX ownership checks"] = function()
+  -- Only meaningful on a POSIX host, where the permissive root would otherwise be rejected.
+  if vim.fn.has("win32") == 1 then
+    return
+  end
+  local path = root()
+  local opts = options(path)
+  local _, entry = complete_install(path, opts)
+  vim.fn.setfperm(opts.cache_root, "rwxrwxrwx")
+  local original_uname = vim.loop.os_uname
+  ---@diagnostic disable-next-line: duplicate-set-field
+  vim.loop.os_uname = function()
+    return { sysname = "MINGW32_NT-10.0", machine = "x86_64" }
+  end
+  local ok, resolved = pcall(store.resolve, opts)
+  vim.loop.os_uname = original_uname
+  eq(ok, true)
+  eq(resolved, entry)
+  eq(vim.fn.getfperm(opts.cache_root), "rwxrwxrwx")
+  vim.fn.delete(path, "rf")
+end
+
 T["repairs user-owned cache directory permissions before reserving"] = function()
   if vim.loop.os_uname().sysname == "Windows_NT" then
     return
