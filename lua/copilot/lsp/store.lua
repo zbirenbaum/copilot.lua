@@ -1,4 +1,5 @@
 local uv = vim.uv
+local platform = require("copilot.lsp.platform")
 local LOCK_STALE_SECONDS = 60
 local STAGING_STALE_SECONDS = 24 * 60 * 60
 
@@ -128,7 +129,7 @@ local function ensure_directory(path, allow_link)
     end
   end
 
-  if uv.os_uname().sysname == "Windows_NT" then
+  if platform.is_windows() then
     return true
   end
   if not uv.getuid or stat.uid ~= uv.getuid() then
@@ -169,7 +170,7 @@ local function resolve_final(fs, options, store_paths)
   if not static_paths_valid(fs, store_paths) then
     return nil
   end
-  if uv.os_uname().sysname ~= "Windows_NT" then
+  if not platform.is_windows() then
     local uid = uv.getuid and uv.getuid()
     if not uid then
       return nil
@@ -202,7 +203,7 @@ local function resolve_final(fs, options, store_paths)
   if not stat or stat.type ~= "file" then
     return nil
   end
-  if uv.os_uname().sysname ~= "Windows_NT" then
+  if not platform.is_windows() then
     local uid = uv.getuid and uv.getuid()
     if
       not uid
