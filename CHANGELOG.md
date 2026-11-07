@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.3](https://github.com/zbirenbaum/copilot.lua/compare/v3.2.2...v3.2.3) (2026-11-07)
+
+
+### Bug Fixes
+
+* detect MinGW/MSYS Neovim builds as Windows ([11cb475](https://github.com/zbirenbaum/copilot.lua/commit/11cb47582e5d541f55fbdc1ee503efc3753c175c))
+
 ## [3.2.0](https://github.com/zbirenbaum/copilot.lua/compare/v3.1.18...v3.2.0) (2026-10-26)
 
 
